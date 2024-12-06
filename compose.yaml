@@ -1,0 +1,24 @@
+# specify the version of docker-compose
+version: "3.8"
+
+# define the services/containers to be run
+services:
+  web:
+    build: ./frontend
+    ports:
+      - 5173:5173
+    develop:
+      watch:
+        # it'll watch for changes in package.json and package-lock.json and rebuild the container if there are any changes
+        - path: ./frontend/package.json
+          action: rebuild
+        - path: ./frontend/package-lock.json
+          action: rebuild
+        # it'll watch for changes in the frontend directory and sync the changes with the container real time
+        - path: ./frontend
+          target: /app
+          action: sync
+  api:
+    build: ./backend
+    ports: 
+      - 8080:8080
