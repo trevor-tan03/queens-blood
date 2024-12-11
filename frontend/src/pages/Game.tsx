@@ -15,8 +15,8 @@ const Game = () => {
 
   const connectionId = connection!.connectionId;
 
-  const isReady = isPlayerReady(connectionId);
-  const isHost = isPlayerHost(connectionId);
+  const isReady = isPlayerReady(connectionId as string);
+  const isHost = isPlayerHost(connectionId as string);
 
   const disconnect = async () => {
     await leaveGame(gameCode);

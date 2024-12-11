@@ -55,6 +55,14 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
   }, []);
 
+  useEffect(() => {
+    if (connection) {
+      window.onbeforeunload = () => {
+        connection.invoke(Methods.LeaveGame, gameCode);
+      }
+    }
+  }, [connection, gameCode]);
+
   const createGame = async (playerName: string) => {
     if (connection) {
       await connection.invoke(Methods.CreateGame, playerName).catch((error) => {
