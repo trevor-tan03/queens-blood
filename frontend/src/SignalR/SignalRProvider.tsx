@@ -46,7 +46,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
       });
 
       conn.on("ReceivePlayerList", (players: Player[]) => {
-        const currPlayer = players.find(p => p.id === connection?.connectionId);
+        const currPlayer = players.find(p => p.id === conn.connectionId);
         setCurrPlayer(currPlayer);
         setPlayers(players);
       });
