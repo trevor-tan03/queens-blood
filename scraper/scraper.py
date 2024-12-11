@@ -16,9 +16,9 @@ if response.status_code == 200:
                     Name TEXT,
                     Rank TEXT,
                     Power TEXT,
-                    Obtain TEXT,
                     Rarity TEXT,
-                    Ability TEXT
+                    Ability TEXT,
+                   Image TEXT
                 )
             ''')
     trs = div.find_all("tr")
@@ -28,14 +28,14 @@ if response.status_code == 200:
         rank = tds[1].getText().strip("\n")
         power = tds[2].getText().strip("\n")
         ability = tds[3].getText().strip("\n")
-        obtain = tds[4].getText().strip("\n")
         Id = tds[5].getText().strip("\n")
         rarity = tds[6].getText().strip("\n")
-        # print((Id,name,rank,power,obtain,rarity,ability))
-        # print(td.getText())
+
+        image = f'player-{name.replace(" ", "-").lower()}.webp'
+
         cursor.execute('''
-            INSERT INTO Cards (ID, Name,Rank,Power,Obtain,Rarity,Ability) VALUES (?,?,?,?,?,?,?)
-        ''', (int(Id),name,rank,power,obtain,rarity,ability))
+            INSERT INTO Cards (ID, Name,Rank,Power,Rarity,Ability,Image) VALUES (?,?,?,?,?,?,?)
+        ''', (int(Id),name,rank,power,rarity,ability,image))
     conn.commit()
     conn.close()
 
