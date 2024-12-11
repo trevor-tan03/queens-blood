@@ -9,8 +9,11 @@ interface SignalRContextProps {
   joinGame: (gameId: string, playerName: string) => Promise<void>;
   leaveGame: (gameId: string) => Promise<void>;
   readyUp: (gameId: string) => Promise<void>;
+  sendMessage: (message: string) => Promise<void>;
+  currPlayer: Player | undefined;
   gameCode: string;
   players: Player[];
+  messageLog: string[];
 }
 
 const SignalRContext = createContext<SignalRContextProps | undefined>(undefined);
@@ -18,7 +21,9 @@ const SignalRContext = createContext<SignalRContextProps | undefined>(undefined)
 export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [gameCode, setGameCode] = useState('');
+  const [currPlayer, setCurrPlayer] = useState<Player | undefined>();
   const [players, setPlayers] = useState<Player[]>([]);
+  const [messageLog, setMessageLog] = useState<string[]>([]);
 
   useEffect(() => {
     const connect = async () => {
@@ -28,19 +33,21 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
         .configureLogging(signalR.LogLevel.Information)
         .build();
 
-      conn.on("ReceiveMessage", (message) => {
+      conn.on("ReceiveMessage", (message: string) => {
+        setMessageLog(prevLog => [...prevLog, message]);
+      });
+
+      conn.on("ErrorMessage", (message: string) => {
         console.log(message);
       });
 
-      conn.on("ErrorMessage", (message) => {
-        console.log(message);
-      });
-
-      conn.on("GameCode", (gameCode) => {
+      conn.on("GameCode", (gameCode: string) => {
         setGameCode(gameCode);
       });
 
-      conn.on("ReceivePlayerList", (players) => {
+      conn.on("ReceivePlayerList", (players: Player[]) => {
+        const currPlayer = players.find(p => p.id === connection?.connectionId);
+        setCurrPlayer(currPlayer);
         setPlayers(players);
       });
 
@@ -62,6 +69,12 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
     }
   }, [connection, gameCode]);
+
+  const sendMessage = async (message: string) => {
+    if (connection) {
+      await connection.invoke("SendMessage", gameCode, message);
+    }
+  }
 
   const createGame = async (playerName: string) => {
     if (connection) {
@@ -102,8 +115,11 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
       joinGame,
       leaveGame,
       readyUp,
+      sendMessage,
       gameCode,
+      currPlayer,
       players,
+      messageLog,
     }}>
       {children}
     </SignalRContext.Provider>

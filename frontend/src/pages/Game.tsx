@@ -1,9 +1,9 @@
+import { useState } from "react";
 import { useSignalR } from "../SignalR/SignalRProvider";
 
 const Game = () => {
-  const { connection, gameCode, players, leaveGame, readyUp } = useSignalR();
-
-  console.log(players);
+  const { messageLog, connection, gameCode, players, leaveGame, readyUp, sendMessage, currPlayer } = useSignalR();
+  const [message, setMessage] = useState('');
 
   const isPlayerReady = (connectionId: string) => {
     return players.find(player => player.id === connectionId)?.isReady;
@@ -14,9 +14,6 @@ const Game = () => {
   }
 
   const connectionId = connection!.connectionId;
-
-  const isReady = isPlayerReady(connectionId as string);
-  const isHost = isPlayerHost(connectionId as string);
 
   const disconnect = async () => {
     await leaveGame(gameCode);
@@ -34,13 +31,13 @@ const Game = () => {
   return (
     <>
       <div>{gameCode}</div>
-      {isHost ?
+      {currPlayer?.isHost ?
         <button className="disabled:bg-slate-300 bg-green-300" disabled={!isLobbyReady()}>
           Start
         </button>
         :
         <button onClick={toggleReady}>
-          {isReady ? "Unready" : "Ready"}
+          {currPlayer?.isReady ? "Unready" : "Ready"}
         </button>
       }
       <ul>
@@ -49,6 +46,16 @@ const Game = () => {
         </li>)}
       </ul>
       <button onClick={disconnect}>Leave</button>
+
+      <input type="text" value={message} onChange={(e) => setMessage(e.target.value)} />
+      <button onClick={() => {
+        sendMessage(message);
+        setMessage('');
+      }}>Send</button>
+
+      <ul>
+        {messageLog.map((message, i) => <li key={`m-${i}`}>{message}</li>)}
+      </ul>
     </>
   )
 }

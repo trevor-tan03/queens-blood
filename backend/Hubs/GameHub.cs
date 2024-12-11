@@ -14,11 +14,6 @@ namespace backend.Hubs
 			_gameRepository = gameRepository;
 		}
 
-		public async Task SendMessage(string message)
-		{
-			await Clients.All.SendAsync("ReceiveMessage", message);
-		}
-
 		public async Task CreateGame(string playerName)
 		{
 			var gameId = new Hashids(Context.ConnectionId, 6).Encode(123456);
@@ -102,6 +97,25 @@ namespace backend.Hubs
 			{
 				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Player not found.");
 			} else if (player != null)
+			{
+				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Game not found.");
+			}
+		}
+
+		public async Task SendMessage(string gameId, string message)
+		{
+			var game = _gameRepository.GetGameById(gameId);
+			var player = game?.Players.Find(p => p.Id == Context.ConnectionId);
+
+			if (game != null && player != null)
+			{
+				await Clients.Group(gameId).SendAsync("ReceiveMessage", $"{player.Name}: {message}");
+			}
+			else if (game != null)
+			{
+				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Player not found.");
+			}
+			else if (player != null)
 			{
 				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Game not found.");
 			}
