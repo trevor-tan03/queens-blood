@@ -8,6 +8,7 @@ interface SignalRContextProps {
   createGame: (playerName: string) => Promise<void>;
   joinGame: (gameId: string, playerName: string) => Promise<void>;
   leaveGame: (gameId: string) => Promise<void>;
+  readyUp: (gameId: string) => Promise<void>;
   gameCode: string;
   players: Player[];
 }
@@ -80,12 +81,19 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }
 
+  const readyUp = async (gameId: string) => {
+    if (connection) {
+      await connection.invoke("ToggleReady", gameId);
+    }
+  }
+
   return (
     <SignalRContext.Provider value={{
       connection,
       createGame,
       joinGame,
       leaveGame,
+      readyUp,
       gameCode,
       players,
     }}>

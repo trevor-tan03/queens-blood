@@ -12,11 +12,21 @@ namespace backend.Models
 		public void AddPlayer (string playerId, string playerName)
 		{
 			var player = new Player(playerId, playerName);
+			if (Players.Count == 0)
+			{
+				player.IsHost = true;
+				player.IsReady = true;
+			}
 
 			if (Players.Count < 2 && !Players.Any(player => player.Id == playerId))
 			{
 				Players.Add (player);
 			}
+		}
+		public void MakePlayerHost (string playerId)
+		{
+			var player = Players.Find(p => p.Id == playerId);
+			player!.IsHost = true;
 		}
 	}
 }

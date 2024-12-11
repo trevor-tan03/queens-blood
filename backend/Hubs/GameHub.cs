@@ -73,6 +73,10 @@ namespace backend.Hubs
 				if (game.Players.Count == 0)
 				{
 					_gameRepository.RemoveGame(gameId);
+				} else if (player.IsHost)
+				{
+					// Transfer ownership of game
+					game.Players[0].IsHost = true;
 				}
 
 				await Groups.RemoveFromGroupAsync(Context.ConnectionId, gameId);
@@ -81,6 +85,24 @@ namespace backend.Hubs
 			} else
 			{
 				// Will say game not found even if the game exists, but the user isn't in that particular game
+				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Game not found.");
+			}
+		}
+
+		public async Task ToggleReady(string gameId)
+		{
+			var game = _gameRepository.GetGameById(gameId);
+			var player = game?.Players.Find(player => player.Id == Context.ConnectionId);
+
+			if (game != null && player != null)
+			{
+				player.ToggleReady();
+				await Clients.Group(gameId).SendAsync("ReceivePlayerList", game.Players);
+			} else if (game != null)
+			{
+				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Player not found.");
+			} else if (player != null)
+			{
 				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Game not found.");
 			}
 		}
