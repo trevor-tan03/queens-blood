@@ -22,16 +22,20 @@ namespace backend.Hubs
 		public async Task CreateGame(string playerName)
 		{
 			var gameId = new Hashids(Context.ConnectionId, 6).Encode(123456);
-			var gameExists = _gameRepository.GetGameById(gameId);
+			var game = _gameRepository.GetGameById(gameId);
 
-			if (gameExists == null)
+			if (game == null)
 			{
 				await Groups.AddToGroupAsync(Context.ConnectionId, gameId);
 				_gameRepository!.AddGame(gameId, playerName);
-				_gameRepository!.GetGameById(gameId)!.AddPlayer(Context.ConnectionId, playerName);
+				game = _gameRepository!.GetGameById(gameId);
+				game!.AddPlayer(Context.ConnectionId, playerName);
 
 				// Send message saying the host has connected
 				await Clients.Group(gameId).SendAsync("ReceiveMessage", $"{playerName} connected.");
+
+				// Send out the list of players in the game
+				await Clients.Group(gameId).SendAsync("ReceivePlayerList", game.Players);
 
 				// Send the game code to the host
 				await Clients.Client(Context.ConnectionId).SendAsync("GameCode", gameId);
@@ -47,6 +51,7 @@ namespace backend.Hubs
 				await Groups.AddToGroupAsync(Context.ConnectionId, gameId);
 				_gameRepository!.GetGameById(gameId)!.AddPlayer(Context.ConnectionId, playerName);
 				await Clients.Group(gameId).SendAsync("ReceiveMessage", $"{playerName} connected.");
+				await Clients.Group(gameId).SendAsync("ReceivePlayerList", game.Players);
 			} 
 			else if (game != null) {
 				await Clients.Group(gameId).SendAsync("ErrorMessage", $"Game is full.");
@@ -72,6 +77,7 @@ namespace backend.Hubs
 
 				await Groups.RemoveFromGroupAsync(Context.ConnectionId, gameId);
 				await Clients.Group(gameId).SendAsync("ReceiveMessage", $"{player.Name} disconnected.");
+				await Clients.Group(gameId).SendAsync("ReceivePlayerList", game.Players);
 			} else
 			{
 				// Will say game not found even if the game exists, but the user isn't in that particular game

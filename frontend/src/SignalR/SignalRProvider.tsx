@@ -1,18 +1,23 @@
 import * as signalR from '@microsoft/signalr';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import type { Player } from '../types/Player';
 import { Methods } from './SignalRMethods';
 
 interface SignalRContextProps {
   connection: signalR.HubConnection | null;
-  createGame: (playerName: string) => void;
-  joinGame: (gameId: string, playerName: string) => void;
-  leaveGame: (gameId: string) => void;
+  createGame: (playerName: string) => Promise<void>;
+  joinGame: (gameId: string, playerName: string) => Promise<void>;
+  leaveGame: (gameId: string) => Promise<void>;
+  gameCode: string;
+  players: Player[];
 }
 
 const SignalRContext = createContext<SignalRContextProps | undefined>(undefined);
 
 export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
+  const [gameCode, setGameCode] = useState('');
+  const [players, setPlayers] = useState<Player[]>([]);
 
   useEffect(() => {
     const connect = async () => {
@@ -31,7 +36,11 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
       });
 
       conn.on("GameCode", (gameCode) => {
-        console.log(gameCode)
+        setGameCode(gameCode);
+      });
+
+      conn.on("ReceivePlayerList", (players) => {
+        setPlayers(players);
       });
 
       await conn.start();
@@ -58,6 +67,8 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
       await connection.invoke(Methods.JoinGame, gameId, playerName).catch((error) => {
         return console.error(error.toString());
       })
+
+      setGameCode(gameId);
     }
   }
 
@@ -74,7 +85,9 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
       connection,
       createGame,
       joinGame,
-      leaveGame
+      leaveGame,
+      gameCode,
+      players,
     }}>
       {children}
     </SignalRContext.Provider>
