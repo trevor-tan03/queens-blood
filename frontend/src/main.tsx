@@ -2,8 +2,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router'
 import './index.css'
+import Game from './pages/Game.tsx'
 import Home from './pages/Home.tsx'
-import Layout from './pages/Layout.tsx'
 import { SignalRProvider } from './SignalR/SignalRProvider.tsx'
 
 createRoot(document.getElementById('root')!).render(
@@ -11,10 +11,8 @@ createRoot(document.getElementById('root')!).render(
     <SignalRProvider>
       <BrowserRouter>
         <Routes>
-          <Route element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="/login" element={<p>Login</p>} />
-          </Route>
+          <Route path="/" element={<Home />} />
+          <Route path="/game/:gameCode" element={<Game />} />
         </Routes>
       </BrowserRouter>
     </SignalRProvider>
