@@ -14,24 +14,23 @@ namespace backend.Hubs
 			_gameRepository = gameRepository;
 		}
 
-		public async Task SendMessage(string message)
-		{
-			await Clients.All.SendAsync("ReceiveMessage", message);
-		}
-
 		public async Task CreateGame(string playerName)
 		{
 			var gameId = new Hashids(Context.ConnectionId, 6).Encode(123456);
-			var gameExists = _gameRepository.GetGameById(gameId);
+			var game = _gameRepository.GetGameById(gameId);
 
-			if (gameExists == null)
+			if (game == null)
 			{
 				await Groups.AddToGroupAsync(Context.ConnectionId, gameId);
 				_gameRepository!.AddGame(gameId, playerName);
-				_gameRepository!.GetGameById(gameId)!.AddPlayer(Context.ConnectionId, playerName);
+				game = _gameRepository!.GetGameById(gameId);
+				game!.AddPlayer(Context.ConnectionId, playerName);
 
 				// Send message saying the host has connected
 				await Clients.Group(gameId).SendAsync("ReceiveMessage", $"{playerName} connected.");
+
+				// Send out the list of players in the game
+				await Clients.Group(gameId).SendAsync("ReceivePlayerList", game.Players);
 
 				// Send the game code to the host
 				await Clients.Client(Context.ConnectionId).SendAsync("GameCode", gameId);
@@ -47,6 +46,7 @@ namespace backend.Hubs
 				await Groups.AddToGroupAsync(Context.ConnectionId, gameId);
 				_gameRepository!.GetGameById(gameId)!.AddPlayer(Context.ConnectionId, playerName);
 				await Clients.Group(gameId).SendAsync("ReceiveMessage", $"{playerName} connected.");
+				await Clients.Group(gameId).SendAsync("ReceivePlayerList", game.Players);
 			} 
 			else if (game != null) {
 				await Clients.Group(gameId).SendAsync("ErrorMessage", $"Game is full.");
@@ -68,13 +68,55 @@ namespace backend.Hubs
 				if (game.Players.Count == 0)
 				{
 					_gameRepository.RemoveGame(gameId);
+				} else if (player.IsHost)
+				{
+					// Transfer ownership of game
+					game.Players[0].IsHost = true;
 				}
 
 				await Groups.RemoveFromGroupAsync(Context.ConnectionId, gameId);
 				await Clients.Group(gameId).SendAsync("ReceiveMessage", $"{player.Name} disconnected.");
+				await Clients.Group(gameId).SendAsync("ReceivePlayerList", game.Players);
 			} else
 			{
 				// Will say game not found even if the game exists, but the user isn't in that particular game
+				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Game not found.");
+			}
+		}
+
+		public async Task ToggleReady(string gameId)
+		{
+			var game = _gameRepository.GetGameById(gameId);
+			var player = game?.Players.Find(player => player.Id == Context.ConnectionId);
+
+			if (game != null && player != null)
+			{
+				player.ToggleReady();
+				await Clients.Group(gameId).SendAsync("ReceivePlayerList", game.Players);
+			} else if (game != null)
+			{
+				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Player not found.");
+			} else if (player != null)
+			{
+				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Game not found.");
+			}
+		}
+
+		public async Task SendMessage(string gameId, string message)
+		{
+			var game = _gameRepository.GetGameById(gameId);
+			var player = game?.Players.Find(p => p.Id == Context.ConnectionId);
+
+			if (game != null && player != null)
+			{
+				await Clients.Group(gameId).SendAsync("ReceiveMessage", $"{player.Name}: {message}");
+			}
+			else if (game != null)
+			{
+				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Player not found.");
+			}
+			else if (player != null)
+			{
 				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Game not found.");
 			}
 		}
