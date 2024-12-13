@@ -38,7 +38,7 @@ def get_card_range(img):
     j = 0
     for col in range(0,120,25):
       center = (col+10,row+10)
-      border = (col+10,row+2)
+      border = (col+10,row+3)
 
       center_pixel = img.getpixel(center)
       border_pixel = img.getpixel(border)
@@ -65,25 +65,28 @@ curr_dir = os.path.dirname(__file__)
 conn = sqlite3.connect('QB_card_info.db')
 cursor = conn.cursor()
 
-cards = cursor.execute("SELECT ID, Name FROM cards")
+cards = cursor.execute("SELECT ID, Name, Rank FROM cards")
 count = 0
 
 for card in cards:
-  id, name = card
-  processed_name = name.replace(" ", "-").lower()
+  id, name, rank = card
+  processed_name = name.replace(" &","")\
+  .replace(".", "")\
+  .replace(" ", "-")\
+  .lower()
+
+  spawned_cards = ["Elemental", "Hype Johnny", "Diamond Dust"]
+  if name in spawned_cards:
+    processed_name += f"-{rank}" 
+
   filepath = os.path.join(curr_dir, f"..\\frontend\public\\assets\cards\player-{processed_name}.webp")
 
   cropped_image = crop_image(filepath)
   _5x5 = get_card_range(cropped_image)
 
-  print(name)
-  for row in _5x5:
-    print(row)
-  print()
-  
-  if count == 5:
-    break
-  else:
-    count += 1
+  # print(name)
+  # for row in _5x5:
+  #   print(row)
+  # print()
 
 conn.close()
