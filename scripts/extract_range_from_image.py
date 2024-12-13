@@ -1,8 +1,12 @@
 from PIL import Image
 import sqlite3
 import os
+import json
 
 """
+NOTE: This is not a perfect solution, but it gets most of the job done.
+      We needed to manually fix up about 13 out of the 165 cards.
+
 Grid area is roughly 120x120 pixels
 
 Each square in the grid is approximately 20x20 pixels
@@ -12,6 +16,16 @@ Each square in the grid is approximately 20x20 pixels
 Each gap between squares is approximately
 - (120 - 100) / 4 = 5 pixels
 """
+
+def check_list_equality(l1, l2):
+  if len(l1) != 5 or len(l2) != 5:
+    return False
+  
+  for i in range(5):
+    for j in range(5):
+      if l1[i][j] != l2[i][j]:
+        return False
+  return True
 
 def get_square_colour(pixel):
   if pixel <= 90:
@@ -24,7 +38,7 @@ def get_square_colour(pixel):
     return "RED"
 
 # 1. Crop & Grayscale
-def crop_image(card_path):
+def crop_image_grayscale(card_path):
   img = Image.open(card_path)
   img = img.crop((135,313,255,433)).convert('L')
   return img
@@ -65,8 +79,13 @@ curr_dir = os.path.dirname(__file__)
 conn = sqlite3.connect('QB_card_info.db')
 cursor = conn.cursor()
 
-cards = cursor.execute("SELECT ID, Name, Rank FROM cards")
+cards = cursor.execute(f"SELECT ID, Name, Rank FROM cards")
 count = 0
+
+dictionary = dict()
+
+with open("sample.json", "r") as openfile:
+  json_object = json.load(openfile)
 
 for card in cards:
   id, name, rank = card
@@ -81,12 +100,36 @@ for card in cards:
 
   filepath = os.path.join(curr_dir, f"..\\frontend\public\\assets\cards\player-{processed_name}.webp")
 
-  cropped_image = crop_image(filepath)
+  cropped_image = crop_image_grayscale(filepath)
   _5x5 = get_card_range(cropped_image)
 
-  # print(name)
-  # for row in _5x5:
-  #   print(row)
-  # print()
+  json_grid = json_object[processed_name]["grid"]
+
+  dictionary[processed_name] = {
+    "name": name,
+    "grid": _5x5
+  }
+
+# We execute this then manually fix the specified cards
+"""
+Cards to fix manually:
+Two Face
+Special Forces Operator
+Ramuh
+Leviathan
+Crimson Mare Mk. II
+Gi Nattak
+Demon Gate
+Moogle Mage
+Don Berry
+Grangalan Junior
+Baby Grangalan
+Resurrected Amalgam
+Diamond Dust
+"""
+# json_object = json.dumps(dictionary, indent=2)
+# with open("sample.json", "w") as outfile:
+#   outfile.write(json_object)
 
 conn.close()
+
