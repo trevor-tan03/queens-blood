@@ -1,6 +1,5 @@
 using backend.Hubs;
 using backend.Repositories;
-using System.Net.WebSockets;
 
 var builder = WebApplication.CreateBuilder(args);
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
@@ -9,6 +8,8 @@ var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IGameRepository, GameRepository>();
+builder.Services.AddSingleton<ICardRepository, CardRepository>();
+builder.Services.AddControllers();
 
 builder.Services.AddCors(options =>
 {
@@ -39,5 +40,6 @@ app.UseCors(MyAllowSpecificOrigins); // Ensure this is before UseEndpoints
 
 
 app.MapHub<GameHub>("/gameHub");
+app.MapControllers();
 
 app.Run();
