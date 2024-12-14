@@ -22,7 +22,7 @@ const CardComponent = ({ handleClick, card }: Props) => {
       }}
     >
       <img
-        src={`../../public/assets/cards/${image}`}
+        src={`../../assets/cards/${image}`}
         alt={name} loading="lazy"
       />
       <div className="z-50 absolute top-0 bg-slate-300 border border-black hidden" ref={cardRef}>

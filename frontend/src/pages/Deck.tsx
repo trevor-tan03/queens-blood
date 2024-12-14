@@ -5,6 +5,13 @@ import { useSignalR } from "../SignalR/SignalRProvider";
 import CardComponent from "../components/Card";
 import { Card } from "../types/Card";
 
+interface CompressedCard {
+  [key: string]: {
+    copies: number;
+    card: Card;
+  }
+}
+
 const Deck = () => {
   const { gameCode } = useSignalR();
   const navigate = useNavigate();
@@ -13,15 +20,14 @@ const Deck = () => {
   const handleAdd = (card: Card) => {
     if (deck.length < 15) {
       const rarity = card.rarity;
+      const copiesInDeck = deck.filter(c => c.id === card.id).length;
 
       // Player can only have one copy of a particular legendary card
-      if (rarity === "Legendary" && deck.find(c => c.id === card.id)) {
-        return;
-      }
       // Player can have at most two copies of a particular standard card
-      else if (rarity === "Standard" && deck.filter(c => c.id === card.id).length === 2) {
-        return;
-      }
+      if (
+        (rarity === "Legendary" && copiesInDeck === 1) ||
+        (rarity === "Standard" && copiesInDeck === 2)
+      ) return;
 
       setDeck(d => [...d, card]);
     }
@@ -36,15 +42,34 @@ const Deck = () => {
     }
   }
 
-  const hasRemainingCopies = (card: Card) => {
+  const compressDeck = (deck: Card[]) => {
+    const compressedDeck: CompressedCard = {};
+
+    deck.forEach((c) => {
+      const key = `${c.id}`;
+      if (compressedDeck[key]) {
+        compressedDeck[key].copies += 1;
+      } else {
+        compressedDeck[key] = { card: c, copies: 1 }
+      }
+    })
+
+    return Object.values(compressedDeck)
+  }
+
+  const getRemainingCopies = (card: Card) => {
     const rarity = card.rarity;
     const copiesInDeck = deck.filter(c => c.id === card.id).length;
 
     if (rarity === "Standard") {
-      return copiesInDeck < 2;
+      return 2 - copiesInDeck;
     }
 
-    return copiesInDeck < 1;
+    return 1 - copiesInDeck;
+  }
+
+  const getCopiesLimit = (rarity: Card["rarity"]) => {
+    return rarity === "Standard" ? 2 : 1;
   }
 
   const api = `${import.meta.env.VITE_API_URL}/api/Card`;
@@ -62,26 +87,35 @@ const Deck = () => {
   return (
     <div className="p-8">
       <div className="grid grid-cols-11 mb-6">
-        {deck.map(card => (
-          <div className="">
-            <img src={`../../public/assets/cards/${card.image}`} alt={card.name} onClick={() => handleRemove(card)} />
-          </div>
-        ))}
+        {
+          compressDeck(deck).map((c, i) => (
+            <div key={`deck-${i}`} className="">
+              <img
+                src={`../../assets/cards/${c.card.image}`}
+                alt={c.card.name}
+                onClick={() => handleRemove(c.card)}
+              />
+              <div>{`${c.copies} / ${getCopiesLimit(c.card.rarity)}`}</div>
+            </div>
+          ))
+        }
       </div>
       <button onClick={() => {
         navigate(`/game/${gameCode}`);
       }}>Save</button>
 
       <div className="grid grid-cols-11 max-w-full gap-2">
-        {data.map(d => {
-          if (hasRemainingCopies(d)) {
+        {data.map((d, i) => {
+          const remCopies = getRemainingCopies(d);
+
+          if (remCopies) {
             return (
-              <div>
+              <div key={`rem-${i}`}>
                 <CardComponent
                   handleClick={handleAdd}
                   card={d}
                 />
-                <div>{d.rarity === "Standard" ? "2/2" : "1/1"}</div>
+                <div>{`${remCopies}/${getCopiesLimit(d.rarity)}`}</div>
               </div>
             )
           }
