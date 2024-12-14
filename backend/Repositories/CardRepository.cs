@@ -35,8 +35,8 @@ namespace backend.Repositories
 							Id = reader.GetInt32(0),
 							Name = reader.GetString(1),
 							Rank = reader.GetInt32(2),
-							Rarity = reader.GetString(3),
-							Power = reader.GetInt32(4),
+							Power = reader.GetInt32(3),
+							Rarity = reader.GetString(4),
 							Ability = reader.GetString(5),
 							Image = reader.GetString(6),
 						};
@@ -49,8 +49,8 @@ namespace backend.Repositories
 
 		public List<Card> GetBaseCards ()
 		{
-			// There are 144 base cards
-			return _cards.GetRange(0, 144);
+			// There are 145 base cards
+			return _cards.GetRange(0, 145);
 		}
 	}
 }

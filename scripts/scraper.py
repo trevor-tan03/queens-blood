@@ -31,7 +31,10 @@ if response.status_code == 200:
         Id = tds[5].getText().strip("\n")
         rarity = tds[6].getText().strip("\n")
 
-        image = f'player-{name.replace(" ", "-").lower()}.webp'
+        image = f'player-{name.replace(" &","")\
+            .replace(".", "")\
+            .replace(" ", "-")\
+            .lower()}.webp'
 
         cursor.execute('''
             INSERT INTO Cards (ID, Name,Rank,Power,Rarity,Ability,Image) VALUES (?,?,?,?,?,?,?)
