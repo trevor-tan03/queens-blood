@@ -1,10 +1,11 @@
-﻿using backend.Repositories;
+﻿using backend.Models;
+using backend.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controller
 {
-	[Route("api/[controller]")]
+	[Route("api/cards")]
 	[ApiController]
 	public class CardController : ControllerBase
 	{
@@ -15,7 +16,7 @@ namespace backend.Controller
 			_cardRepository = cardRepository;
 		}
 
-		[HttpGet]
+		[HttpGet("base")]
 		public IActionResult GetBaseCards()
 		{
 			return Ok(_cardRepository.GetBaseCards());

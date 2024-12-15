@@ -33,8 +33,8 @@ const Home = () => {
         </button>
       </div>
       <div>
-        <button onClick={async () => await leaveGame(code)}>
-          Leave
+        <button onClick={() => navigate("/deck")}>
+          Deck
         </button>
       </div>
     </div>

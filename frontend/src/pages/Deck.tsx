@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
 import { useSignalR } from "../SignalR/SignalRProvider";
 import CardComponent from "../components/Card";
 import { Card } from "../types/Card";
@@ -8,7 +7,6 @@ import { compressDeck, getCopiesLimit, getRemainingCopies, isLegalDeck, saveDeck
 
 const Deck = () => {
   const { gameCode } = useSignalR();
-  const navigate = useNavigate();
   const [deck, setDeck] = useState<Card[]>([]);
 
   useEffect(() => {
@@ -45,7 +43,7 @@ const Deck = () => {
     }
   }
 
-  const api = `${import.meta.env.VITE_API_URL}/api/Card`;
+  const api = `${import.meta.env.VITE_API_URL}/api/cards/base`;
 
   const { isPending, error, data } = useQuery<Card[]>({
     queryKey: ["baseCards"],
@@ -82,7 +80,7 @@ const Deck = () => {
       <button className="disabled:text-slate-500" disabled={!isLegalDeck(deck)} onClick={() => {
         if (isLegalDeck(deck)) {
           saveDeck(deck);
-          navigate(`/game/${gameCode}`);
+          history.back();
         }
       }}>Save</button>
 
