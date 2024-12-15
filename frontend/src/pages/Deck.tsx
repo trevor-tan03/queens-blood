@@ -1,21 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useSignalR } from "../SignalR/SignalRProvider";
 import CardComponent from "../components/Card";
 import { Card } from "../types/Card";
-
-interface CompressedCard {
-  [key: string]: {
-    copies: number;
-    card: Card;
-  }
-}
+import { compressDeck, getCopiesLimit, getRemainingCopies, isLegalDeck, saveDeck } from "../utils/deckMethods";
 
 const Deck = () => {
   const { gameCode } = useSignalR();
   const navigate = useNavigate();
   const [deck, setDeck] = useState<Card[]>([]);
+
+  useEffect(() => {
+    const storedDeck = localStorage.getItem("deck");
+    if (storedDeck) {
+      const parsedDeck = JSON.parse(storedDeck) as Card[];
+      if (isLegalDeck(parsedDeck))
+        setDeck(parsedDeck);
+    }
+  }, []);
 
   const handleAdd = (card: Card) => {
     if (deck.length < 15) {
@@ -42,36 +45,6 @@ const Deck = () => {
     }
   }
 
-  const compressDeck = (deck: Card[]) => {
-    const compressedDeck: CompressedCard = {};
-
-    deck.forEach((c) => {
-      const key = `${c.id}`;
-      if (compressedDeck[key]) {
-        compressedDeck[key].copies += 1;
-      } else {
-        compressedDeck[key] = { card: c, copies: 1 }
-      }
-    })
-
-    return Object.values(compressedDeck)
-  }
-
-  const getRemainingCopies = (card: Card) => {
-    const rarity = card.rarity;
-    const copiesInDeck = deck.filter(c => c.id === card.id).length;
-
-    if (rarity === "Standard") {
-      return 2 - copiesInDeck;
-    }
-
-    return 1 - copiesInDeck;
-  }
-
-  const getCopiesLimit = (rarity: Card["rarity"]) => {
-    return rarity === "Standard" ? 2 : 1;
-  }
-
   const api = `${import.meta.env.VITE_API_URL}/api/Card`;
 
   const { isPending, error, data } = useQuery<Card[]>({
@@ -86,6 +59,12 @@ const Deck = () => {
 
   return (
     <div className="p-8">
+      <div>
+        <span className={`${deck.length != 15 ? "text-red-600" : ""}`}>
+          {deck.length}
+        </span>
+        /15
+      </div>
       <div className="grid grid-cols-11 mb-6">
         {
           compressDeck(deck).map((c, i) => (
@@ -100,13 +79,16 @@ const Deck = () => {
           ))
         }
       </div>
-      <button onClick={() => {
-        navigate(`/game/${gameCode}`);
+      <button className="disabled:text-slate-500" disabled={!isLegalDeck(deck)} onClick={() => {
+        if (isLegalDeck(deck)) {
+          saveDeck(deck);
+          navigate(`/game/${gameCode}`);
+        }
       }}>Save</button>
 
       <div className="grid grid-cols-11 max-w-full gap-2">
         {data.map((d, i) => {
-          const remCopies = getRemainingCopies(d);
+          const remCopies = getRemainingCopies(deck, d);
 
           if (remCopies) {
             return (
