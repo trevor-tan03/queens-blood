@@ -24,7 +24,7 @@ namespace backend.Hubs
 			if (game == null)
 			{
 				await Groups.AddToGroupAsync(Context.ConnectionId, gameId);
-				_gameRepository!.AddGame(gameId, playerName);
+				_gameRepository!.AddGame(gameId);
 				game = _gameRepository!.GetGameById(gameId);
 				game!.AddPlayer(Context.ConnectionId, playerName);
 
@@ -111,6 +111,7 @@ namespace backend.Hubs
 					{
 						game.Start();
 						// Update the player's screens
+						await Clients.Group(gameId).SendAsync("GameStart", true);
 					}
                 }
 				else if (!isReadyUp)

@@ -16,6 +16,7 @@ interface SignalRContextProps {
   gameCode: string;
   players: Player[];
   messageLog: string[];
+  gameStart: boolean;
 }
 
 const SignalRContext = createContext<SignalRContextProps | undefined>(undefined);
@@ -26,6 +27,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [currPlayer, setCurrPlayer] = useState<Player | undefined>();
   const [players, setPlayers] = useState<Player[]>([]);
   const [messageLog, setMessageLog] = useState<string[]>([]);
+  const [gameStart, setGameStart] = useState(false);
 
   useEffect(() => {
     const connect = async () => {
@@ -51,6 +53,10 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
         const currPlayer = players.find(p => p.id === conn.connectionId);
         setCurrPlayer(currPlayer);
         setPlayers(players);
+      });
+
+      conn.on("GameStart", (start: boolean) => {
+        setGameStart(start);
       });
 
       await conn.start();
@@ -135,6 +141,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
       currPlayer,
       players,
       messageLog,
+      gameStart,
     }}>
       {children}
     </SignalRContext.Provider>

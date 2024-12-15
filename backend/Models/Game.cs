@@ -15,7 +15,6 @@ namespace backend.Models
 			if (Players.Count == 0)
 			{
 				player.IsHost = true;
-				player.IsReady = true;
 			}
 
 			if (Players.Count < 2 && !Players.Any(player => player.Id == playerId))

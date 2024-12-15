@@ -6,7 +6,7 @@ namespace backend.Repositories
 	public interface IGameRepository
 	{
 		Game? GetGameById(string id);
-		Boolean AddGame(string id, string playerName);
+		Boolean AddGame(string id);
 		Boolean RemoveGame(string gameId);
 	}
 
@@ -21,7 +21,7 @@ namespace backend.Repositories
 		}
 
 		// Adds game to dictionary and adds host player to list of players inside the Game object
-		public bool AddGame(string id, string playerName) 
+		public bool AddGame(string id) 
 		{
 			if (_games.ContainsKey(id))
 				return false;
