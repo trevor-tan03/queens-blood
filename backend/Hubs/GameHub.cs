@@ -86,14 +86,41 @@ namespace backend.Hubs
 			}
 		}
 
-		public async Task ToggleReady(string gameId)
+		public async Task ToggleReady(string gameId, bool isReadyUp, List<int> cardIds)
 		{
 			var game = _gameRepository.GetGameById(gameId);
 			var player = game?.Players.Find(player => player.Id == Context.ConnectionId);
 
 			if (game != null && player != null)
 			{
-				player.ToggleReady();
+				// If the player is trying to "Ready up", make sure that their deck is valid
+				if (isReadyUp && _cardRepository.IsDeckLegal(cardIds))
+				{
+					var deck = new List<Card>();
+
+					foreach (var cardId in cardIds)
+					{
+						deck.Add(_cardRepository.GetCardById(cardId));
+					}
+
+					// Mark player as ready and update the player's deck
+					player.Ready(deck);
+
+					// If all players are ready then start the match
+					if (game.PlayersReady())
+					{
+						game.Start();
+						// Update the player's screens
+					}
+                }
+				else if (!isReadyUp)
+				{
+					player.Unready();
+				} else
+				{
+					await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", $"{player.Name} does not have a valid deck.");
+				}
+
 				await Clients.Group(gameId).SendAsync("ReceivePlayerList", game.Players);
 			} else if (game != null)
 			{

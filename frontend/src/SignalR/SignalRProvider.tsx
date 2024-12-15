@@ -1,5 +1,6 @@
 import * as signalR from '@microsoft/signalr';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import type { Card } from '../types/Card';
 import type { Player } from '../types/Player';
 import { Methods } from './SignalRMethods';
 
@@ -9,6 +10,7 @@ interface SignalRContextProps {
   joinGame: (gameId: string, playerName: string) => Promise<void>;
   leaveGame: (gameId: string) => Promise<void>;
   readyUp: (gameId: string) => Promise<void>;
+  unready: (gameId: string) => Promise<void>;
   sendMessage: (message: string) => Promise<void>;
   currPlayer: Player | undefined;
   gameCode: string;
@@ -104,7 +106,19 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const readyUp = async (gameId: string) => {
     if (connection) {
-      await connection.invoke("ToggleReady", gameId);
+      const rawDeck = localStorage.getItem("deck");
+
+      if (rawDeck) {
+        const deck = JSON.parse(rawDeck) as Card[];
+        const cardIds = deck.map(card => card.id);
+        await connection.invoke("ToggleReady", gameId, true, cardIds);
+      }
+    }
+  }
+
+  const unready = async (gameId: string) => {
+    if (connection) {
+      await connection.invoke("ToggleReady", gameId, false, []);
     }
   }
 
@@ -115,6 +129,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
       joinGame,
       leaveGame,
       readyUp,
+      unready,
       sendMessage,
       gameCode,
       currPlayer,

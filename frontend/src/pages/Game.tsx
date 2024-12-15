@@ -3,7 +3,7 @@ import { Outlet, useNavigate } from "react-router";
 import { useSignalR } from "../SignalR/SignalRProvider";
 
 const Game = () => {
-  const { messageLog, connection, gameCode, players, leaveGame, readyUp, sendMessage, currPlayer } = useSignalR();
+  const { messageLog, connection, gameCode, players, leaveGame, readyUp, unready, sendMessage, currPlayer } = useSignalR();
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
@@ -22,26 +22,38 @@ const Game = () => {
     window.location.replace("/")
   }
 
-  const toggleReady = async () => {
+  const readyPlayer = async () => {
     await readyUp(gameCode);
+  }
+
+  const unreadyPlayer = async () => {
+    await unready(gameCode);
   }
 
   const isLobbyReady = () => {
     return players.length === 2 && players[0].isReady && players[1].isReady;
   }
 
+  // const startGame = () => {
+  //   if (connection) {
+  //     connection.invoke("StartGame")
+  //   }
+  // }
+
   return (
     <>
       <div>{gameCode}</div>
-      {currPlayer?.isHost ?
-        <button className="disabled:bg-slate-300 bg-green-300" disabled={!isLobbyReady()}>
-          Start
-        </button>
-        :
-        <button onClick={toggleReady}>
-          {currPlayer?.isReady ? "Unready" : "Ready"}
-        </button>
-      }
+      <button onClick={async () => {
+        if (!currPlayer?.isReady) {
+          console.log("READY!")
+          await readyPlayer();
+        } else {
+          await unreadyPlayer();
+        }
+      }}>
+        {currPlayer?.isReady ? "Unready" : "Ready"}
+      </button>
+
       <ul>
         {players.map(player => <li key={player.id} className={player.id === connectionId ? "text-red-700" : ""}>
           {isPlayerHost(player.id) && "👑"} {player.name} {isPlayerReady(player.id) && "(READY)"}
