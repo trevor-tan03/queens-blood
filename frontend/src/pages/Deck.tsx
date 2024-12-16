@@ -1,12 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useSignalR } from "../SignalR/SignalRProvider";
 import CardComponent from "../components/Card";
 import { Card } from "../types/Card";
 import { compressDeck, getCopiesLimit, getRemainingCopies, isLegalDeck, saveDeck } from "../utils/deckMethods";
 
 const Deck = () => {
-  const { gameCode } = useSignalR();
   const [deck, setDeck] = useState<Card[]>([]);
 
   useEffect(() => {

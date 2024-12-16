@@ -58,3 +58,20 @@ export const isLegalDeck = (deck: Card[]) => {
 export const saveDeck = (deck: Card[]) => {
   localStorage.setItem("deck", JSON.stringify(deck));
 };
+
+export const getDefaultDeck = () => {
+  /**
+   * ID  | Name
+   * ----------------------
+   * 1   | Security Officer
+   * 2   | Riot Trooper
+   * 7   | Levrikon
+   * 8   | Grasslands Wolf
+   * 11  | Elphadunk
+   * 12  | Cactuar
+   * 13  | Crystalline Crab
+   * 98  | Titan
+   * 107 | Chocobo & Moogle
+   */
+  return [1, 1, 2, 7, 7, 8, 8, 11, 11, 12, 12, 13, 13, 98, 107];
+};

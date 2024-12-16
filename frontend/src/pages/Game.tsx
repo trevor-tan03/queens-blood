@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useSignalR } from "../SignalR/SignalRProvider";
 import Board from "../components/Game/Board";
+import SelectedDeck from "../components/Lobby/SelectedDeck";
 
 const Game = () => {
   const { messageLog, connection, gameCode, players, leaveGame, readyUp, unready, sendMessage, currPlayer, gameStart } = useSignalR();
@@ -56,6 +57,8 @@ const Game = () => {
           <button onClick={() => {
             navigate(`/game/${gameCode}/deck`)
           }}>Decks</button>
+
+          <SelectedDeck />
 
           <input type="text" value={message} onChange={(e) => setMessage(e.target.value)} />
           <button onClick={() => {
