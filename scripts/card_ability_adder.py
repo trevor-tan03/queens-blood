@@ -1,11 +1,13 @@
 import sqlite3
 
-conditions = [" no ", "when played", "is in play"]
-c = ["N", "P", "*"]
-abilities = ["destroy", "replace", "raise the p", "lower the p", "raise position r"]
-a = ["destroy", "replace", "increaseP", "decreaseP", "increaseR"]
-targets = ["allied and enemy", "allied", "enemy"]
-t = ['ae', 'a', 'e']
+conditions = [" no ", "when played", "is in play", "when des", "allied and enemy cards are de",'allied cards are de','enemy cards are de',
+              "first enf", 'enfeebled allied and','enfeebled allied c', 'enfeebled e', "is enhanced", 'first enhanced',
+              'enhanced allied and e', "enhanced allied c", 'enhanced e', 'replace']
+c = ["N", "P", "*", "D", "AED", "AD", "ED", "1-", '-AE', '-A', '-E', '1+', '1+', '+AE', "+A", '+E', 'R']
+abilities = [" destroy ", 'and replace', "raise the p", "lower the p", "raise position r", "raise this card's p", "raise power by"]
+a = ["destroy", "replace", "increaseP", "decreaseP", "increaseR", "increaseP", 'increaseP']
+targets = ['raise power by', "raise this card", "allied and enemy", "allied", "enemy", "d's"]
+t = ['s', 's', 'ae', 'a', 'e', 's']  # s == itself
 
 
 
@@ -17,7 +19,6 @@ def card_ability_adder():
         "ALTER TABLE Cards ADD COLUMN 'Condition' TEXT",
         "ALTER TABLE Cards ADD COLUMN 'Action' TEXT",
         "ALTER TABLE Cards ADD COLUMN 'Target' TEXT",
-        "ALTER TABLE Cards ADD COLUMN 'Value Source' TEXT",
         "ALTER TABLE Cards ADD COLUMN 'Value' TEXT"
     ]
 
@@ -43,19 +44,22 @@ def card_ability_adder():
     nums = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
     for card in cards:
         cardId = card[0]
-        ability = card[1]
+        ability = card[1].lower()
         for condition in conditions:
             if condition in ability:
                 i = conditions.index(condition)
                 cursor.execute(f"UPDATE Cards SET Condition = '{c[i]}' WHERE id = {cardId};")
+                break
         for action in abilities:
             if action in ability:
                 i = abilities.index(action)
                 cursor.execute(f"UPDATE Cards SET Action = '{a[i]}' WHERE id = {cardId};")
+                break
         for target in targets:
             if target in ability:
                 i = targets.index(target)
                 cursor.execute(f"UPDATE Cards SET Target = '{t[i]}' WHERE id = {cardId};")
+                break
         if " by " in ability:
             i = ability.index(" by ")
             value = ability[i+4:i+6]
@@ -73,5 +77,5 @@ def card_ability_adder():
     cursor.close()
     connection.close()
 
-
-# card_ability_adder()
+if __name__ == "__main__":
+    card_ability_adder()

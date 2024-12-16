@@ -81,6 +81,9 @@ def add_extra_cards():
       INSERT INTO Cards (Name,Rank,Power,Rarity,Ability,Image) VALUES (?,?,?,?,?,?)
     ''', (name, rank, power, rarity, ability, image))
 
+  cursor.execute(f"UPDATE Cards SET Ability =  'Raise the power of allied cards on affected tiles by 3.' WHERE id = 24;")
+  cursor.execute(f"UPDATE Cards SET Ability =  'Raise power by 1 for each other enhanced allied card.' WHERE id = 107;")
+  cursor.execute(f"UPDATE Cards SET Ability =  'The first time this card is enhanced, raise the power of allied cards on affected tiles by 4.' WHERE id = 81;")
 
   conn.commit()
   conn.close()
