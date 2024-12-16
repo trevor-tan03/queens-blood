@@ -5,13 +5,12 @@ import { useSignalR } from "../SignalR/SignalRProvider";
 const Home = () => {
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
-  const { gameCode, createGame, joinGame, leaveGame } = useSignalR();
+  const { gameCode, createGame, joinGame } = useSignalR();
 
   const navigate = useNavigate();
 
   useEffect(() => {
     if (gameCode) {
-      console.log(gameCode);
       navigate(`/game/${gameCode}`);
     }
   }, [gameCode, navigate]);
@@ -33,8 +32,8 @@ const Home = () => {
         </button>
       </div>
       <div>
-        <button onClick={async () => await leaveGame(code)}>
-          Leave
+        <button onClick={() => navigate("/deck")}>
+          Deck
         </button>
       </div>
     </div>
