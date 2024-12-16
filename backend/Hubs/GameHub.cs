@@ -150,12 +150,5 @@ namespace backend.Hubs
 				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Game not found.");
 			}
 		}
-
-		// Used to populate the deck screen
-		public async Task GetBaseCards()
-		{
-			var baseCards = _cardRepository.GetBaseCards();
-			await Clients.Client(Context.ConnectionId).SendAsync("ReceiveBaseCards", baseCards);
-		}
 	}
 }
