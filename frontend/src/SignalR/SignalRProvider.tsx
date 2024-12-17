@@ -12,11 +12,14 @@ interface SignalRContextProps {
   readyUp: (gameId: string) => Promise<void>;
   unready: (gameId: string) => Promise<void>;
   sendMessage: (message: string) => Promise<void>;
+  getHand: (gameId: string) => Promise<void>;
+  mulliganCards: (gameId: string, cardsToMulligan: number[]) => Promise<void>;
   currPlayer: Player | undefined;
   gameCode: string;
   players: Player[];
   messageLog: string[];
   gameStart: boolean;
+  hand: Card[];
 }
 
 const SignalRContext = createContext<SignalRContextProps | undefined>(undefined);
@@ -28,6 +31,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [players, setPlayers] = useState<Player[]>([]);
   const [messageLog, setMessageLog] = useState<string[]>([]);
   const [gameStart, setGameStart] = useState(false);
+  const [hand, setHand] = useState<Card[]>([]);
 
   useEffect(() => {
     const connect = async () => {
@@ -57,6 +61,10 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
 
       conn.on("GameStart", (start: boolean) => {
         setGameStart(start);
+      });
+
+      conn.on("CardsInHand", (hand: Card[]) => {
+        setHand(hand);
       });
 
       await conn.start();
@@ -128,6 +136,18 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }
 
+  const getHand = async (gameId: string) => {
+    if (connection) {
+      await connection.invoke("GetHand", gameId);
+    }
+  }
+
+  const mulliganCards = async (gameId: string, cardsToMulligan: number[]) => {
+    if (connection) {
+      connection.invoke("MulliganCards", gameId, cardsToMulligan);
+    }
+  }
+
   return (
     <SignalRContext.Provider value={{
       connection,
@@ -137,11 +157,14 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
       readyUp,
       unready,
       sendMessage,
+      getHand,
+      mulliganCards,
       gameCode,
       currPlayer,
       players,
       messageLog,
       gameStart,
+      hand,
     }}>
       {children}
     </SignalRContext.Provider>

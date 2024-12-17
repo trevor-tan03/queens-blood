@@ -150,5 +150,28 @@ namespace backend.Hubs
 				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Game not found.");
 			}
 		}
+
+		public async Task GetHand(string gameId)
+		{
+			var game = _gameRepository.GetGameById(gameId);
+			var player = game?.Players.Find(p => p.Id == Context.ConnectionId);
+
+			if (game != null && player != null)
+			{
+				await Clients.Client(Context.ConnectionId).SendAsync("CardsInHand", player.Hand);
+			}
+		}
+
+		public async Task MulliganCards(string gameId, List<int> handIndices)
+		{
+			var game = _gameRepository.GetGameById(gameId);
+			var player = game?.Players.Find(p => p.Id == Context.ConnectionId);
+
+			if (game != null && player != null)
+			{
+				game.MulliganCards(player, handIndices);
+				await Clients.Client(Context.ConnectionId).SendAsync("CardsInHand", player.Hand);
+			}
+		}
 	}
 }
