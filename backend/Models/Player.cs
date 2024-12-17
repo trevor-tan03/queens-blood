@@ -6,6 +6,7 @@
 		public string Name { get; set; }
 		public Boolean IsReady { get; set; } = false;
 		public Boolean IsHost { get; set; } = false;
+		public Boolean HasMulliganed { get; set; } = false;
 		public List<Card> Deck { get; set; } = new List<Card>();
 		public List<Card> Hand { get; set; } = new List<Card>();
 

@@ -173,11 +173,19 @@ namespace backend.Hubs
 		{
 			var (game, player) = await FetchGameAndPlayer(gameId);
 
-			if (game != null && player != null)
+			if (game == null || player == null) { return; }
+
+			game.MulliganCards(player, handIndices);
+			player.HasMulliganed = true;
+			await Clients.Client(Context.ConnectionId).SendAsync("CardsInHand", player.Hand);
+
+			var bothPlayersMulliganed = game.Players.All(p => p.HasMulliganed);
+
+			if (bothPlayersMulliganed)
 			{
-				game.MulliganCards(player, handIndices);
-				await Clients.Client(Context.ConnectionId).SendAsync("CardsInHand", player.Hand);
+				await Clients.Group(gameId).SendAsync("MulliganPhaseEnded", true);
 			}
 		}
+
 	}
 }

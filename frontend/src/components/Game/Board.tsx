@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 import { useSignalR } from "../../SignalR/SignalRProvider";
 
 const Board = () => {
-  const [mulliganPhase, setMulliganPhase] = useState(true);
   const [cardsToMulligan, setCardsToMulligan] = useState<number[]>([]);
-  const { hand, gameCode, getHand, mulliganCards } = useSignalR();
+  const { hand, gameCode, mulliganPhaseEnded, getHand, mulliganCards } = useSignalR();
+
+  useEffect(() => {
+    console.log(mulliganPhaseEnded)
+  }, [mulliganPhaseEnded])
 
   useEffect(() => {
     getHand(gameCode);
@@ -23,7 +26,7 @@ const Board = () => {
     setCardsToMulligan([]);
   }
 
-  if (mulliganPhase) {
+  if (!mulliganPhaseEnded) {
     return (
       <div>
         Mulligan
@@ -49,7 +52,7 @@ const Board = () => {
   }
 
   return (
-    <div>Board</div>
+    <div>Game Time</div>
   )
 }
 

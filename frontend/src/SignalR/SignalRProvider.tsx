@@ -2,7 +2,6 @@ import * as signalR from '@microsoft/signalr';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import type { Card } from '../types/Card';
 import type { Player } from '../types/Player';
-import { Methods } from './SignalRMethods';
 
 interface SignalRContextProps {
   connection: signalR.HubConnection | null;
@@ -20,6 +19,7 @@ interface SignalRContextProps {
   messageLog: string[];
   gameStart: boolean;
   hand: Card[];
+  mulliganPhaseEnded: boolean;
 }
 
 const SignalRContext = createContext<SignalRContextProps | undefined>(undefined);
@@ -32,6 +32,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [messageLog, setMessageLog] = useState<string[]>([]);
   const [gameStart, setGameStart] = useState(false);
   const [hand, setHand] = useState<Card[]>([]);
+  const [mulliganPhaseEnded, setMulliganPhaseEnded] = useState(false);
 
   const setupSignalREvents = (conn: signalR.HubConnection) => {
     conn.on("ReceiveMessage", (message: string) => {
@@ -58,6 +59,10 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     conn.on("CardsInHand", (hand: Card[]) => {
       setHand(hand);
+    });
+
+    conn.on("MulliganPhaseEnded", (hasEnded: boolean) => {
+      setMulliganPhaseEnded(hasEnded);
     });
   }
 
@@ -90,7 +95,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
   }, []);
 
   useEffect(() => {
-    const handleBeforeUnload = () => connection?.invoke(Methods.LeaveGame, gameCode);
+    const handleBeforeUnload = () => connection?.invoke("LeaveGame", gameCode);
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
@@ -172,6 +177,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
       messageLog,
       gameStart,
       hand,
+      mulliganPhaseEnded,
     }}>
       {children}
     </SignalRContext.Provider>
