@@ -16,27 +16,56 @@ namespace backend.Hubs
 			_cardRepository = cardRepository;
 		}
 
-		public async Task CreateGame(string playerName)
+		private async Task SendErrorMessage(string message)
 		{
-			var gameId = new Hashids(Context.ConnectionId, 6).Encode(123456);
+			await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", message);
+		}
+
+		private async Task<(Game?, Player?)> FetchGameAndPlayer(string gameId)
+		{
 			var game = _gameRepository.GetGameById(gameId);
+			var player = game?.Players.Find(p => p.Id == Context.ConnectionId);
 
 			if (game == null)
 			{
-				await Groups.AddToGroupAsync(Context.ConnectionId, gameId);
-				_gameRepository!.AddGame(gameId);
-				game = _gameRepository!.GetGameById(gameId);
-				game!.AddPlayer(Context.ConnectionId, playerName);
-
-				// Send message saying the host has connected
-				await Clients.Group(gameId).SendAsync("ReceiveMessage", $"{playerName} connected.");
-
-				// Send out the list of players in the game
-				await Clients.Group(gameId).SendAsync("ReceivePlayerList", game.Players);
-
-				// Send the game code to the host
-				await Clients.Client(Context.ConnectionId).SendAsync("GameCode", gameId);
+				await SendErrorMessage("Game not found.");
+			} else if (player == null)
+			{
+				await SendErrorMessage("Player not found.");
 			}
+			return (game, player);
+		}
+
+		private string GenerateUniqueGameId()
+		{
+			string gameId;
+			Game? game;
+
+			do
+			{
+				gameId = new Hashids(Context.ConnectionId, 6).Encode(DateTime.Now.Second);
+				game = _gameRepository.GetGameById(gameId);
+			} while (game != null);
+
+			return gameId;
+		}
+
+		public async Task CreateGame(string playerName)
+		{
+			var gameId = GenerateUniqueGameId();
+			await Groups.AddToGroupAsync(Context.ConnectionId, gameId);
+			_gameRepository!.AddGame(gameId);
+			var game = _gameRepository.GetGameById(gameId);
+			game!.AddPlayer(Context.ConnectionId, playerName);
+
+			// Send message saying the host has connected
+			await Clients.Group(gameId).SendAsync("ReceiveMessage", $"{playerName} connected.");
+
+			// Send out the list of players in the game
+			await Clients.Group(gameId).SendAsync("ReceivePlayerList", game.Players);
+
+			// Send the game code to the host
+			await Clients.Client(Context.ConnectionId).SendAsync("GameCode", gameId);
 		}
 
 		public async Task JoinGame(string gameId, string playerName)
@@ -51,18 +80,13 @@ namespace backend.Hubs
 				await Clients.Group(gameId).SendAsync("ReceivePlayerList", game.Players);
 			} 
 			else if (game != null) {
-				await Clients.Group(gameId).SendAsync("ErrorMessage", $"Game is full.");
+				await SendErrorMessage("Game is full.");
 			} 
-			else
-			{
-				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", $"Game not found.");
-			}
 		}
 
 		public async Task LeaveGame(string gameId)
 		{
-			var game = _gameRepository.GetGameById(gameId);
-			var player = game?.Players.Find(x => x.Id == Context.ConnectionId);
+			var (game, player) = await FetchGameAndPlayer(gameId);
 
 			if (game != null && player != null)
 			{
@@ -82,14 +106,13 @@ namespace backend.Hubs
 			} else
 			{
 				// Will say game not found even if the game exists, but the user isn't in that particular game
-				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Game not found.");
+				await SendErrorMessage("Game not found.");
 			}
 		}
 
 		public async Task ToggleReady(string gameId, bool isReadyUp, List<int> cardIds)
 		{
-			var game = _gameRepository.GetGameById(gameId);
-			var player = game?.Players.Find(player => player.Id == Context.ConnectionId);
+			var (game, player) = await FetchGameAndPlayer(gameId);
 
 			if (game != null && player != null)
 			{
@@ -119,42 +142,26 @@ namespace backend.Hubs
 					player.Unready();
 				} else
 				{
-					await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", $"{player.Name} does not have a valid deck.");
+					await SendErrorMessage($"{player.Name} does not have a valid deck.");
 				}
 
 				await Clients.Group(gameId).SendAsync("ReceivePlayerList", game.Players);
-			} else if (game != null)
-			{
-				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Player not found.");
-			} else if (player != null)
-			{
-				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Game not found.");
 			}
 		}
 
 		public async Task SendMessage(string gameId, string message)
 		{
-			var game = _gameRepository.GetGameById(gameId);
-			var player = game?.Players.Find(p => p.Id == Context.ConnectionId);
+			var (game, player) = await FetchGameAndPlayer(gameId);
 
 			if (game != null && player != null)
 			{
 				await Clients.Group(gameId).SendAsync("ReceiveMessage", $"{player.Name}: {message}");
 			}
-			else if (game != null)
-			{
-				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Player not found.");
-			}
-			else if (player != null)
-			{
-				await Clients.Client(Context.ConnectionId).SendAsync("ErrorMessage", "Game not found.");
-			}
 		}
 
 		public async Task GetHand(string gameId)
 		{
-			var game = _gameRepository.GetGameById(gameId);
-			var player = game?.Players.Find(p => p.Id == Context.ConnectionId);
+			var (game, player) = await FetchGameAndPlayer(gameId);
 
 			if (game != null && player != null)
 			{
@@ -164,8 +171,7 @@ namespace backend.Hubs
 
 		public async Task MulliganCards(string gameId, List<int> handIndices)
 		{
-			var game = _gameRepository.GetGameById(gameId);
-			var player = game?.Players.Find(p => p.Id == Context.ConnectionId);
+			var (game, player) = await FetchGameAndPlayer(gameId);
 
 			if (game != null && player != null)
 			{

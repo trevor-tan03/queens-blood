@@ -33,6 +33,34 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [gameStart, setGameStart] = useState(false);
   const [hand, setHand] = useState<Card[]>([]);
 
+  const setupSignalREvents = (conn: signalR.HubConnection) => {
+    conn.on("ReceiveMessage", (message: string) => {
+      setMessageLog(prevLog => [...prevLog, message]);
+    });
+
+    conn.on("ErrorMessage", (message: string) => {
+      console.log(message);
+    });
+
+    conn.on("GameCode", (gameCode: string) => {
+      setGameCode(gameCode);
+    });
+
+    conn.on("ReceivePlayerList", (players: Player[]) => {
+      const currPlayer = players.find(p => p.id === conn.connectionId);
+      setCurrPlayer(currPlayer);
+      setPlayers(players);
+    });
+
+    conn.on("GameStart", (start: boolean) => {
+      setGameStart(start);
+    });
+
+    conn.on("CardsInHand", (hand: Card[]) => {
+      setHand(hand);
+    });
+  }
+
   useEffect(() => {
     const connect = async () => {
       const apiUrl = `${import.meta.env.VITE_API_URL}/gameHub`;
@@ -41,32 +69,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
         .configureLogging(signalR.LogLevel.Information)
         .build();
 
-      conn.on("ReceiveMessage", (message: string) => {
-        setMessageLog(prevLog => [...prevLog, message]);
-      });
-
-      conn.on("ErrorMessage", (message: string) => {
-        console.log(message);
-      });
-
-      conn.on("GameCode", (gameCode: string) => {
-        setGameCode(gameCode);
-      });
-
-      conn.on("ReceivePlayerList", (players: Player[]) => {
-        const currPlayer = players.find(p => p.id === conn.connectionId);
-        setCurrPlayer(currPlayer);
-        setPlayers(players);
-      });
-
-      conn.on("GameStart", (start: boolean) => {
-        setGameStart(start);
-      });
-
-      conn.on("CardsInHand", (hand: Card[]) => {
-        setHand(hand);
-      });
-
+      setupSignalREvents(conn);
       await conn.start();
       setConnection(conn);
     };
@@ -74,17 +77,28 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
     connect();
 
     return () => {
-      if (connection) connection.stop();
+      if (connection) {
+        connection.off("ReceiveMessage");
+        connection.off("ErrorMessage");
+        connection.off("GameCode");
+        connection.off("ReceivePlayerList");
+        connection.off("GameStart");
+        connection.off("CardsInHand");
+        connection.stop();
+      }
     };
   }, []);
 
   useEffect(() => {
-    if (connection) {
-      window.onbeforeunload = () => {
-        connection.invoke(Methods.LeaveGame, gameCode);
-      }
-    }
+    const handleBeforeUnload = () => connection?.invoke(Methods.LeaveGame, gameCode);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [connection, gameCode]);
+
+  const handleError = (err: Error, context: string) => {
+    console.error(`[${context}] Error:`, err);
+  }
 
   const sendMessage = async (message: string) => {
     if (connection) {
@@ -94,27 +108,20 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const createGame = async (playerName: string) => {
     if (connection) {
-      await connection.invoke(Methods.CreateGame, playerName).catch((error) => {
-        return console.error(error.toString());
-      })
+      await connection.invoke("CreateGame", playerName).catch((error) => handleError(error, "CreateGame"))
     }
   }
 
   const joinGame = async (gameId: string, playerName: string,) => {
     if (connection) {
-      await connection.invoke(Methods.JoinGame, gameId, playerName).catch((error) => {
-        return console.error(error.toString());
-      })
-
+      await connection.invoke("JoinGame", gameId, playerName).catch((error) => handleError(error, "JoinGame"))
       setGameCode(gameId);
     }
   }
 
   const leaveGame = async (gameId: string) => {
     if (connection) {
-      await connection.invoke(Methods.LeaveGame, gameId).catch((error) => {
-        return console.error(error.toString());
-      })
+      await connection.invoke("LeaveGame", gameId).catch((error) => handleError(error, "LeaveGame"))
     }
   }
 
