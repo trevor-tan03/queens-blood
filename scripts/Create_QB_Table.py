@@ -4,6 +4,6 @@ from card_ability_adder import card_ability_adder
 
 
 
-# scraper()
+scraper()
 add_extra_cards()
 card_ability_adder()

@@ -17,12 +17,13 @@ def add_extra_cards():
     ["Moogle Mage", 1, 1, LEGENDARY, "When played, lower the power of enemy cards on affected tiles by 4."],
     ["Moogle Bard", 1, 1, LEGENDARY, "Raise the power of allied cards on affected tiles by 2 while this card is in play."],
     ["Donberry", 2, 2, STANDARD, "When played, destroy enemy cards on affected tiles."],
-    ["Grangalan Junior", 2, 2, STANDARD, "When played add Baby Grangalan to your hand."],
+    ["Grangalan Junior", 2, 2, STANDARD, "When played, add Baby Grangalan to your hand."],
     ["Baby Grangalan", 1, 1, STANDARD, "When destroyed, lower the power of allied and enemy cards on affected tiles by 5."],
     ["The Tiny Bronco", 2, 2, LEGENDARY, "When played, raise position ranks by 2."],
     ["Galian Beast", 2, 4, LEGENDARY, "When played, lower the power of allied and enemy cards on affected tiles by 1."],
     ["Heatseeker Minion", 1, 1, STANDARD, "This card has no abilities."],
     ["Resurrected Amalgam", 1, 2, STANDARD, "Lower the power of allied and enemy cards on affected tiles by 2 while this card is in play."],
+    ["Cacneo", 2, 2, STANDARD, "Raise the power of allied cards on affected tiles by 3 while this card is in play."]
   ]
 
   """Spawned into the board"""
@@ -43,47 +44,58 @@ def add_extra_cards():
   cursor = conn.cursor()
 
   # Create a table for the extra cards
-  cursor.execute('''
-                  CREATE TABLE IF NOT EXISTS 'Extra Cards' (
-                      ID INTEGER PRIMARY KEY,
-                      Parent INTEGER,
-                      Name TEXT,
-                      Rank TEXT,
-                      Power TEXT,
-                      Rarity TEXT,
-                      Ability TEXT,
-                      Image TEXT,
-                      FOREIGN KEY("Parent") REFERENCES Cards("ID")
-                  )
-              ''')
-
-  for added_card in added_cards:
-    name, rank, power, rarity, ability = added_card
-    image = f'player-{name.replace(" ", "-").lower()}.webp'
-
+  try:
     cursor.execute('''
-      INSERT INTO 'Extra Cards' (Name,Rank,Power,Rarity,Ability,Image) VALUES (?,?,?,?,?,?)
-    ''', (name,rank,power,rarity,ability,image))
+                    CREATE TABLE 'Extra Cards' (
+                        ID INTEGER PRIMARY KEY,
+                        Parent INTEGER,
+                        Name TEXT,
+                        Rank TEXT,
+                        Power TEXT,
+                        Rarity TEXT,
+                        Ability TEXT,
+                        Image TEXT,
+                        FOREIGN KEY("Parent") REFERENCES Cards("ID")
+                    )
+                ''')
+    for added_card in added_cards:
+      name, rank, power, rarity, ability = added_card
+      image = f'player-{name.replace(" ", "-").lower()}.webp'
 
-    cursor.execute('''
+      cursor.execute('''
+        INSERT INTO 'Extra Cards' (Name,Rank,Power,Rarity,Ability,Image) VALUES (?,?,?,?,?,?)
+      ''', (name, rank, power, rarity, ability, image))
+
+      cursor.execute('''
+          INSERT INTO Cards (Name,Rank,Power,Rarity,Ability,Image) VALUES (?,?,?,?,?,?)
+        ''', (name, rank, power, rarity, ability, image))
+
+    for spawned_card in spawned_cards:
+      name, rank, power, rarity, ability = spawned_card
+      image = f'player-{name.replace(" ", "-").lower()}-{rank}.webp'
+
+      cursor.execute('''
+        INSERT INTO 'Extra Cards' (Name,Rank,Power,Rarity,Ability,Image) VALUES (?,?,?,?,?,?)
+      ''', (name, rank, power, rarity, ability, image))
+
+      cursor.execute('''
         INSERT INTO Cards (Name,Rank,Power,Rarity,Ability,Image) VALUES (?,?,?,?,?,?)
       ''', (name, rank, power, rarity, ability, image))
 
-  for spawned_card in spawned_cards:
-    name, rank, power, rarity, ability = spawned_card
-    image = f'player-{name.replace(" ", "-").lower()}-{rank}.webp'
+    cursor.execute(
+      f"UPDATE Cards SET Ability =  'Raise the power of allied cards on affected tiles by 3 while this card is in play.' WHERE id = 24;")
+    cursor.execute(
+      f"UPDATE Cards SET Ability =  'Raise power by 1 for each other enhanced allied card.' WHERE id = 107;")
+    cursor.execute(
+      f"UPDATE Cards SET Ability =  'The first time this card is enhanced, raise the power of allied cards on affected tiles by 4.' WHERE id = 81;")
 
-    cursor.execute('''
-      INSERT INTO 'Extra Cards' (Name,Rank,Power,Rarity,Ability,Image) VALUES (?,?,?,?,?,?)
-    ''', (name,rank,power,rarity,ability,image))
+    conn.commit()
+    conn.close()
+  except sqlite3.OperationalError:
+    print("ERROR: Cards already added.")
 
-    cursor.execute('''
-      INSERT INTO Cards (Name,Rank,Power,Rarity,Ability,Image) VALUES (?,?,?,?,?,?)
-    ''', (name, rank, power, rarity, ability, image))
 
-  cursor.execute(f"UPDATE Cards SET Ability =  'Raise the power of allied cards on affected tiles by 3.' WHERE id = 24;")
-  cursor.execute(f"UPDATE Cards SET Ability =  'Raise power by 1 for each other enhanced allied card.' WHERE id = 107;")
-  cursor.execute(f"UPDATE Cards SET Ability =  'The first time this card is enhanced, raise the power of allied cards on affected tiles by 4.' WHERE id = 81;")
 
-  conn.commit()
-  conn.close()
+
+if __name__ == "__main__":
+  add_extra_cards()
