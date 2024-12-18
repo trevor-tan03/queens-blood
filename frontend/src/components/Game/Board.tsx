@@ -42,12 +42,11 @@ const Board = () => {
         Mulligan
         <div className="grid grid-cols-5">
           {hand.map((card, i) => (
-            <div>
+            <div key={`hand-${i}`}>
               <img
                 draggable={false}
                 src={`../../../../assets/cards/${card.image}`}
                 alt={card.name}
-                key={`hand-${i}`}
                 onClick={() => mulliganCard(i)}
               />
               {cardsToMulligan.includes(i) ? <span>
@@ -65,12 +64,11 @@ const Board = () => {
   return (
     <div className="grid grid-cols-5">
       {hand.map((card, i) => (
-        <div>
+        <div key={`hand-${i}`}>
           <img
             draggable={false}
             src={`../../../../assets/cards/${card.image}`}
             alt={card.name}
-            key={`hand-${i}`}
           />
         </div>
       ))}
