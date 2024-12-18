@@ -23,27 +23,18 @@ const Board = () => {
   }
 
   const confirmMulligan = useCallback(async () => {
-    if (mulliganTimer) {
-      clearTimeout(mulliganTimer);
-      setMulliganTimer(null);
-    }
-
     await mulliganCards(gameCode, cardsToMulligan);
     setCardsToMulligan([]);
     setHasMulliganed(true);
   }, [cardsToMulligan])
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!hasMulliganed) {
-        confirmMulligan();
-      }
-    }, 30000);
+    if (getTimeFormat(deadline) === 0) {
+      confirmMulligan();
+    }
 
-    setMulliganTimer(timer);
-
-    return () => clearTimeout(timer);
-  }, [confirmMulligan]);
+    return;
+  }, [getTimeFormat(deadline), deadline])
 
   if (!mulliganPhaseEnded) {
     return (
@@ -72,7 +63,18 @@ const Board = () => {
   }
 
   return (
-    <div>Game Time</div>
+    <div className="grid grid-cols-5">
+      {hand.map((card, i) => (
+        <div>
+          <img
+            draggable={false}
+            src={`../../../../assets/cards/${card.image}`}
+            alt={card.name}
+            key={`hand-${i}`}
+          />
+        </div>
+      ))}
+    </div>
   )
 }
 
