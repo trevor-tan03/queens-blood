@@ -1,13 +1,14 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSignalR } from "../../SignalR/SignalRProvider";
+import { getTimeFormat } from "../../utils/formatDate";
 
 const Board = () => {
   const [cardsToMulligan, setCardsToMulligan] = useState<number[]>([]);
   const { hand, gameCode, mulliganPhaseEnded, getHand, mulliganCards } = useSignalR();
+  const [hasMulliganed, setHasMulliganed] = useState(false);
 
-  useEffect(() => {
-    console.log(mulliganPhaseEnded)
-  }, [mulliganPhaseEnded])
+  const [mulliganTimer, setMulliganTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [deadline, setDeadline] = useState<Date>(new Date(new Date().getTime() + 30500));
 
   useEffect(() => {
     getHand(gameCode);
@@ -21,10 +22,28 @@ const Board = () => {
     }
   }
 
-  const confirmMulligan = async () => {
+  const confirmMulligan = useCallback(async () => {
+    if (mulliganTimer) {
+      clearTimeout(mulliganTimer);
+      setMulliganTimer(null);
+    }
+
     await mulliganCards(gameCode, cardsToMulligan);
     setCardsToMulligan([]);
-  }
+    setHasMulliganed(true);
+  }, [cardsToMulligan])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!hasMulliganed) {
+        confirmMulligan();
+      }
+    }, 30000);
+
+    setMulliganTimer(timer);
+
+    return () => clearTimeout(timer);
+  }, [confirmMulligan]);
 
   if (!mulliganPhaseEnded) {
     return (
@@ -46,7 +65,8 @@ const Board = () => {
             </div>
           ))}
         </div>
-        <button onClick={confirmMulligan}>Confirm</button>
+        {!hasMulliganed && <button onClick={confirmMulligan}>Confirm</button>}
+        <div>{getTimeFormat(deadline)}</div>
       </div>
     )
   }
