@@ -6,8 +6,6 @@ const Board = () => {
   const [cardsToMulligan, setCardsToMulligan] = useState<number[]>([]);
   const { hand, gameCode, mulliganPhaseEnded, getHand, mulliganCards } = useSignalR();
   const [hasMulliganed, setHasMulliganed] = useState(false);
-
-  const [mulliganTimer, setMulliganTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [deadline] = useState<Date>(new Date(new Date().getTime() + 30500));
 
   useEffect(() => {
