@@ -71,7 +71,6 @@ namespace backend.Models
 			foreach(var index in cardIndices)
 			{
 				var card = player.Hand[index];
-				player.Hand.RemoveAt(index);
 				player.Deck.Add(card);
 			}
 
@@ -79,7 +78,12 @@ namespace backend.Models
 			if (cardIndices.Count > 0)
 			{
 				ShuffleDeck(player.Deck);
-				player.PickUp(cardIndices.Count);
+				foreach(var index in cardIndices)
+				{
+					var card = player.Deck[0];
+					player.Deck.RemoveAt(0);
+					player.Hand[index] = card;
+				}
 			}
 		}
 	}
