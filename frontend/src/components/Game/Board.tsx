@@ -8,7 +8,7 @@ const Board = () => {
   const [hasMulliganed, setHasMulliganed] = useState(false);
 
   const [mulliganTimer, setMulliganTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
-  const [deadline, setDeadline] = useState<Date>(new Date(new Date().getTime() + 30500));
+  const [deadline] = useState<Date>(new Date(new Date().getTime() + 30500));
 
   useEffect(() => {
     getHand(gameCode);
