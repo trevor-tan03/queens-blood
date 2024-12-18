@@ -18,34 +18,38 @@ def get_important_tiles(grid):
 
   return important_tiles
 
-curr_dir = os.path.dirname(__file__)
-json_path = os.path.join(curr_dir, "expected_ranges.json")
+def add_range_to_db():
+  curr_dir = os.path.dirname(__file__)
+  json_path = os.path.join(curr_dir, "expected_ranges.json")
 
-with open(json_path, "r") as openfile:
-  entries = json.load(openfile)
+  with open(json_path, "r") as openfile:
+    entries = json.load(openfile)
 
-conn = sqlite3.connect('QB_card_info.db')
-cursor = conn.cursor()
+  conn = sqlite3.connect('QB_card_info.db')
+  cursor = conn.cursor()
 
-cursor.execute("""
-  CREATE TABLE IF NOT EXISTS Ranges (
-               ID INTEGER PRIMARY KEY,
-               CardID INTEGER,
-               Offset TEXT,
-               Colour TEXT,
-               FOREIGN KEY("CardID") REFERENCES Card("ID")
-  )
-""")
+  cursor.execute("""
+    CREATE TABLE IF NOT EXISTS Ranges (
+                 ID INTEGER PRIMARY KEY,
+                 CardID INTEGER,
+                 Offset TEXT,
+                 Colour TEXT,
+                 FOREIGN KEY("CardID") REFERENCES Card("ID")
+    )
+  """)
 
-for (id, processed_name) in enumerate(entries.keys()):
-  grid = entries[processed_name]["grid"]
-  important_tiles = get_important_tiles(grid)
+  for (id, processed_name) in enumerate(entries.keys()):
+    grid = entries[processed_name]["grid"]
+    important_tiles = get_important_tiles(grid)
 
-  for important_tile in important_tiles:
-    colour = important_tile["colour"]
-    offset = important_tile["offset"]
+    for important_tile in important_tiles:
+      colour = important_tile["colour"]
+      offset = important_tile["offset"]
 
-    cursor.execute("INSERT INTO Ranges (CardID, Offset, Colour) VALUES (?,?,?)", (id+1,f"{offset[0],offset[1]}",colour))
+      cursor.execute("INSERT INTO Ranges (CardID, Offset, Colour) VALUES (?,?,?)", (id+1,f"{offset[0],offset[1]}",colour))
 
-conn.commit()
-conn.close()
+  conn.commit()
+  conn.close()
+
+if __name__ == "__main__":
+  add_range_to_db()
