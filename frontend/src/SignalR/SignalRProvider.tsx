@@ -2,7 +2,6 @@ import * as signalR from '@microsoft/signalr';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import type { Card } from '../types/Card';
 import type { Player } from '../types/Player';
-import { Methods } from './SignalRMethods';
 
 interface SignalRContextProps {
   connection: signalR.HubConnection | null;
@@ -12,11 +11,15 @@ interface SignalRContextProps {
   readyUp: (gameId: string) => Promise<void>;
   unready: (gameId: string) => Promise<void>;
   sendMessage: (message: string) => Promise<void>;
+  getHand: (gameId: string) => Promise<void>;
+  mulliganCards: (gameId: string, cardsToMulligan: number[]) => Promise<void>;
   currPlayer: Player | undefined;
   gameCode: string;
   players: Player[];
   messageLog: string[];
   gameStart: boolean;
+  hand: Card[];
+  mulliganPhaseEnded: boolean;
 }
 
 const SignalRContext = createContext<SignalRContextProps | undefined>(undefined);
@@ -28,6 +31,40 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [players, setPlayers] = useState<Player[]>([]);
   const [messageLog, setMessageLog] = useState<string[]>([]);
   const [gameStart, setGameStart] = useState(false);
+  const [hand, setHand] = useState<Card[]>([]);
+  const [mulliganPhaseEnded, setMulliganPhaseEnded] = useState(false);
+
+  const setupSignalREvents = (conn: signalR.HubConnection) => {
+    conn.on("ReceiveMessage", (message: string) => {
+      setMessageLog(prevLog => [...prevLog, message]);
+    });
+
+    conn.on("ErrorMessage", (message: string) => {
+      console.log(message);
+    });
+
+    conn.on("GameCode", (gameCode: string) => {
+      setGameCode(gameCode);
+    });
+
+    conn.on("ReceivePlayerList", (players: Player[]) => {
+      const currPlayer = players.find(p => p.id === conn.connectionId);
+      setCurrPlayer(currPlayer);
+      setPlayers(players);
+    });
+
+    conn.on("GameStart", (start: boolean) => {
+      setGameStart(start);
+    });
+
+    conn.on("CardsInHand", (hand: Card[]) => {
+      setHand(hand);
+    });
+
+    conn.on("MulliganPhaseEnded", (hasEnded: boolean) => {
+      setMulliganPhaseEnded(hasEnded);
+    });
+  }
 
   useEffect(() => {
     const connect = async () => {
@@ -37,28 +74,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
         .configureLogging(signalR.LogLevel.Information)
         .build();
 
-      conn.on("ReceiveMessage", (message: string) => {
-        setMessageLog(prevLog => [...prevLog, message]);
-      });
-
-      conn.on("ErrorMessage", (message: string) => {
-        console.log(message);
-      });
-
-      conn.on("GameCode", (gameCode: string) => {
-        setGameCode(gameCode);
-      });
-
-      conn.on("ReceivePlayerList", (players: Player[]) => {
-        const currPlayer = players.find(p => p.id === conn.connectionId);
-        setCurrPlayer(currPlayer);
-        setPlayers(players);
-      });
-
-      conn.on("GameStart", (start: boolean) => {
-        setGameStart(start);
-      });
-
+      setupSignalREvents(conn);
       await conn.start();
       setConnection(conn);
     };
@@ -66,17 +82,28 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
     connect();
 
     return () => {
-      if (connection) connection.stop();
+      if (connection) {
+        connection.off("ReceiveMessage");
+        connection.off("ErrorMessage");
+        connection.off("GameCode");
+        connection.off("ReceivePlayerList");
+        connection.off("GameStart");
+        connection.off("CardsInHand");
+        connection.stop();
+      }
     };
   }, []);
 
   useEffect(() => {
-    if (connection) {
-      window.onbeforeunload = () => {
-        connection.invoke(Methods.LeaveGame, gameCode);
-      }
-    }
+    const handleBeforeUnload = () => connection?.invoke("LeaveGame", gameCode);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [connection, gameCode]);
+
+  const handleError = (err: Error, context: string) => {
+    console.error(`[${context}] Error:`, err);
+  }
 
   const sendMessage = async (message: string) => {
     if (connection) {
@@ -86,27 +113,20 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const createGame = async (playerName: string) => {
     if (connection) {
-      await connection.invoke(Methods.CreateGame, playerName).catch((error) => {
-        return console.error(error.toString());
-      })
+      await connection.invoke("CreateGame", playerName).catch((error) => handleError(error, "CreateGame"))
     }
   }
 
   const joinGame = async (gameId: string, playerName: string,) => {
     if (connection) {
-      await connection.invoke(Methods.JoinGame, gameId, playerName).catch((error) => {
-        return console.error(error.toString());
-      })
-
+      await connection.invoke("JoinGame", gameId, playerName).catch((error) => handleError(error, "JoinGame"))
       setGameCode(gameId);
     }
   }
 
   const leaveGame = async (gameId: string) => {
     if (connection) {
-      await connection.invoke(Methods.LeaveGame, gameId).catch((error) => {
-        return console.error(error.toString());
-      })
+      await connection.invoke("LeaveGame", gameId).catch((error) => handleError(error, "LeaveGame"))
     }
   }
 
@@ -128,6 +148,18 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }
 
+  const getHand = async (gameId: string) => {
+    if (connection) {
+      await connection.invoke("GetHand", gameId);
+    }
+  }
+
+  const mulliganCards = async (gameId: string, cardsToMulligan: number[]) => {
+    if (connection) {
+      connection.invoke("MulliganCards", gameId, cardsToMulligan);
+    }
+  }
+
   return (
     <SignalRContext.Provider value={{
       connection,
@@ -137,11 +169,15 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
       readyUp,
       unready,
       sendMessage,
+      getHand,
+      mulliganCards,
       gameCode,
       currPlayer,
       players,
       messageLog,
       gameStart,
+      hand,
+      mulliganPhaseEnded,
     }}>
       {children}
     </SignalRContext.Provider>

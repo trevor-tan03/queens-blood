@@ -62,5 +62,29 @@ namespace backend.Models
 
 			// Initialize board
 		}
+
+		public void MulliganCards(Player player, List<int> cardIndices)
+		{
+			cardIndices.Sort((a,b) => b.CompareTo(a));
+
+			// Add back specified cards back to deck
+			foreach(var index in cardIndices)
+			{
+				var card = player.Hand[index];
+				player.Deck.Add(card);
+			}
+
+			// If we mulliganed, reshuffle deck and pick up
+			if (cardIndices.Count > 0)
+			{
+				ShuffleDeck(player.Deck);
+				foreach(var index in cardIndices)
+				{
+					var card = player.Deck[0];
+					player.Deck.RemoveAt(0);
+					player.Hand[index] = card;
+				}
+			}
+		}
 	}
 }
