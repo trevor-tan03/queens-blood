@@ -1,11 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useSignalR } from "../../SignalR/SignalRProvider";
+import { useOverlay } from "../Overlay";
 
-const HomeMenu = () => {
-  const [name, setName] = useState('');
-  const [code, setCode] = useState('');
-  const { gameCode, createGame, joinGame } = useSignalR();
+interface Props {
+  name: string;
+  setName: React.Dispatch<React.SetStateAction<string>>;
+}
+
+const HomeMenu = ({ name, setName }: Props) => {
+  const { showOverlay } = useOverlay();
+  const { gameCode, createGame } = useSignalR();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,9 +19,8 @@ const HomeMenu = () => {
     }
   }, [gameCode, navigate]);
 
-
   return (
-    <div className="flex flex-col span px-24 bg-slate-700 items-center *:w-full gap-3 py-32 border border-orange-300">
+    <div className="flex flex-col span px-24 bg-slate-700 items-center *:w-full gap-3 py-32 border border-orange-300 absolute">
       <h1 className="text-4xl font-bold text-center text-orange-300 mb-8">
         {"Queen's Blood"}
       </h1>
@@ -28,8 +32,7 @@ const HomeMenu = () => {
         value={name}
         onChange={((e) => setName(e.target.value))}
       />
-      {/* <label htmlFor="code">Code</label>
-        <input id="code" className="border border-slate-500" type="text" value={code} onChange={((e) => setCode(e.target.value))} /> */}
+
       <button
         className="text-slate-700 bg-orange-300 p-2 rounded-full"
         onClick={async () => await createGame(name)}
@@ -37,8 +40,8 @@ const HomeMenu = () => {
         Create
       </button>
       <button
+        onClick={showOverlay}
         className="text-slate-700 bg-orange-300 p-2 rounded-full"
-        onClick={async () => await joinGame(code, name)}
       >
         Join
       </button>

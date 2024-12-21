@@ -15,7 +15,7 @@ const SelectedDeck = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-3 xl:grid-cols-5 max-w-[50%]">
+    <div className="grid grid-cols-3 h-full xl:grid-cols-5 xl:h-auto overflow-y-auto pb-12">
       {selectedDeck?.map((card, i) => (
         <img
           key={`card-${i}`}

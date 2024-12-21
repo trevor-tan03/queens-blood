@@ -1,3 +1,4 @@
+import { BiEdit } from "react-icons/bi";
 import { useNavigate } from "react-router";
 import { useSignalR } from "../SignalR/SignalRProvider";
 import Board from "../components/Game/Board";
@@ -14,11 +15,19 @@ const Game = () => {
         ?
         <Board />
         :
-        <div className="flex">
-          <div>
-            <button onClick={() => {
-              navigate(`/game/${gameCode}/deck`)
-            }}>Decks</button>
+        <div className="flex *:flex-1 gap-4 bg-slate-700 p-6 h-dvh overflow-y-visible md:overflow-y-hidden md:grid-cols-1 flex-col-reverse md:flex-row">
+          <div className="overflow-y-hidden">
+            <div className="flex justify-between w-full p-2 text-orange-300">
+              <h1 className="text-2xl">Deck</h1>
+              <button
+                className="flex gap-2 items-center"
+                onClick={() => {
+                  navigate(`/game/${gameCode}/deck`)
+                }}>
+                Edit
+                <BiEdit />
+              </button>
+            </div>
             <SelectedDeck />
           </div>
           <PlayersSection />
