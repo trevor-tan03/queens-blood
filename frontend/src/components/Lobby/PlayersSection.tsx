@@ -1,5 +1,5 @@
 
-import { BiClipboard } from "react-icons/bi";
+import { BiClipboard, BiExit } from "react-icons/bi";
 import { MdCheck, MdHourglassBottom } from "react-icons/md";
 import { useSignalR } from "../../SignalR/SignalRProvider";
 import Chat from "./Chat";
@@ -29,8 +29,8 @@ const PlayersSection = () => {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <section className="border border-orange-300 p-3">
+    <div className="flex flex-col gap-3 flex-1">
+      <section className="border border-orange-300 p-3 bg-slate-700 text-slate-50">
         <ul className="flex flex-col gap-3">
           <li
             className={`flex items-center gap-2 p-3 bg-orange-300 rounded-full`}>
@@ -54,20 +54,19 @@ const PlayersSection = () => {
             }
             {players[1].name} {isPlayerReady(players[1].id)}
           </li> : <li
-            className={`flex items-center gap-2 p-3 bg-amber-700 rounded-full`}>
+            className={`flex items-center gap-2 p-3 bg-orange-300 bg-opacity-50 rounded-full`}>
             Waiting for player...
           </li>}
         </ul>
-        <button onClick={disconnect}>Leave</button>
         <Chat />
       </section>
 
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-center text-white">
         <span className="font-bold">
           PARTY CODE:
         </span>
         <button
-          className="p-2 border border-orange-300 rounded-full flex items-center gap-2"
+          className="p-2 border border-orange-300 rounded-full flex items-center gap-2 px-4 hover:bg-slate-700 transition-colors duration-200"
           onClick={copyCodeToClipboard}>
           {gameCode}
           <BiClipboard />
@@ -86,6 +85,12 @@ const PlayersSection = () => {
         {currPlayer?.isReady ? "Unready" : "Ready"}
       </button>
 
+      <button
+        className="flex gap-2 items-center mt-auto ml-auto py-3 px-8 rounded-full text-orange-300 hover:bg-red-700 hover:text-slate-50 transition-colors duration-200"
+        onClick={disconnect}>
+        <BiExit />
+        Leave
+      </button>
     </div>
   )
 }

@@ -20,7 +20,7 @@ const HomeMenu = ({ name, setName }: Props) => {
   }, [gameCode, navigate]);
 
   return (
-    <div className="flex flex-col span px-24 bg-slate-700 items-center *:w-full gap-3 py-32 border border-orange-300 absolute">
+    <div className="flex flex-col span px-6 bg-slate-700 bg-opacity-75 items-center w-full max-w-96 *:w-full gap-3 py-16 border border-orange-300 absolute sm:px-16">
       <h1 className="text-4xl font-bold text-center text-orange-300 mb-8">
         {"Queen's Blood"}
       </h1>
