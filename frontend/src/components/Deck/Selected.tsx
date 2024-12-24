@@ -36,7 +36,7 @@ const Selected = ({ deck, setDeck }: Props) => {
         <div className="flex mb-6 overflow-x-auto gap-2" ref={containerRef}>
           {
             compressDeck(deck).map((c, i) => (
-              <div key={`deck-${i}`} className="">
+              <div key={`deck-${i}`}>
                 <CardComponent
                   card={c.card}
                   handleClick={() => handleRemove(c.card)}

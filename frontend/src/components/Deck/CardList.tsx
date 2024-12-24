@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BiSearch } from "react-icons/bi";
 import type { Card } from "../../types/Card";
 import { getCopiesLimit, getRemainingCopies } from "../../utils/deckMethods";
@@ -13,7 +13,11 @@ interface Props {
 
 const CardList = ({ deck, setDeck, cardsList }: Props) => {
   const [shownCards, setShownCards] = useState(cardsList);
+  const [order, setOrder] = useState<"asc" | "desc">("asc");
+
   const cardListRef = useRef<HTMLDivElement>(null);
+
+  const toggleOrder = () => setOrder(o => o === "asc" ? "desc" : "asc");
 
   const handleAdd = (card: Card) => {
     if (deck.length < 15) {
@@ -32,18 +36,21 @@ const CardList = ({ deck, setDeck, cardsList }: Props) => {
   }
 
   const filterCardName = (cardName: string) => {
-    setShownCards(cardsList.filter(card => card.name.toLowerCase().includes(cardName.toLowerCase())));
+    setShownCards(cardsList.filter(c => c.name.toLowerCase().includes(cardName.toLowerCase())));
   }
+
+  useEffect(() => {
+    setShownCards(cards => cards.slice().reverse());
+  }, [order])
 
   return (
     <div className="flex flex-col bg-slate-700 border border-orange-300 max-h-[500px] overflow-y-hidden">
-      <div className="p-4 border-b border-orange-300 mb-2 flex justify-end gap-3 items-center">
+      <div className="p-4 border-b border-orange-300 mb-2 flex justify-end gap-3 items-center flex-wrap">
         <h2 className="mr-auto text-2xl text-orange-300">Cards</h2>
-        <button className="py-2 px-4 border border-orange-300 bg-orange-300 rounded-full">
-          {"Card #"}
-        </button>
-        <button className="py-2 px-4 border border-orange-300 bg-orange-300 rounded-full">
-          Ascending
+        <button
+          className="py-2 px-4 border border-orange-300 bg-orange-300 rounded-full"
+          onClick={toggleOrder}>
+          {order === "asc" ? "Ascending" : "Descending"}
         </button>
         <button className="py-2 px-4 border border-orange-300 rounded-full text-orange-300">
           Filters
@@ -54,7 +61,7 @@ const CardList = ({ deck, setDeck, cardsList }: Props) => {
           </div>
           <input
             onChange={(e) => filterCardName(e.target.value)}
-            className="h-[35px] px-4"
+            className="h-[35px] px-4 w-full"
             type="text"
             placeholder="Search card..."
           />

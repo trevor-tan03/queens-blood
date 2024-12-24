@@ -29,7 +29,7 @@ const CardComponent = ({ handleClick, card, containerRef, grow = true }: Props) 
 
   return (
     <div
-      className={`relative ${grow ? "" : "max-w-24"}`}
+      className={`relative ${grow ? "" : "min-w-20 max-w-24"}`}
       onClick={() => handleClick(card)}
       ref={cardRef}
       onMouseOver={() => {
