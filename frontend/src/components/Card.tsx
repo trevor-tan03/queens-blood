@@ -4,9 +4,11 @@ import type { Card } from '../types/Card';
 interface Props {
   handleClick: (card: Card) => void;
   card: Card,
+  containerRef: React.RefObject<HTMLDivElement>,
+  grow?: boolean
 }
 
-const CardComponent = ({ handleClick, card }: Props) => {
+const CardComponent = ({ handleClick, card, containerRef, grow = true }: Props) => {
   const popupRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const { name, image, ability } = card;
@@ -15,10 +17,10 @@ const CardComponent = ({ handleClick, card }: Props) => {
     if (!cardRef.current) return "R"
 
     const padding = 30;
-    const screenWidth = window.innerWidth;
+    const container = containerRef.current!.getBoundingClientRect();
     const boundaries = popupEl.getBoundingClientRect();
 
-    if (boundaries.right >= 0.75 * (screenWidth - padding)) {
+    if (boundaries.right >= 0.75 * (container.width - padding)) {
       popupEl.classList.add("left-[-200px]");
     } else {
       popupEl.classList.add("right-[-200px]");
@@ -27,7 +29,7 @@ const CardComponent = ({ handleClick, card }: Props) => {
 
   return (
     <div
-      className="relative"
+      className={`relative ${grow ? "" : "max-w-24"}`}
       onClick={() => handleClick(card)}
       ref={cardRef}
       onMouseOver={() => {

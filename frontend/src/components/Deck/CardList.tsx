@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { BiSearch } from "react-icons/bi";
 import type { Card } from "../../types/Card";
 import { getCopiesLimit, getRemainingCopies } from "../../utils/deckMethods";
@@ -13,6 +13,8 @@ interface Props {
 
 const CardList = ({ deck, setDeck, cardsList }: Props) => {
   const [shownCards, setShownCards] = useState(cardsList);
+  const cardListRef = useRef<HTMLDivElement>(null);
+
   const handleAdd = (card: Card) => {
     if (deck.length < 15) {
       const rarity = card.rarity;
@@ -59,7 +61,10 @@ const CardList = ({ deck, setDeck, cardsList }: Props) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-11 max-w-full gap-2 p-6 flex-1 overflow-y-scroll">
+      <div
+        className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-11 max-w-full gap-2 p-6 flex-1 overflow-y-scroll"
+        ref={cardListRef}
+      >
         {shownCards.length > 0 ?
           shownCards.map((d, i) => {
             const remCopies = getRemainingCopies(deck, d);
@@ -68,6 +73,7 @@ const CardList = ({ deck, setDeck, cardsList }: Props) => {
               return (
                 <div key={`rem-${i}`}>
                   <CardComponent
+                    containerRef={cardListRef}
                     handleClick={handleAdd}
                     card={d}
                   />

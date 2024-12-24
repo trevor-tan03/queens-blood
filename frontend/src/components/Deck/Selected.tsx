@@ -1,5 +1,7 @@
+import { useRef } from "react";
 import type { Card } from "../../types/Card";
 import { compressDeck, getCopiesLimit } from "../../utils/deckMethods";
+import CardComponent from "../Card";
 import CardCopiesText from "./CardCopiesText";
 
 interface Props {
@@ -8,6 +10,8 @@ interface Props {
 }
 
 const Selected = ({ deck, setDeck }: Props) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const handleRemove = (card: Card) => {
     if (deck.includes(card)) {
       const index = deck.findIndex(c => c.id === card.id);
@@ -29,15 +33,15 @@ const Selected = ({ deck, setDeck }: Props) => {
           </span>
           /15
         </div>
-        <div className="flex mb-6 whitespace-nowrap overflow-x-auto gap-2">
+        <div className="flex mb-6 overflow-x-auto gap-2" ref={containerRef}>
           {
             compressDeck(deck).map((c, i) => (
               <div key={`deck-${i}`} className="">
-                <img
-                  className="max-w-24"
-                  src={`../../assets/cards/${c.card.image}`}
-                  alt={c.card.name}
-                  onClick={() => handleRemove(c.card)}
+                <CardComponent
+                  card={c.card}
+                  handleClick={() => handleRemove(c.card)}
+                  containerRef={containerRef}
+                  grow={false}
                 />
                 <CardCopiesText>
                   {`${c.copies} / ${getCopiesLimit(c.card.rarity)}`}
