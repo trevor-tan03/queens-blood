@@ -1,9 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { BiSearch } from "react-icons/bi";
+import { GrAscend, GrDescend, GrFilter } from "react-icons/gr";
 import type { Card } from "../../types/Card";
 import { getCopiesLimit, getRemainingCopies } from "../../utils/deckMethods";
 import CardComponent from "../Card";
+import { useOverlay } from "../Overlay";
 import CardCopiesText from "./CardCopiesText";
+import { useFilters } from "./FilterProvider";
 
 interface Props {
   deck: Card[];
@@ -11,13 +14,14 @@ interface Props {
   cardsList: Card[];
 }
 
-const CardList = ({ deck, setDeck, cardsList }: Props) => {
-  const [shownCards, setShownCards] = useState(cardsList);
-  const [order, setOrder] = useState<"asc" | "desc">("asc");
+
+
+const CardList = ({ deck, setDeck }: Props) => {
+  const { toggleOrder, order, shownCards, filterCardName } = useFilters();
+
+  const { showOverlay } = useOverlay();
 
   const cardListRef = useRef<HTMLDivElement>(null);
-
-  const toggleOrder = () => setOrder(o => o === "asc" ? "desc" : "asc");
 
   const handleAdd = (card: Card) => {
     if (deck.length < 15) {
@@ -35,26 +39,30 @@ const CardList = ({ deck, setDeck, cardsList }: Props) => {
     }
   }
 
-  const filterCardName = (cardName: string) => {
-    setShownCards(cardsList.filter(c => c.name.toLowerCase().includes(cardName.toLowerCase())));
-  }
-
-  useEffect(() => {
-    setShownCards(cards => cards.slice().reverse());
-  }, [order])
-
   return (
-    <div className="flex flex-col bg-slate-700 border border-orange-300 max-h-[500px] overflow-y-hidden">
-      <div className="p-4 border-b border-orange-300 mb-2 flex justify-end gap-3 items-center flex-wrap">
+    <div className="flex flex-col bg-slate-700 border border-orange-300 max-h-[500px] overflow-y-hidden bg-opacity-60 h-[70rem]">
+      <div className="p-4 border-b border-orange-300 mb-2 flex justify-end gap-3 items-center flex-wrap bg-slate-800">
         <h2 className="mr-auto text-2xl text-orange-300">Cards</h2>
+
         <button
-          className="py-2 px-4 border border-orange-300 bg-orange-300 rounded-full"
+          className="py-2 px-4 border border-orange-300 bg-orange-300 rounded-full hidden sm:block"
           onClick={toggleOrder}>
           {order === "asc" ? "Ascending" : "Descending"}
         </button>
-        <button className="py-2 px-4 border border-orange-300 rounded-full text-orange-300">
+        <button
+          className="py-2 px-4 border border-orange-300 bg-orange-300 rounded-full sm:hidden"
+          onClick={toggleOrder}>
+          {order === "asc" ? <GrAscend /> : <GrDescend />}
+        </button>
+
+        <button className="py-2 px-4 border border-orange-300 rounded-full text-orange-300 sm:hidden" onClick={showOverlay}>
+          <GrFilter />
+        </button>
+
+        <button className="py-2 px-4 border border-orange-300 rounded-full text-orange-300 hidden sm:block" onClick={showOverlay}>
           Filters
         </button>
+
         <div className="flex items-center">
           <div className="h-[35px] flex-1 p-2 bg-slate-900 grid place-items-center rounded-l-md text-orange-300">
             <BiSearch />
