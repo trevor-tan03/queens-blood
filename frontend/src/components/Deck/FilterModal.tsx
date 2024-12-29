@@ -1,10 +1,12 @@
 
 import { useOverlay } from "../Overlay";
 import { useFilters } from "./FilterProvider";
+import RankFilters from "./RankFilters";
+import RarityFilters from "./RarityFilters";
 
 const FilterModal = () => {
   const { hideOverlay } = useOverlay();
-  const { setFilters, applyFilters, filters } = useFilters();
+  const { applyFilters } = useFilters();
 
   return (
     <div
@@ -36,38 +38,8 @@ const FilterModal = () => {
           </div>
         </header>
 
-        <div>
-          <div>
-            Rank
-          </div>
-          <div className="flex">
-            {[1, 2, 3, 0].map(rank => (
-              <div key={`rank-${rank}`}>
-                <label>{!rank ? "Replace" : rank}</label>
-                <input
-                  type="checkbox"
-                  checked={filters.rank.includes(rank)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setFilters(filters => ({ ...filters, rank: [...filters.rank, rank] }))
-                    } else {
-                      setFilters(filters => ({ ...filters, rank: filters.rank.filter(r => r != rank) }))
-                    }
-                  }} />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div>
-            Rarity
-          </div>
-          <div>
-            <label>1</label>
-            <input id="" type="checkbox" />
-          </div>
-        </div>
+        <RankFilters />
+        <RarityFilters />
       </div>
 
       <div className="bg-black bg-opacity-45 absolute h-full w-full" onClick={hideOverlay}></div>

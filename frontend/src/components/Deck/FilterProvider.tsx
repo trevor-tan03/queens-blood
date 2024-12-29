@@ -56,7 +56,7 @@ const FilterProvider = ({ children, cardsList }: Props) => {
    * Apply filters
    */
   const applyFilters = () => {
-    const cardsToShow: Card[] = []
+    let cardsToShow = [...cardsList];
 
     if (!filters.rank.length && !filters.rarity.length && !filters.ability.length) {
       setFilteredCards(cardsList);
@@ -64,16 +64,16 @@ const FilterProvider = ({ children, cardsList }: Props) => {
       return;
     }
 
-    cardsList.forEach(card => {
-      // Must have selected Rank & Rarity & Ability Effect
-      if (
-        filters.rank.includes(card.rank) ||
-        filters.rarity.includes(card.rarity) ||
-        filters.ability.includes(card.action)
-      ) {
-        cardsToShow.push(card);
-      }
-    })
+    // Apply rank filter
+    cardsToShow = cardsToShow.filter(c => (
+      filters.rank.length ? filters.rank.includes(c.rank) : true
+    ));
+
+    // Apply rarity filter
+    cardsToShow = cardsToShow.filter((
+      c => filters.rarity.length ? filters.rarity.includes(c.rarity) : true
+    ));
+
 
     setFilteredCards(cardsToShow);
     setShownCards(cardsToShow.filter(c => c.name.toLowerCase().includes(search.toLowerCase())));
