@@ -74,6 +74,11 @@ const FilterProvider = ({ children, cardsList }: Props) => {
       c => filters.rarity.length ? filters.rarity.includes(c.rarity) : true
     ));
 
+    // Apply ability filter
+    cardsToShow = cardsToShow.filter((
+      c => filters.ability.length ? filters.ability.includes(c.action) : true
+    ));
+
 
     setFilteredCards(cardsToShow);
     setShownCards(cardsToShow.filter(c => c.name.toLowerCase().includes(search.toLowerCase())));

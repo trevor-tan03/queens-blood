@@ -10,7 +10,7 @@ const RarityFilters = () => {
       <div className="flex">
         {["Standard", "Legendary"].map((rarity) => (
           <div key={`rarity-${rarity}`}>
-            <label>{!rarity ? "Replace" : rarity}</label>
+            <label>{rarity}</label>
             <input
               type="checkbox"
               checked={filters.rarity.includes(rarity as "Standard" | "Legendary")}

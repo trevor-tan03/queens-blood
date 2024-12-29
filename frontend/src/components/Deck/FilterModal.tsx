@@ -1,5 +1,6 @@
 
 import { useOverlay } from "../Overlay";
+import AbilityFilters from "./AbilityFilters";
 import { useFilters } from "./FilterProvider";
 import RankFilters from "./RankFilters";
 import RarityFilters from "./RarityFilters";
@@ -40,6 +41,7 @@ const FilterModal = () => {
 
         <RankFilters />
         <RarityFilters />
+        <AbilityFilters />
       </div>
 
       <div className="bg-black bg-opacity-45 absolute h-full w-full" onClick={hideOverlay}></div>

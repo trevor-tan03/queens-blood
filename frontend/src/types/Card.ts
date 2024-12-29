@@ -19,4 +19,5 @@ export enum Ability {
   Destroy = "destroy",
   IncreaseRank = "+R",
   Spawn = "spawn",
+  ScoreBonus = "+Score",
 }
