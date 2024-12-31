@@ -14,7 +14,7 @@ const FilterModal = () => {
       className="absolute h-dvh w-full grid place-items-center z-50"
     >
       <div
-        className="bg-slate-600 w-[60%] flex flex-col gap-2 p-8 z-[99] top-0 border border-orange-300"
+        className="bg-slate-800 w-[60%] flex flex-col gap-2 p-8 z-[99] top-0 border border-orange-300"
       >
         <header className="flex justify-between items-center border-b border-orange-300 py-2
         ">
