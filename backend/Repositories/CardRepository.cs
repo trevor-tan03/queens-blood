@@ -44,7 +44,27 @@ namespace backend.Repositories
 							Rarity = reader.GetString(4),
 							Ability = reader.GetString(5),
 							Image = reader.GetString(6),
+							Condition = reader.GetString(7),
 						};
+
+						for (int i = 8; i <= 10; i++)
+						{
+							var isDbNull = reader.IsDBNull(i);
+
+							if (isDbNull) break;
+							switch (i)
+							{
+								case 8:
+									card.Action = reader.GetString(i);
+									break;
+								case 9:
+									card.Target = reader.GetString(i);
+									break;
+								default:
+									card.Value = reader.GetInt32(i);
+									break;
+							}
+						}
 
 						_cards.Add(card);
 					}

@@ -1,40 +1,21 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
-import { useSignalR } from "../SignalR/SignalRProvider";
+import { useState } from "react";
+import Background from "../components/Home/Background";
+import JoinModal from "../components/Home/JoinModal";
+import HomeMenu from "../components/Home/Menu";
+import { useOverlay } from "../components/Overlay";
 
 const Home = () => {
+  const { show } = useOverlay();
   const [name, setName] = useState('');
-  const [code, setCode] = useState('');
-  const { gameCode, createGame, joinGame } = useSignalR();
-
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (gameCode) {
-      navigate(`/game/${gameCode}`);
-    }
-  }, [gameCode, navigate]);
 
   return (
     <div>
-      <div>
-        <label htmlFor="name">Name</label>
-        <input id="name" className="border border-slate-500" type="text" value={name} onChange={((e) => setName(e.target.value))} />
-        <button className="bg-blue-300" onClick={async () => await createGame(name)}>
-          Create
-        </button>
-      </div>
-      <div>
-        <label htmlFor="code">Code</label>
-        <input id="code" className="border border-slate-500" type="text" value={code} onChange={((e) => setCode(e.target.value))} />
-        <button onClick={async () => await joinGame(code, name)}>
-          Join
-        </button>
-      </div>
-      <div>
-        <button onClick={() => navigate("/deck")}>
-          Deck
-        </button>
+      <div
+        className="flex items-center justify-center h-dvh w-full relative"
+      >
+        {show && <JoinModal name={name} />}
+        <HomeMenu name={name} setName={setName} />
+        <Background />
       </div>
     </div>
   )

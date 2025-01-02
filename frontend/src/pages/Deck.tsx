@@ -1,11 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import CardComponent from "../components/Card";
+import CardList from "../components/Deck/CardList";
+import FilterModal from "../components/Deck/FilterModal";
+import FilterProvider from "../components/Deck/FilterProvider";
+import Selected from "../components/Deck/Selected";
+import GameBackground from "../components/Game/GameBackground";
+import { useOverlay } from "../components/Overlay";
 import { Card } from "../types/Card";
-import { compressDeck, getCopiesLimit, getRemainingCopies, isLegalDeck, saveDeck } from "../utils/deckMethods";
+import { isLegalDeck, saveDeck } from "../utils/deckMethods";
 
 const Deck = () => {
   const [deck, setDeck] = useState<Card[]>([]);
+  const { show } = useOverlay();
 
   useEffect(() => {
     const storedDeck = localStorage.getItem("deck");
@@ -15,31 +21,6 @@ const Deck = () => {
         setDeck(parsedDeck);
     }
   }, []);
-
-  const handleAdd = (card: Card) => {
-    if (deck.length < 15) {
-      const rarity = card.rarity;
-      const copiesInDeck = deck.filter(c => c.id === card.id).length;
-
-      // Player can only have one copy of a particular legendary card
-      // Player can have at most two copies of a particular standard card
-      if (
-        (rarity === "Legendary" && copiesInDeck === 1) ||
-        (rarity === "Standard" && copiesInDeck === 2)
-      ) return;
-
-      setDeck(d => [...d, card]);
-    }
-  }
-
-  const handleRemove = (card: Card) => {
-    if (deck.includes(card)) {
-      const index = deck.findIndex(c => c.id === card.id);
-      setDeck(d => (
-        d.slice(0, index).concat(d.slice(index + 1))
-      ))
-    }
-  }
 
   const api = `${import.meta.env.VITE_API_URL}/api/cards/base`;
 
@@ -54,52 +35,35 @@ const Deck = () => {
   if (error) return "An error occurred: " + error.message;
 
   return (
-    <div className="p-8">
-      <div>
-        <span className={`${deck.length != 15 ? "text-red-600" : ""}`}>
-          {deck.length}
-        </span>
-        /15
-      </div>
-      <div className="grid grid-cols-11 mb-6">
-        {
-          compressDeck(deck).map((c, i) => (
-            <div key={`deck-${i}`} className="">
-              <img
-                src={`../../assets/cards/${c.card.image}`}
-                alt={c.card.name}
-                onClick={() => handleRemove(c.card)}
-              />
-              <div>{`${c.copies} / ${getCopiesLimit(c.card.rarity)}`}</div>
-            </div>
-          ))
-        }
-      </div>
-      <button className="disabled:text-slate-500" disabled={!isLegalDeck(deck)} onClick={() => {
-        if (isLegalDeck(deck)) {
-          saveDeck(deck);
-          history.back();
-        }
-      }}>Save</button>
+    <FilterProvider cardsList={data}>
+      <div className="relative flex flex-col h-dvh">
+        <Selected
+          deck={deck}
+          setDeck={setDeck} />
 
-      <div className="grid grid-cols-11 max-w-full gap-2">
-        {data.map((d, i) => {
-          const remCopies = getRemainingCopies(deck, d);
+        <div className="p-6">
+          <CardList
+            deck={deck}
+            setDeck={setDeck}
+            cardsList={data} />
+        </div>
 
-          if (remCopies) {
-            return (
-              <div key={`rem-${i}`}>
-                <CardComponent
-                  handleClick={handleAdd}
-                  card={d}
-                />
-                <div>{`${remCopies}/${getCopiesLimit(d.rarity)}`}</div>
-              </div>
-            )
-          }
-        })}
+        <button
+          className="disabled:text-slate-500 py-2 px-4 bg-orange-300 rounded-full max-w-24 w-full mx-auto"
+          disabled={!isLegalDeck(deck)} onClick={() => {
+            if (isLegalDeck(deck)) {
+              saveDeck(deck);
+              history.back();
+            }
+          }}>
+          Save
+        </button>
+
+        {show && <FilterModal />}
+
+        <GameBackground />
       </div>
-    </div>
+    </FilterProvider>
   )
 }
 

@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card } from "../../types/Card";
 import { isLegalDeck } from "../../utils/deckMethods";
+import CardComponent from "../Card";
 
 const SelectedDeck = () => {
   const [selectedDeck, setSelectedDeck] = useState<Card[]>();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const storedDeck = localStorage.getItem("deck");
@@ -15,12 +17,16 @@ const SelectedDeck = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-3 md:grid-cols-5 max-w-[860px]">
+    <div
+      className="grid grid-cols-3 h-full xl:grid-cols-5 xl:h-auto overflow-y-auto p-12 bg-slate-800 border border-orange-300 max-w-screen-lg"
+      ref={containerRef}
+    >
       {selectedDeck?.map((card, i) => (
-        <img
+        <CardComponent
           key={`card-${i}`}
-          src={`../../../../assets/cards/${card.image}`}
-          alt={card.name}
+          card={card}
+          containerRef={containerRef}
+          handleClick={() => { }}
         />
       ))}
     </div>
