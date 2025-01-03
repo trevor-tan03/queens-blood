@@ -6,7 +6,12 @@ import PlayersSection from "../components/Lobby/PlayersSection";
 import SelectedDeck from "../components/Lobby/SelectedDeck";
 
 const Game = () => {
-  const { gameStart } = useSignalR();
+  const { gameStart, gameCode } = useSignalR();
+
+  if (!gameCode) {
+    window.location.replace("/");
+  }
+
   return (
     <>
       {gameStart
