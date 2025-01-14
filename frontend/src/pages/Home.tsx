@@ -4,6 +4,7 @@ import JoinModal from "../components/Home/JoinModal";
 import HomeMenu from "../components/Home/Menu";
 import { useOverlay } from "../components/Overlay";
 
+
 const Home = () => {
   const { show } = useOverlay();
   const [name, setName] = useState('');

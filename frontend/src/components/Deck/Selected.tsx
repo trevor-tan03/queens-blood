@@ -3,6 +3,7 @@ import type { Card } from "../../types/Card";
 import { compressDeck, getCopiesLimit } from "../../utils/deckMethods";
 import CardComponent from "../Card";
 import CardCopiesText from "./CardCopiesText";
+import { BsArrowLeft } from "react-icons/bs";
 
 interface Props {
   deck: Card[];
@@ -23,9 +24,14 @@ const Selected = ({ deck, setDeck }: Props) => {
 
   return (
     <div className="text-orange-300">
-      <h1 className="text-3xl p-2">
-        Card List
-      </h1>
+      <div className="flex ml-3 items-center">
+        <button className="text-2xl" onClick={() => history.back()}>
+          <BsArrowLeft />
+        </button>
+        <h1 className="text-3xl p-2">
+          Card List
+        </h1>
+      </div>
       <div className="bg-slate-700 bg-opacity-75 p-6 border-y border-orange-300">
         <div>
           <span className={`${deck.length != 15 ? "text-red-600" : ""}`}>

@@ -6,8 +6,9 @@ namespace backend.Models
 	{
 		public string Id { get; set; }
 		public List<Player> Players { get; set; } = new List<Player>();
+        public Tile[,] Grid = new Tile[3, 5];
 
-		public Game(string id) { Id = id; }
+        public Game(string id) { Id = id; }
 
 		public void AddPlayer (string playerId, string playerName)
 		{
