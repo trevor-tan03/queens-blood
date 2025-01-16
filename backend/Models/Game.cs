@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Numerics;
 
 namespace backend.Models
 {
@@ -6,9 +7,17 @@ namespace backend.Models
 	{
 		public string Id { get; set; }
 		public List<Player> Players { get; set; } = new List<Player>();
-        public Tile[,] Grid = new Tile[3, 5];
+        public Tile[,] Player1Grid = new Tile[3, 5];
+		public Tile[,] Player2Grid = new Tile[3, 5];
+		public Player? currentPlayer { get; set; }
+		public Random Random { get; set; }
 
         public Game(string id) { Id = id; }
+		public Game(string id, int seed)
+		{
+			Id = id;
+			Random = new Random(seed);
+		}
 
 		public void AddPlayer (string playerId, string playerName)
 		{
@@ -50,7 +59,44 @@ namespace backend.Models
 			}
 		}
 
-		public void Start()
+        private void InitializeBoard()
+        {
+            // Populate player 1 board and set initial owner
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 5; j++)
+                {
+                    Player1Grid[i, j] = new Tile();
+                }
+                Player1Grid[i, 0].Owner = Players[0];
+                Player1Grid[i, 4].Owner = Players[1]; // Setting owner for player 2's view
+            }
+
+            // Mirror player 1's board for player 2
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 5; j++)
+                {
+                    Player2Grid[i, j] = Player1Grid[i, 4 - j];
+                }
+            }
+
+            // Each player will be the owner of the first column on their respective boards
+            for (int i = 0; i < 3; i++)
+            {
+                Player1Grid[i, 0].Owner = Players[0];
+                Player2Grid[i, 0].Owner = Players[1];
+            }
+        }
+
+		private void PickStartingPlayer()
+		{
+			Random rand = new Random();
+			currentPlayer = Players[rand.Next(0,2)];
+		}
+
+
+        public void Start()
 		{
 			// Shuffle each player's deck and add first 5 to their hand
 			foreach (Player player in Players)
@@ -59,9 +105,8 @@ namespace backend.Models
 				player.PickUp(5);
 			}
 
-			// Decide who the starting player is
-
-			// Initialize board
+			PickStartingPlayer();
+			InitializeBoard();
 		}
 
 		public void MulliganCards(Player player, List<int> cardIndices)
@@ -86,6 +131,32 @@ namespace backend.Models
 					player.Hand[index] = card;
 				}
 			}
+		}
+
+		private bool CanPlaceCard(Card card, Tile tile)
+		{
+			var tileMeetsRankRequirement = tile.Rank >= card.Rank;
+			var playerOwnsTile = tile.Owner == currentPlayer;
+			var tileNotOccupied = tile.Card == null;
+
+			return tileMeetsRankRequirement && playerOwnsTile && tileNotOccupied;
+        }
+
+		public void PlaceCard(int handIndex, int row, int col)
+		{
+			var playerIndex = Players.IndexOf(currentPlayer!);
+			var card = currentPlayer!.Hand[handIndex];
+			var grid = playerIndex == 0 ? Player1Grid : Player2Grid;
+			var tile = grid[row, col];
+
+			if (CanPlaceCard(card, tile))
+			{
+                tile.Card = card;
+
+                // Rank up tiles in range
+
+                // Effect
+            }
 		}
 	}
 }

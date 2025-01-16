@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("QueensBloodTest")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3703ccc06511e123353d655d025813bd0f377c23")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c4276987dc9c5d288ddb76f125331e4d4d6dc1f8")]
 [assembly: System.Reflection.AssemblyProductAttribute("QueensBloodTest")]
 [assembly: System.Reflection.AssemblyTitleAttribute("QueensBloodTest")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

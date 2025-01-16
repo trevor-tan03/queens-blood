@@ -140,8 +140,53 @@ namespace QueensBloodTest
 
             Assert.Equal(5, game.Players[0].Hand.Count);
             Assert.Equal(10, game.Players[0].Deck.Count);
+
+            Assert.Equal(5, game.Players[1].Hand.Count);
+            Assert.Equal(10, game.Players[1].Deck.Count);
         }
 
+        [Fact]
+        public void BoardInitializedCorrectly()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
 
+            var p1 = game.Players[0];
+            var p2 = game.Players[1];
+
+            for (int i = 0; i < 3; i++)
+            {
+                Assert.Equal(p1, game.Player1Grid[i, 0].Owner);
+                Assert.Equal(p2, game.Player1Grid[i, 4].Owner);
+
+                Assert.Equal(p2, game.Player2Grid[i, 0].Owner);
+                Assert.Equal(p1, game.Player2Grid[i, 4].Owner);
+            }
+        }
+
+        [Fact]
+        public void CheckCurrentPlayerSelected()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            Assert.NotNull(game.currentPlayer);
+
+        }
+
+        [Fact]
+        public void PlayNoAbilityCard()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            var currPlayer = game.Players[0]; // Force player 1 to be current player
+
+            // Place security officer in the 2nd row, 1st column
+            var securityOfficer = _cards[0];
+            currPlayer.Hand[0] = securityOfficer;
+            //game.Player1Grid[1,0].PlaceCard()
+
+            // Ensure that the ora
+            
+        }
     }
 }
