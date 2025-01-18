@@ -29,7 +29,7 @@ namespace backend.Repositories
 				connection.Open();
 				
 				var command = connection.CreateCommand();
-				command.CommandText = "SELECT * FROM Cards";
+				command.CommandText = "SELECT * FROM Cards UNION ALL SELECT * FROM Ranges";
 
 				using (var reader = command.ExecuteReader())
 				{

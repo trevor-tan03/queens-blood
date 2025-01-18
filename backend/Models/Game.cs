@@ -85,7 +85,9 @@ namespace backend.Models
             for (int i = 0; i < 3; i++)
             {
                 Player1Grid[i, 0].Owner = Players[0];
+				Player1Grid[i, 0].Rank = 1;
                 Player2Grid[i, 0].Owner = Players[1];
+                Player2Grid[i, 0].Rank = 1;
             }
         }
 
@@ -153,7 +155,24 @@ namespace backend.Models
 			{
                 tile.Card = card;
 
-                // Rank up tiles in range
+                /* Orange tiles in range:
+                 * - Rank up
+                 * - Change owner
+                 */
+				foreach(RangeCell rangeCell in card.Range)
+				{
+                    var dy = row + rangeCell.Offset.row;
+                    var dx = col + rangeCell.Offset.col;
+                    var isIndexInBounds = dy >= 0 && dy <= 2 && dx >= 0 && dx <= 4;
+
+					if (rangeCell.Colour.Contains("O") && isIndexInBounds)
+					{
+						var offsetTile = grid[dy, dx];
+						offsetTile.Owner = currentPlayer;
+						offsetTile.RankUp(1);
+					}
+				}
+
 
                 // Effect
             }
