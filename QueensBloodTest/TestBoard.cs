@@ -1,3 +1,4 @@
+using System.Drawing;
 using backend;
 using backend.Models;
 using backend.Repositories;
@@ -37,7 +38,8 @@ namespace QueensBloodTest
                         if (card != null && offsetString != null && colour != null)
                         {
                             card.AddRangeCell(offsetString, colour);
-                        } else
+                        }
+                        else
                         {
                             card = new Card
                             {
@@ -46,45 +48,32 @@ namespace QueensBloodTest
                                 Rank = reader.GetInt32(2),
                                 Power = reader.GetInt32(3),
                                 Rarity = reader.GetString(4),
-                                Ability = reader.GetString(5),
                                 Image = reader.GetString(6),
+                            };
+
+                            Ability ability = new Ability()
+                            {
+                                Description = reader.GetString(5),
                                 Condition = reader.GetString(7),
                                 Action = reader.IsDBNull(8) ? null : reader.GetString(8),
                                 Target = reader.IsDBNull(9) ? null : reader.GetString(9),
                                 Value = reader.IsDBNull(10) ? null : reader.GetInt32(10),
                             };
 
+                            card.Ability = ability;
+
                             if (offsetString != null && colour != null)
                             {
                                 card.AddRangeCell(offsetString, colour);
-                            }
-
-                            for (int i = 8; i <= 10; i++)
-                            {
-                                var isDbNull = reader.IsDBNull(i);
-
-                                if (isDbNull) break;
-                                switch (i)
-                                {
-                                    case 8:
-                                        card.Action = reader.GetString(i);
-                                        break;
-                                    case 9:
-                                        card.Target = reader.GetString(i);
-                                        break;
-                                    default:
-                                        card.Value = reader.GetInt32(i);
-                                        break;
-                                }
                             }
 
                             _cards.Add(card);
                         }
                     }
                 }
-            }
 
-            CreateGameWithPlayers();
+                CreateGameWithPlayers();
+            }
         }
 
         private Game CreateGameWithPlayers()

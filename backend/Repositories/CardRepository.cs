@@ -35,38 +35,28 @@ namespace backend.Repositories
 				{
 					while (reader.Read())
 					{
-						var card = new Card
-						{
-							Id = reader.GetInt32(0),
-							Name = reader.GetString(1),
-							Rank = reader.GetInt32(2),
-							Power = reader.GetInt32(3),
-							Rarity = reader.GetString(4),
-							Ability = reader.GetString(5),
-							Image = reader.GetString(6),
-							Condition = reader.GetString(7),
-						};
+                        var card = new Card
+                        {
+                            Id = reader.GetInt32(0),
+                            Name = reader.GetString(1),
+                            Rank = reader.GetInt32(2),
+                            Power = reader.GetInt32(3),
+                            Rarity = reader.GetString(4),
+                            Image = reader.GetString(6),
+                        };
 
-						for (int i = 8; i <= 10; i++)
-						{
-							var isDbNull = reader.IsDBNull(i);
+                        Ability ability = new Ability()
+                        {
+                            Description = reader.GetString(5),
+                            Condition = reader.GetString(7),
+                            Action = reader.IsDBNull(8) ? null : reader.GetString(8),
+                            Target = reader.IsDBNull(9) ? null : reader.GetString(9),
+                            Value = reader.IsDBNull(10) ? null : reader.GetInt32(10),
+                        };
 
-							if (isDbNull) break;
-							switch (i)
-							{
-								case 8:
-									card.Action = reader.GetString(i);
-									break;
-								case 9:
-									card.Target = reader.GetString(i);
-									break;
-								default:
-									card.Value = reader.GetInt32(i);
-									break;
-							}
-						}
+                        card.Ability = ability;
 
-						_cards.Add(card);
+                        _cards.Add(card);
 					}
 				}
 			}
