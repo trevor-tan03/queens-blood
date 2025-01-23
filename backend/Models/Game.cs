@@ -12,6 +12,15 @@ namespace backend.Models
 		public Player? currentPlayer { get; set; }
 		public Random Random { get; set; }
 
+		public List<Tile> EnhancedCards { get; set; }
+		public List<Tile> EnfeebledCards { get; set; }
+
+		// Events
+		public event Action<Card> OnCardPlaced;
+		public event Action<Card> OnCardDestroyed;
+		public event Action<Card> OnCardEnhanced;
+		public event Action<Card> OnCardEnfeebled;
+
         public Game(string id) { Id = id; }
 		public Game(string id, int seed)
 		{
@@ -139,10 +148,21 @@ namespace backend.Models
 		{
 			var tileMeetsRankRequirement = tile.Rank >= card.Rank;
 			var playerOwnsTile = tile.Owner == currentPlayer;
-			var tileNotOccupied = tile.Card == null;
+			var tileOccupied = tile.Card != null;
 
-			return tileMeetsRankRequirement && playerOwnsTile && tileNotOccupied;
+            if (card.Ability.Action == "replace")
+            {
+                // Replace cards can only be placed on occupied tiles, regardless of rank
+                return playerOwnsTile && tileOccupied;
+            }
+
+            return tileMeetsRankRequirement && playerOwnsTile && !tileOccupied;
         }
+
+		private void SwapPlayerTurns()
+		{
+			currentPlayer = Players.Find(p => p.Id != currentPlayer!.Id);
+		}
 
 		public void PlaceCard(int handIndex, int row, int col)
 		{
@@ -154,6 +174,8 @@ namespace backend.Models
 			if (CanPlaceCard(card, tile))
 			{
                 tile.Card = card;
+
+				card.InitAbility(this);
 
                 /* Orange tiles in range:
                  * - Rank up
@@ -169,12 +191,13 @@ namespace backend.Models
 					{
 						var offsetTile = grid[dy, dx];
 						offsetTile.Owner = currentPlayer;
-						offsetTile.RankUp(1);
+						offsetTile.RankUp(card.RankUpAmount);
 					}
 				}
 
-
-                // Effect
+				OnCardPlaced?.Invoke(card);
+				currentPlayer.Hand.RemoveAt(handIndex);
+				SwapPlayerTurns();
             }
 		}
 	}

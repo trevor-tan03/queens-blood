@@ -29,12 +29,8 @@ namespace backend.Models
 		public Ability Ability { get; set; }
 		public List<RangeCell> Range { get; set; } = new List<RangeCell>();
 
-		//Events
-		public Action<Card>? OnCardPlaced;
-        public Action<Card>? OnCardDestroyed;
-
-		//Game
-		//Draw the card
+		// Default is 1, but some cards have abilities which increases this up to 3.
+		public int RankUpAmount { get; set; } = 1;
 		
 
         public void SetChild(Card child)
@@ -54,15 +50,69 @@ namespace backend.Models
             Range.Add(cell);
         }
 
-  //      public void InitAbility(Game game)
-  //      {
-  //          game.OnCardDestroyed += AddToCardLevel;
-  //      }
+		public void InitAbility(Game game)
+		{
+			var onPlaceConditions = new List<string> { "AP", "EP" };
+			var onDestroyConditions = new List<string> { "D", "AD", "ED", "*" };
+			var onEnhanceConditions = new List<string> { "P1R", "1+", "+A", "+E", "+AE" };
+			var onEnfeebleConditions = new List<string> { "1-", "-A", "-E", "-AE" };
+			var onWinLane = new List<string> { "+Score", "L+V" };
 
-		//private void AddToCardLevel(Card destroyedCard)
-		//{
-		//	//
-		//	Power += 5;
-		//}
-    }
+			// Subscribe based on the card's trigger condition for its ability
+			if (onPlaceConditions.Contains(this.Ability.Condition))
+			{
+                game.OnCardPlaced += HandleCardPlaced;
+            } 
+			else if (onDestroyConditions.Contains(this.Ability.Condition))
+			{
+				game.OnCardDestroyed += HandleCardDestroyed;
+			} 
+			else if (onEnhanceConditions.Contains(this.Ability.Condition))
+			{
+				game.OnCardEnhanced += HandleCardEnhanced;
+			} 
+			else if (onEnfeebleConditions.Contains(this.Ability.Condition))
+			{ 
+				game.OnCardEnfeebled += HandleCardEnfeebled;
+			}
+		}
+
+		private void UninitAbility(Game game)
+		{
+            // Unsubscribe the destroyed card from all events
+            game.OnCardPlaced += HandleCardPlaced;
+            game.OnCardDestroyed += HandleCardDestroyed;
+            game.OnCardEnhanced += HandleCardEnhanced;
+            game.OnCardEnfeebled += HandleCardEnfeebled;
+
+            /*
+			 * Undo the effects of the ability on other cards if applicable. This includes abilities with:
+			 *  - "While in play" condition (*)
+			 */
+        }
+
+        private void HandleCardPlaced(Card card)
+		{
+			//if (this.Ability.Condition == "R")
+			//{
+				
+			//}
+		}
+
+		private void HandleCardDestroyed(Card card)
+		{
+			
+			
+		}
+
+		private void HandleCardEnhanced(Card card)
+		{
+
+		}
+
+		private void HandleCardEnfeebled(Card card)
+		{
+
+		}
+	}
 }

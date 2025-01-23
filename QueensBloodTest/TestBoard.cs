@@ -95,7 +95,14 @@ namespace QueensBloodTest
                 }
             }
 
+            game.currentPlayer = game.Players[0]; // Force player 1 to be current player
+
             return game;
+        }
+
+        private void SetFirstCardInHand(Game game, Card card)
+        {
+            game.currentPlayer.Hand[0] = card;
         }
 
         [Fact]
@@ -211,37 +218,53 @@ namespace QueensBloodTest
             }
         }
 
+        private void AssertTileState(Tile[,] grid, int row, int column, int expectedRank, string expectedOwner)
+        {
+            Assert.Equal(expectedRank, grid[row, column].Rank);
+            Assert.Equal(expectedOwner, grid[row, column].Owner!.Name);
+        }
+
         [Fact]
         public void CheckOrangeTilesUpdatesCorrectly()
         {
             var game = CreateGameWithPlayers();
             game.Start();
-            game.currentPlayer = game.Players[0]; // Force player 1 to be current player
-
+           
             // Place security officer in the 2nd row, 1st column
             var securityOfficer = _cards[0];
-            game.currentPlayer.Hand[0] = securityOfficer;
+            SetFirstCardInHand(game, securityOfficer);
             game.PlaceCard(0, 1, 0);
 
             // Ensure affected tiles are updated correctly
-            Assert.Equal(2, game.Player1Grid[0, 0].Rank);
-            Assert.Equal("Player1", game.Player1Grid[0,0].Owner!.Name);
+            AssertTileState(game.Player1Grid, 0, 0, 2, "Player1");
+            AssertTileState(game.Player1Grid, 1, 1, 1, "Player1");
+            AssertTileState(game.Player1Grid, 2, 0, 2, "Player1");
 
-            Assert.Equal(1, game.Player1Grid[1, 1].Rank);
-            Assert.Equal("Player1", game.Player1Grid[1, 1].Owner!.Name);
+            AssertTileState(game.Player2Grid, 0, 4, 2, "Player1");
+            AssertTileState(game.Player2Grid, 1, 3, 1, "Player1");
+            AssertTileState(game.Player2Grid, 2, 4, 2, "Player1");
+        }
 
-            Assert.Equal(2, game.Player1Grid[2, 0].Rank);
-            Assert.Equal("Player1", game.Player1Grid[2, 0].Owner!.Name);
+        [Fact]
+        public void PlaceReplaceCard()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
 
-            // Ensure changes are reflected in player 2's board too
-            Assert.Equal(2, game.Player2Grid[0, 4].Rank);
-            Assert.Equal("Player1", game.Player2Grid[0, 4].Owner!.Name);
+            var securityOfficer = _cards[0];
+            SetFirstCardInHand(game, securityOfficer);
+            game.PlaceCard(0, 1, 0);
 
-            Assert.Equal(1, game.Player2Grid[1, 3].Rank);
-            Assert.Equal("Player1", game.Player2Grid[1, 3].Owner!.Name);
+            game.currentPlayer = game.Players[0]; // Back to Player 1's turn
 
-            Assert.Equal(2, game.Player2Grid[2, 4].Rank);
-            Assert.Equal("Player1", game.Player2Grid[2, 4].Owner!.Name);
+            var insectoidChimera = _cards[50];
+            SetFirstCardInHand(game, insectoidChimera);
+            game.PlaceCard(0, 1, 0);
+
+            // Ensure affected tiles are updated correctly
+            AssertTileState(game.Player1Grid, 0, 0, 3, "Player1");
+            AssertTileState(game.Player1Grid, 1, 1, 2, "Player1");
+            AssertTileState(game.Player1Grid, 2, 0, 3, "Player1");
         }
     }
 }
