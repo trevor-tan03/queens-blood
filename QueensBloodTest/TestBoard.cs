@@ -87,7 +87,7 @@ namespace QueensBloodTest
 
             for (int i = 0; i < 15; i++)
             {
-                Card card = _cards[defaultDeck[i]-1];
+                Card card = _cards[defaultDeck[i] - 1];
 
                 foreach (Player player in game.Players)
                 {
@@ -95,14 +95,12 @@ namespace QueensBloodTest
                 }
             }
 
-            game.currentPlayer = game.Players[0]; // Force player 1 to be current player
-
             return game;
         }
 
         private void SetFirstCardInHand(Game game, Card card)
         {
-            game.currentPlayer.Hand[0] = card;
+            game.currentPlayer!.Hand[0] = card;
         }
 
         [Fact]
@@ -191,6 +189,26 @@ namespace QueensBloodTest
 
         }
 
+        private void SetPlayer1Start(Game game)
+        {
+            game.currentPlayer = game.Players.First();
+        }
+
+        [Fact]
+        public void CheckSwapPlayersEachTurn()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            var securityOfficer = _cards[0];
+            SetFirstCardInHand(game, securityOfficer);
+
+            Assert.Equal("Player1", game.currentPlayer!.Name);
+            game.PlaceCard(0, 0, 0);
+            Assert.Equal("Player2", game.currentPlayer!.Name);
+        }
+
         [Fact]
         public void InitializeCardRangeCorrectly()
         {
@@ -213,8 +231,8 @@ namespace QueensBloodTest
             for (int i = 0; i < 10; i++)
             {
                 Assert.Equal(expectedRedXIIIRanges[i].Colour, redXIII.Range[i].Colour);
-                Assert.Equal(expectedRedXIIIRanges[i].Offset.row, redXIII.Range[i].Offset.row);
-                Assert.Equal(expectedRedXIIIRanges[i].Offset.col, redXIII.Range[i].Offset.col);
+                Assert.Equal(expectedRedXIIIRanges[i].Offset.y, redXIII.Range[i].Offset.y);
+                Assert.Equal(expectedRedXIIIRanges[i].Offset.x, redXIII.Range[i].Offset.x);
             }
         }
 
@@ -229,7 +247,8 @@ namespace QueensBloodTest
         {
             var game = CreateGameWithPlayers();
             game.Start();
-           
+            SetPlayer1Start(game);
+
             // Place security officer in the 2nd row, 1st column
             var securityOfficer = _cards[0];
             SetFirstCardInHand(game, securityOfficer);
@@ -250,6 +269,7 @@ namespace QueensBloodTest
         {
             var game = CreateGameWithPlayers();
             game.Start();
+            SetPlayer1Start(game);
 
             var securityOfficer = _cards[0];
             SetFirstCardInHand(game, securityOfficer);
@@ -264,6 +284,20 @@ namespace QueensBloodTest
             // Ensure affected tiles are updated correctly
             AssertTileState(game.Player1Grid, 0, 0, 3, "Player1");
             AssertTileState(game.Player1Grid, 1, 1, 2, "Player1");
+            AssertTileState(game.Player1Grid, 2, 0, 3, "Player1");
+        }
+
+        [Fact]
+        public void PlaceCardWithRaisePositionRankAbility()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            var twinBrain = _cards[70];
+            SetFirstCardInHand(game, twinBrain);
+            game.PlaceCard(0, 0, 0);
+
             AssertTileState(game.Player1Grid, 2, 0, 3, "Player1");
         }
     }

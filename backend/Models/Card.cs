@@ -5,7 +5,7 @@ namespace backend.Models
 	public struct RangeCell
 	{
 		public string Colour;
-		public (int row, int col) Offset;
+		public (int x, int y) Offset;
 	}
 
 	public struct Ability
@@ -41,11 +41,13 @@ namespace backend.Models
 		public void AddRangeCell(string offsetString, string colour)
 		{
             var offsetTuple = offsetString.Replace("(", "").Replace(")", "").Split(",");
+			var x = Int32.Parse(offsetTuple[0].Trim());
+			var y = Int32.Parse(offsetTuple[1].Trim());
 
             RangeCell cell = new RangeCell()
             {
                 Colour = colour,
-                Offset = (Int32.Parse(offsetTuple[0].Trim()), Int32.Parse(offsetTuple[1].Trim()))
+                Offset = (x, y)
             };
             Range.Add(cell);
         }
@@ -75,6 +77,8 @@ namespace backend.Models
 			{ 
 				game.OnCardEnfeebled += HandleCardEnfeebled;
 			}
+
+			ExecuteAbility(game);
 		}
 
 		private void UninitAbility(Game game)
@@ -91,12 +95,17 @@ namespace backend.Models
 			 */
         }
 
+		private void ExecuteAbility(Game game)
+		{
+			if (Ability.Action == "+R" && Ability.Value != null)
+			{
+				RankUpAmount = (int) Ability.Value;
+			}
+		}
+
         private void HandleCardPlaced(Card card)
 		{
-			//if (this.Ability.Condition == "R")
-			//{
-				
-			//}
+
 		}
 
 		private void HandleCardDestroyed(Card card)

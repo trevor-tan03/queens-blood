@@ -174,17 +174,19 @@ namespace backend.Models
 			if (CanPlaceCard(card, tile))
 			{
                 tile.Card = card;
+                currentPlayer.Hand.RemoveAt(handIndex);
 
-				card.InitAbility(this);
+                card.InitAbility(this);
+                OnCardPlaced?.Invoke(card);
 
                 /* Orange tiles in range:
                  * - Rank up
                  * - Change owner
                  */
-				foreach(RangeCell rangeCell in card.Range)
+                foreach (RangeCell rangeCell in card.Range)
 				{
-                    var dy = row + rangeCell.Offset.row;
-                    var dx = col + rangeCell.Offset.col;
+                    var dx = col + rangeCell.Offset.x;
+                    var dy = row + rangeCell.Offset.y;
                     var isIndexInBounds = dy >= 0 && dy <= 2 && dx >= 0 && dx <= 4;
 
 					if (rangeCell.Colour.Contains("O") && isIndexInBounds)
@@ -195,8 +197,6 @@ namespace backend.Models
 					}
 				}
 
-				OnCardPlaced?.Invoke(card);
-				currentPlayer.Hand.RemoveAt(handIndex);
 				SwapPlayerTurns();
             }
 		}
