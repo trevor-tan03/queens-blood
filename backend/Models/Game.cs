@@ -16,10 +16,10 @@ namespace backend.Models
 		public List<Tile> EnfeebledCards { get; set; }
 
 		// Events
-		public event Action<Card> OnCardPlaced;
-		public event Action<Card> OnCardDestroyed;
-		public event Action<Card> OnCardEnhanced;
-		public event Action<Card> OnCardEnfeebled;
+		public event Action<Game, Tile[,], int, int> OnCardPlaced;
+		public event Action<Game, Tile[,], int, int> OnCardDestroyed;
+		public event Action<Game, Tile[,], int, int> OnCardEnhanced;
+		public event Action<Game, Tile[,], int, int> OnCardEnfeebled;
 
         public Game(string id) { Id = id; }
 		public Game(string id, int seed)
@@ -176,26 +176,9 @@ namespace backend.Models
                 tile.Card = card;
                 currentPlayer.Hand.RemoveAt(handIndex);
 
-                card.InitAbility(this);
-                OnCardPlaced?.Invoke(card);
-
-                /* Orange tiles in range:
-                 * - Rank up
-                 * - Change owner
-                 */
-                foreach (RangeCell rangeCell in card.Range)
-				{
-                    var dx = col + rangeCell.Offset.x;
-                    var dy = row + rangeCell.Offset.y;
-                    var isIndexInBounds = dy >= 0 && dy <= 2 && dx >= 0 && dx <= 4;
-
-					if (rangeCell.Colour.Contains("O") && isIndexInBounds)
-					{
-						var offsetTile = grid[dy, dx];
-						offsetTile.Owner = currentPlayer;
-						offsetTile.RankUp(card.RankUpAmount);
-					}
-				}
+                tile.InitAbility(this);
+                OnCardPlaced?.Invoke(this, grid, row, col);
+				
 
 				SwapPlayerTurns();
             }

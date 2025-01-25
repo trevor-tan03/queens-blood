@@ -300,5 +300,39 @@ namespace QueensBloodTest
 
             AssertTileState(game.Player1Grid, 2, 0, 3, "Player1");
         }
+
+        [Fact]
+        public void PlaceCardsThatEnhanceWhenCardsArePlayed()
+        {
+            // This refers to the two cards: Sea Devil and Bagnadrana
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            // Set middle row of each each player's side have a starting rank of 3
+            game.Player1Grid[1, 0].RankUp(2);
+            game.Player2Grid[1, 0].RankUp(2);
+
+            // Player 1 places sea devil which raises its power by 1 when an allied card is played (AP)
+            var seaDevil = _cards[31];
+            SetFirstCardInHand(game, seaDevil);
+            game.PlaceCard(0, 1, 0);
+            Assert.Equal(0, game.Player1Grid[1, 0].BonusPower);
+
+            // Player 2 places sea devil which raises its power by 1 when an enemy card is played (EP)
+            var bagnadrana = _cards[37];
+            SetFirstCardInHand(game, bagnadrana);
+            game.PlaceCard(0, 1, 0);
+
+            /* Player 1 places an allied card (security officer) in the first column. This is an enemy card for Player 2.
+             * This should raise the power of both the Sea Devil and Bagnadrana.
+             */
+            var securityOfficer = _cards[0];
+            SetFirstCardInHand(game, securityOfficer);
+            game.PlaceCard(0, 0, 0);
+
+            Assert.Equal(1, game.Player1Grid[1,0].BonusPower);
+            Assert.Equal(1, game.Player2Grid[1, 0].BonusPower);
+        }
     }
 }
