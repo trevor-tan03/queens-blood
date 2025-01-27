@@ -62,6 +62,11 @@ namespace QueensBloodTest
 
                             card.Ability = ability;
 
+                            if (card.Ability.Action == "+R" && ability.Value != null)
+                            {
+                                card.RankUpAmount = (int) ability!.Value;
+                            }
+
                             if (offsetString != null && colour != null)
                             {
                                 card.AddRangeCell(offsetString, colour);
@@ -294,11 +299,35 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
+            // Place Twin Brain to raise position rank of tile 
             var twinBrain = _cards[70];
             SetFirstCardInHand(game, twinBrain);
             game.PlaceCard(0, 0, 0);
 
             AssertTileState(game.Player1Grid, 2, 0, 3, "Player1");
+        }
+
+        [Fact]
+        public void PlaceCardWithRaisePositionRankAbilityButAlreadyCardOnTile()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            // Place security officer at [2,0]
+            var securityOfficer = _cards[0];
+            SetFirstCardInHand(game, securityOfficer);
+            game.PlaceCard(0, 2, 0);
+
+            // Back to Player 1's turn
+            game.currentPlayer = game.Players[0];
+
+            // Place Twin Brain but it shouldn't change the position rank of the affected tiles since there's already a card there
+            var twinBrain = _cards[70];
+            SetFirstCardInHand(game, twinBrain);
+            game.PlaceCard(0, 0, 0);
+
+            AssertTileState(game.Player1Grid, 2, 0, 1, "Player1");
         }
 
         [Fact]
@@ -333,6 +362,74 @@ namespace QueensBloodTest
 
             Assert.Equal(1, game.Player1Grid[1,0].BonusPower);
             Assert.Equal(1, game.Player2Grid[1, 0].BonusPower);
+        }
+
+        [Fact]
+        public void PlaceCardThatEnhanceWhileInPlay()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            // Play Crystalline Crab
+            var crystallineCrab = _cards[12];
+            SetFirstCardInHand(game, crystallineCrab);
+            game.PlaceCard(0, 1, 0);
+
+            // Tile above should have its power enhanced by 2
+            Assert.Equal(2, game.Player1Grid[0,0].BonusPower);
+            SetPlayer1Start(game);
+
+            // When an allied security officer is placed, its cumulative power should be 3 (1+2)
+            var securityOfficer = _cards[0];
+            SetFirstCardInHand(game, securityOfficer);
+            game.PlaceCard(0, 0, 0);
+
+            Assert.Equal(3, CumulativePowerOnTile(game.Player1Grid[0, 0]));
+            SetPlayer1Start(game);
+
+            // When Crystalline Crab is destroyed, the security officer should lose its enhancement
+            var insectoidChimera = _cards[51];
+            SetFirstCardInHand(game, insectoidChimera);
+            game.PlaceCard(0, 1, 0);
+
+            Assert.Equal(1, CumulativePowerOnTile(game.Player1Grid[0, 0]));
+        }
+
+        // Used to place cards in "illegal" places and ignore abilities for more efficient testing
+        private void ForcePlace(Game game, Card card, Player owner, int row, int col)
+        {
+            game.Player1Grid[row, col].Owner = owner;
+            game.Player1Grid[row, col].Card = card;
+        }
+
+        private int CumulativePowerOnTile(Tile tile)
+        {
+            return tile.BonusPower + tile.Card!.Power;
+        }
+
+        [Fact]
+        public void PlaceCardThatEnhanceWhenFirstPlayed()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            var securityOfficer = _cards[0];
+            ForcePlace(game, securityOfficer, game.Players[0], 0, 0); // Allied card
+            ForcePlace(game, securityOfficer, game.Players[1], 0, 1); // Enemy card
+
+            // Loveless is the only card with both this ability & trigger condition
+            var loveless = _cards[138];
+            SetFirstCardInHand(game, loveless);
+            game.PlaceCard(0, 1, 0);
+
+            Assert.Equal(2, CumulativePowerOnTile(game.Player1Grid[0, 0])); // Allied card enhanced
+            Assert.Equal(2, CumulativePowerOnTile(game.Player1Grid[0, 1])); // Enemy card enhanced
+
+            ForcePlace(game, securityOfficer, game.Players[1], 1, 1); // Place enemy card beneath the first enemy card
+            // Card shouldn't have bonus power since it wasn't present at the time of Loveless being placed
+            Assert.Equal(1, CumulativePowerOnTile(game.Player1Grid[1,1])); 
         }
     }
 }

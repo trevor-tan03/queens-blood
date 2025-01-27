@@ -12,8 +12,8 @@ namespace backend.Models
 		public Player? currentPlayer { get; set; }
 		public Random Random { get; set; }
 
-		public List<Tile> EnhancedCards { get; set; }
-		public List<Tile> EnfeebledCards { get; set; }
+		public List<Tile> EnhancedCards { get; set; } = new List<Tile>();
+		public List<Tile> EnfeebledCards { get; set; } = new List<Tile>();
 
 		// Events
 		public event Action<Game, Tile[,], int, int> OnCardPlaced;
@@ -164,6 +164,15 @@ namespace backend.Models
 			currentPlayer = Players.Find(p => p.Id != currentPlayer!.Id);
 		}
 
+		public void EnhanceTile(Tile tile, int amount)
+		{
+            var playerIndex = Players.IndexOf(currentPlayer!);
+            var grid = playerIndex == 0 ? Player1Grid : Player2Grid;
+
+            EnhancedCards.Add(tile);
+			tile.BonusPower += amount;
+		}
+
 		public void PlaceCard(int handIndex, int row, int col)
 		{
 			var playerIndex = Players.IndexOf(currentPlayer!);
@@ -173,14 +182,17 @@ namespace backend.Models
 
 			if (CanPlaceCard(card, tile))
 			{
+                // Invoke card destroyed if replace card
+                if (card.Ability.Condition == "R")
+                    OnCardDestroyed?.Invoke(this, grid, row, col);
+
                 tile.Card = card;
                 currentPlayer.Hand.RemoveAt(handIndex);
 
                 tile.InitAbility(this);
                 OnCardPlaced?.Invoke(this, grid, row, col);
-				
 
-				SwapPlayerTurns();
+                SwapPlayerTurns();
             }
 		}
 	}

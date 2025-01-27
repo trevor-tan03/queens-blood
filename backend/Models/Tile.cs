@@ -41,13 +41,13 @@
             }
         }
 
-        private void UninitAbility(Game game)
+        private void UninitAbility(Game game, Tile[,] grid, int row, int col)
         {
             // Unsubscribe the destroyed card from all events
-            game.OnCardPlaced += HandleCardPlaced;
-            game.OnCardDestroyed += HandleCardDestroyed;
-            game.OnCardEnhanced += HandleCardEnhanced;
-            game.OnCardEnfeebled += HandleCardEnfeebled;
+            game.OnCardPlaced -= HandleCardPlaced;
+            game.OnCardDestroyed -= HandleCardDestroyed;
+            game.OnCardEnhanced -= HandleCardEnhanced;
+            game.OnCardEnfeebled -= HandleCardEnfeebled;
 
             /*
 			 * Undo the effects of the ability on other cards if applicable. This includes abilities with:
@@ -57,45 +57,38 @@
             {
                 foreach (RangeCell rangeCell in Card!.Range)
                 {
+                    var dx = col + rangeCell.Offset.x;
+                    var dy = row + rangeCell.Offset.y;
+                    var isIndexInBounds = dy >= 0 && dy <= 2 && dx >= 0 && dx <= 4;
 
+                    if (rangeCell.Colour.Contains("R") && isIndexInBounds && Card!.Ability.Value != null)
+                        grid[dy, dx].BonusPower -= (int) Card!.Ability.Value;
                 }
             }
         }
 
-        private void ModifyPowerOfCardsInRange(Tile[,] grid, string target)
+        private void HandleTargetingAbilties(Tile tile, Game game)
         {
-            if (target.Contains("AE"))
-            {
+            if (Card!.Ability.Value == null) return;
+            var operation = Card!.Ability.Action!.Contains("+") ? 1 : -1;
 
-            }
-            else if (target.Contains("A"))
-            {
-
-            }
+            if (operation == 1)
+                game.EnhancedCards.Add(tile);
             else
-            {
+                game.EnfeebledCards.Add(tile);
 
-            }
-        }
-
-        private void HandleTargetingAbilties(Game game)
-        {
-            switch (Card!.Ability.Action)
+            if (
+                // Check if we're allowed to use the ability on the tile on target
+                ((Card!.Ability.Target == "a" && tile.Owner == Owner) ||
+                (Card!.Ability.Target == "e" && tile.Owner != Owner) ||
+                (Card!.Ability.Target == "ae"))
+                &&
+                // Check if we're allowed to use the ability on an empty tile
+                ((Card!.Ability.Condition == "P" && tile.Card != null) || 
+                Card!.Ability.Condition == "*")
+            )
             {
-                case "-A":
-                    break;
-                case "+A":
-                    break;
-                case "-E":
-                    break;
-                case "+E":
-                    break;
-                case "-AE":
-                    break;
-                case "+AE":
-                    break;
-                default:
-                    return;
+                tile.BonusPower += operation * (int) Card!.Ability.Value;
             }
         }
 
@@ -104,14 +97,14 @@
 
         }
 
-        private void ExecuteAbility(Game game)
+        private void ExecuteAbility(Game game, Tile[,] grid, int row, int col)
         {
             // Targets allied or enemy cards means it uses the red tiles
             if (Card!.Ability.Target != null)
             {
                 if (Card!.Ability.Target.Contains("a") || Card!.Ability.Target.Contains("e"))
                 {
-
+                    HandleTargetingAbilties(grid[row,col], game);
                 }
                 // Raise this card's power by one
                 else if (Card!.Ability.Target == "s")
@@ -123,11 +116,6 @@
                 {
 
                 }
-            }
-
-            if (Card!.Ability.Action == "+R" && Card!.Ability.Value != null)
-            {
-                Card!.RankUpAmount = (int) Card!.Ability.Value;
             }
         }
 
@@ -155,14 +143,19 @@
                 var dy = row + rangeCell.Offset.y;
                 var isIndexInBounds = dy >= 0 && dy <= 2 && dx >= 0 && dx <= 4;
 
-                if (rangeCell.Colour.Contains("O") && isIndexInBounds)
+                if (!isIndexInBounds) continue;
+                var offsetTile = grid[dy, dx];
+
+                if (rangeCell.Colour.Contains("O") && isIndexInBounds && offsetTile.Card == null)
                 {
-                    var offsetTile = grid[dy, dx];
                     offsetTile.Owner = game.currentPlayer;
                     offsetTile.RankUp(Card!.RankUpAmount);
                 }
 
-                //ExecuteAbility(game);
+                if (rangeCell.Colour.Contains("R") && isIndexInBounds)
+                {
+                    ExecuteAbility(game, grid, dy, dx);
+                }
             }
 
             // If the card doesn't need to listen for other cards being placed, unsubscribe
@@ -174,18 +167,24 @@
 
         private void HandleCardDestroyed(Game game, Tile[,] grid, int row, int col)
         {
-            UninitAbility(game);
+            UninitAbility(game, grid, row, col);
 
         }
 
         private void HandleCardEnhanced(Game game, Tile[,] grid, int row, int col)
         {
-
+            
         }
 
         private void HandleCardEnfeebled(Game game, Tile[,] grid, int row, int col)
         {
+            var cardOnTile = grid[row, col].Card;
 
+            // Destroy card if the power is less than or equal to 0
+            if (grid[row, col].BonusPower + grid[row, col]!.Card!.Power <= 0)
+                grid[row, col].Card = null;
+
+            // Hand
         }
     }
 }
