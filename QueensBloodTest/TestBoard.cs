@@ -346,7 +346,7 @@ namespace QueensBloodTest
             var seaDevil = _cards[31];
             SetFirstCardInHand(game, seaDevil);
             game.PlaceCard(0, 1, 0);
-            Assert.Equal(0, game.Player1Grid[1, 0].BonusPower);
+            Assert.Equal(0, game.Player1Grid[1, 0].SelfBonusPower);
 
             // Player 2 places sea devil which raises its power by 1 when an enemy card is played (EP)
             var bagnadrana = _cards[37];
@@ -360,8 +360,8 @@ namespace QueensBloodTest
             SetFirstCardInHand(game, securityOfficer);
             game.PlaceCard(0, 0, 0);
 
-            Assert.Equal(1, game.Player1Grid[1,0].BonusPower);
-            Assert.Equal(1, game.Player2Grid[1, 0].BonusPower);
+            Assert.Equal(1, game.Player1Grid[1,0].SelfBonusPower);
+            Assert.Equal(1, game.Player2Grid[1, 0].SelfBonusPower);
         }
 
         [Fact]
@@ -405,7 +405,7 @@ namespace QueensBloodTest
 
         private int CumulativePowerOnTile(Tile tile)
         {
-            return tile.BonusPower + tile.Card!.Power;
+            return tile.BonusPower + tile.SelfBonusPower + tile.Card!.Power;
         }
 
         [Fact]
@@ -430,6 +430,177 @@ namespace QueensBloodTest
             ForcePlace(game, securityOfficer, game.Players[1], 1, 1); // Place enemy card beneath the first enemy card
             // Card shouldn't have bonus power since it wasn't present at the time of Loveless being placed
             Assert.Equal(1, CumulativePowerOnTile(game.Player1Grid[1,1])); 
+        }
+
+        [Fact]
+        public void PlaceCardThatEnfeeblesWhileInPlay()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            var elphadunk = _cards[10];
+            ForcePlace(game, elphadunk, game.Players[0], 0, 0);
+            Assert.Equal(4, CumulativePowerOnTile(game.Player1Grid[0,0]));
+
+            var resurrectedAmalgram = _cards[155];
+            SetFirstCardInHand(game, resurrectedAmalgram);
+            game.PlaceCard(0, 1, 0);
+
+            // Elphadunk's cumulative power should be reduced to 2
+            Assert.Equal(2, CumulativePowerOnTile(game.Player1Grid[0, 0]));
+
+            SetPlayer1Start(game);
+
+            var insectoidChimera = _cards[50];
+            SetFirstCardInHand(game, insectoidChimera);
+            game.PlaceCard(0, 1, 0); // Replace the Resurrect Amalgram card
+
+            // Elphadunk's power should be back to 4
+            Assert.Equal(4, CumulativePowerOnTile(game.Player1Grid[0, 0]));
+        }
+
+        [Fact]
+        public void PlaceCardThatEnfeeblesWhenFirstPlayed()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            var elphadunk = _cards[10];
+            ForcePlace(game, elphadunk, game.Players[0], 0, 0);
+
+            var capparwire = _cards[25];
+            SetFirstCardInHand(game, capparwire);
+            game.PlaceCard(0, 1, 0);
+
+            // The Capparwire's ability should have affected the Elphadunk
+            Assert.Equal(3, CumulativePowerOnTile(game.Player1Grid[0, 0]));
+
+            var securityOfficer = _cards[0];
+            ForcePlace(game, securityOfficer, game.Players[0], 2, 0);
+
+            /* Security Officer shouldn't be affected since it wasn't present at the
+             * time of the Capparwire's ability being executed.
+             */
+            Assert.Equal(1, CumulativePowerOnTile(game.Player1Grid[2, 0]));
+        }
+
+        [Fact]
+        public void PlaceCardThatEnhancesItselfWhenAlliesAreEnhancedAsFirstCard()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            // Place Ifrit at the top of the first column
+            var ifrit = _cards[94];
+            SetFirstCardInHand(game, ifrit);
+            game.Player1Grid[0, 0].RankUp(2);
+            game.PlaceCard(0, 0, 0);
+
+            // Place security officer in middle of first column
+            ForcePlace(game, _cards[0], game.Players[0], 1, 0);
+
+            // Place crystalline crab at bottom of first column, enhancing security officer
+            SetPlayer1Start(game);
+            var crystallineCrab = _cards[12];
+            SetFirstCardInHand(game, crystallineCrab);
+            game.PlaceCard(0, 2, 0);
+
+
+            // Security Officer's power should be enhanced by 2
+            Assert.Equal(3, CumulativePowerOnTile(game.Player1Grid[1,0]));
+            // Ifrit should enhance its own power because an allied card has been enhanced
+            Assert.Equal(2, game.Player1Grid[0,0].SelfBonusPower);
+        }
+
+        [Fact]
+        public void PlaceCardThatEnhancesItselfWhenAlliesAreEnhancedAfterCardsHaveAlreadyBeenPlaced()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            var crystallineCrab = _cards[12];
+            SetFirstCardInHand(game, crystallineCrab);
+            game.PlaceCard(0, 2, 0);
+
+            SetPlayer1Start(game);
+            var securityOfficer = _cards[0];
+            SetFirstCardInHand(game, securityOfficer);
+            game.PlaceCard(0, 1, 0);
+            Assert.Equal(3, CumulativePowerOnTile(game.Player1Grid[1,0]));
+
+            SetPlayer1Start(game);
+            var ifrit = _cards[94];
+            SetFirstCardInHand(game, ifrit);
+            game.Player1Grid[0, 0].RankUp(2);
+            game.PlaceCard(0, 0, 0);
+            Assert.Equal(2, game.Player1Grid[0, 0].SelfBonusPower);
+        }
+
+        [Fact]
+        public void PlaceCardThatEnhancesItselfWhenAlliesAreEnfeebledAsFirstCard()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            var shadowBloodQueen = _cards[144];
+            SetFirstCardInHand(game, shadowBloodQueen);
+            game.Player1Grid[0, 0].RankUp(2);
+            game.PlaceCard(0, 0, 0);
+            Assert.Equal(0, game.Player1Grid[0, 0].SelfBonusPower);
+
+            SetPlayer1Start(game);
+            var grasslandsWolf = _cards[7];
+            SetFirstCardInHand(game, grasslandsWolf);
+            game.PlaceCard(0, 1, 0);
+
+            // Place Capparwire to enfeeble Grasslands Wolf
+            SetPlayer1Start(game);
+            var capparwire = _cards[25];
+            SetFirstCardInHand(game, capparwire);
+            game.PlaceCard(0, 2, 0);
+            Assert.Equal(-1, game.Player1Grid[1, 0].BonusPower);
+
+            // Shadowblood Queen should have enhanced its own power by 3 due to the enfeeble
+            Assert.Equal(3, game.Player1Grid[0, 0].SelfBonusPower);
+        }
+
+        [Fact]
+        public void PlaceCardThatEnhancesItselfWhenAlliesAreEnfeebledAfterCardsHaveAlreadyBeenPlaced()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            var grasslandsWolf = _cards[7];
+            SetFirstCardInHand(game, grasslandsWolf);
+            game.PlaceCard(0, 1, 0);
+
+            // Place Capparwire to enfeeble Grasslands Wolf
+            SetPlayer1Start(game);
+            var capparwire = _cards[25];
+            SetFirstCardInHand(game, capparwire);
+            game.PlaceCard(0, 2, 0);
+            Assert.Equal(-1, game.Player1Grid[1, 0].BonusPower);
+
+            SetPlayer1Start(game);
+            var shadowBloodQueen = _cards[144];
+            SetFirstCardInHand(game, shadowBloodQueen);
+            game.Player1Grid[0, 0].RankUp(2);
+            game.PlaceCard(0, 0, 0);
+
+            // Shadowblood Queen should have enhanced its own power by 3 due to the enfeeble
+            Assert.Equal(3, game.Player1Grid[0, 0].SelfBonusPower);
+        }
+
+        [Fact]
+        public void CheckCardWithAEConditionIsWorkingCorrectly()
+        {
+            // WIP
         }
     }
 }

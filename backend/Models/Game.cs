@@ -164,13 +164,23 @@ namespace backend.Models
 			currentPlayer = Players.Find(p => p.Id != currentPlayer!.Id);
 		}
 
-		public void EnhanceTile(Tile tile, int amount)
+		public void ChangePower(Tile tile, int row, int col, int amount)
 		{
             var playerIndex = Players.IndexOf(currentPlayer!);
             var grid = playerIndex == 0 ? Player1Grid : Player2Grid;
 
-            EnhancedCards.Add(tile);
 			tile.BonusPower += amount;
+
+			if (amount > 0)
+			{
+                if (!EnhancedCards.Contains(tile)) EnhancedCards.Add(tile);
+                OnCardEnhanced?.Invoke(this, grid, row, col);
+            }
+			else
+			{
+                if (!EnfeebledCards.Contains(tile)) EnfeebledCards.Add(tile);
+				OnCardEnfeebled?.Invoke(this, grid, row, col);
+			}
 		}
 
 		public void PlaceCard(int handIndex, int row, int col)
