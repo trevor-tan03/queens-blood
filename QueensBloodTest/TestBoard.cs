@@ -600,7 +600,61 @@ namespace QueensBloodTest
         [Fact]
         public void CheckCardWithAEConditionIsWorkingCorrectly()
         {
-            // WIP
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            game.Player1Grid[0, 0].RankUp(2);
+            var dio = _cards[140];
+            SetFirstCardInHand(game, dio);
+            game.PlaceCard(0, 0, 0);
+            Assert.Equal(0, game.Player1Grid[0, 0].SelfBonusPower);
+
+            // Place security officers for both players
+            var securityOfficer = _cards[0];
+            ForcePlace(game, securityOfficer, game.Players[1], 0, 4);
+            ForcePlace(game, securityOfficer, game.Players[0], 1, 0);
+
+            // Enhance player 2's (enemy) security officer using a Crystalline Crab
+            var crystallineCrab = _cards[12];
+            SetFirstCardInHand(game, crystallineCrab);
+            game.PlaceCard(0, 1, 0);
+            Assert.Equal(2, game.Player2Grid[0, 0].BonusPower);
+
+            // Dio should've received its own power by 1
+            Assert.Equal(1, game.Player1Grid[0, 0].SelfBonusPower);
+
+            // Enhancing Player 1's (ally) security officer using a Crystalline Crab
+            SetFirstCardInHand(game, crystallineCrab);
+            game.PlaceCard(0, 2, 0);
+            Assert.Equal(2, game.Player1Grid[1, 0].BonusPower);
+
+            // Dio should have raise its own power by 1 again
+            Assert.Equal(2, game.Player1Grid[0, 0].SelfBonusPower);
+        }
+
+        [Fact]
+        public void CheckAbilityTriggerWhenItIsDestroyed()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            var securityOfficer = _cards[0];
+            ForcePlace(game, securityOfficer, game.Players[0], 0, 0);
+
+            var sandhogPie = _cards[35];
+            SetFirstCardInHand(game, sandhogPie);
+            game.PlaceCard(0, 1, 0);
+
+            SetPlayer1Start(game);
+            // Destroy the Sandhog Pie using a replace card (Insectoid Chimera)
+            var insectoidChimera = _cards[50];
+            SetFirstCardInHand(game, insectoidChimera);
+            game.PlaceCard(0, 1, 0);
+
+            // Security Officer should have its power increased by 3 from the destruction of Sandhog Pie
+            Assert.Equal(3, game.Player1Grid[0, 0].BonusPower);
         }
     }
 }

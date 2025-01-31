@@ -82,7 +82,7 @@
                 (Card!.Ability.Target == "ae"))
                 &&
                 // Check if we're allowed to use the ability on an empty tile
-                ((Card!.Ability.Condition == "P" && tile.Card != null) || 
+                (((Card!.Ability.Condition == "P" || Card!.Ability.Condition == "D") && tile.Card != null) || 
                 Card!.Ability.Condition == "*")
                 &&
                 Card!.Ability.Value != null
@@ -142,18 +142,18 @@
             {
                 if (enhancedTile.Card == null) 
                     continue;
-                if (enhancedTile.Owner == Owner && triggerCondition == modifier + "A" && enhancedTile != this)
+                if (enhancedTile.Owner == Owner && triggerCondition!.Contains(modifier) && enhancedTile != this)
                     alliesModified++;
-                if (enhancedTile.Owner != Owner && triggerCondition == modifier + "E" && enhancedTile != this)
+                if (enhancedTile.Owner != Owner && triggerCondition!.Contains(modifier) && enhancedTile != this)
                     enemiesModified++;
             }
 
             if (triggerCondition == "+A" || triggerCondition == "-A")
-                SelfBonusPower += (int)Card!.Ability.Value! * alliesModified;
+                SelfBonusPower = (int)Card!.Ability.Value! * alliesModified;
             else if (triggerCondition == "+E" || triggerCondition == "-E")
-                SelfBonusPower += (int)Card!.Ability.Value! * enemiesModified;
+                SelfBonusPower = (int)Card!.Ability.Value! * enemiesModified;
             else if (triggerCondition == "+AE" || triggerCondition == "-AE")
-                SelfBonusPower += (int)Card!.Ability.Value! * (alliesModified + enemiesModified);
+                SelfBonusPower = (int)Card!.Ability.Value! * (alliesModified + enemiesModified);
         }
 
         private void HandleCardPlaced(Game game, Tile[,] grid, int row, int col)
@@ -197,6 +197,10 @@
 
         private void HandleCardDestroyed(Game game, Tile[,] grid, int row, int col)
         {
+            // Execute post-mortem ability
+            if (Card!.Ability!.Condition == "D")
+                ExecuteAbility(game, grid, row, col);
+
             UninitAbility(game, grid, row, col);
         }
 
