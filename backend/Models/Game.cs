@@ -180,7 +180,16 @@ namespace backend.Models
 			{
                 if (!EnfeebledCards.Contains(tile)) EnfeebledCards.Add(tile);
 				OnCardEnfeebled?.Invoke(this, grid, row, col);
+
+				if (tile.Card != null && tile.GetCumulativePower() <= 0)
+					DestroyCard(grid, row, col);
 			}
+		}
+
+		public void DestroyCard(Tile[,] grid, int row, int col)
+		{
+			OnCardDestroyed?.Invoke(this, grid, row, col);
+			grid[row, col].Card = null;
 		}
 
 		public void PlaceCard(int handIndex, int row, int col)

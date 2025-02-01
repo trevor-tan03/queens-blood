@@ -79,11 +79,10 @@
                 // Check if we're allowed to use the ability on the tile on target
                 ((Card!.Ability.Target == "a" && tile.Owner == Owner) ||
                 (Card!.Ability.Target == "e" && tile.Owner != Owner) ||
-                (Card!.Ability.Target == "ae"))
+                Card!.Ability.Target == "ae")
                 &&
-                // Check if we're allowed to use the ability on an empty tile
-                (((Card!.Ability.Condition == "P" || Card!.Ability.Condition == "D") && tile.Card != null) || 
-                Card!.Ability.Condition == "*")
+                // If card doesn't have "While in play" (*) condition, don't target empty tiles
+                (tile.Card != null || Card!.Ability.Condition == "*")
                 &&
                 Card!.Ability.Value != null
             )
@@ -163,6 +162,8 @@
              * - Rank up
              * - Change owner
              */
+            var executeAbilityImmediately = Card!.Ability.Condition == "P" || Card!.Ability.Condition == "*";
+
             foreach (RangeCell rangeCell in Card!.Range)
             {
                 var dx = col + rangeCell.Offset.x;
@@ -178,7 +179,7 @@
                     offsetTile.RankUp(Card!.RankUpAmount);
                 }
 
-                if (rangeCell.Colour.Contains("R") && isIndexInBounds)
+                if (rangeCell.Colour.Contains("R") && isIndexInBounds && executeAbilityImmediately)
                 {
                     ExecuteAbility(game, grid, dy, dx);
                 }
@@ -199,28 +200,89 @@
         {
             // Execute post-mortem ability
             if (Card!.Ability!.Condition == "D")
-                ExecuteAbility(game, grid, row, col);
+            {
+                foreach (RangeCell rangeCell in Card!.Range)
+                {
+                    var dx = col + rangeCell.Offset.x;
+                    var dy = row + rangeCell.Offset.y;
+                    var isIndexInBounds = dy >= 0 && dy <= 2 && dx >= 0 && dx <= 4;
+
+                    if (!isIndexInBounds) continue;
+                    var offsetTile = grid[dy, dx];
+
+                    if (rangeCell.Colour.Contains("R") && isIndexInBounds)
+                    {
+                        ExecuteAbility(game, grid, dy, dx);
+                    }
+                }
+            }
 
             UninitAbility(game, grid, row, col);
         }
 
         private void HandleCardEnhanced(Game game, Tile[,] grid, int row, int col)
         {
-            if (Card!.Ability.Target != "s" && grid[row, col] != this) return;
-            
-            // Execute self-enhance ability
-            ExecuteAbility(game, grid, row, col);
+            // Handle self-enhancing ability
+            if (Card!.Ability.Target == "s")
+            {
+                ExecuteAbility(game, grid, row, col);
+                return;
+            }
+
+            // Cloud's ability should only execute once it reaches >= 7 power
+            if (Card!.Ability.Condition == "P1R" && GetCumulativePower() < 7) return;
+
+            // Handle targetting ability
+            foreach (RangeCell rangeCell in Card!.Range)
+            {
+                var dx = col + rangeCell.Offset.x;
+                var dy = row + rangeCell.Offset.y;
+                var isIndexInBounds = dy >= 0 && dy <= 2 && dx >= 0 && dx <= 4;
+
+                if (!isIndexInBounds) continue;
+                var offsetTile = grid[dy, dx];
+
+                if (rangeCell.Colour.Contains("R") && isIndexInBounds)
+                {
+                    ExecuteAbility(game, grid, dy, dx);
+                }
+            }
+
+            if (Card!.Ability.Condition.Contains("1"))
+                game.OnCardEnhanced -= HandleCardEnhanced;
         }
 
         private void HandleCardEnfeebled(Game game, Tile[,] grid, int row, int col)
         {
-            var cardOnTile = grid[row, col].Card;
+            if (Card!.Ability.Target == "s")
+            {
+                ExecuteAbility(game, grid, row, col);
+                return;
+            }
 
-            // Destroy card if the power is less than or equal to 0
-            if (grid[row, col].BonusPower + grid[row, col]!.Card!.Power <= 0)
-                grid[row, col].Card = null;
+            // Handle ability trigger when first enfeebled
+            foreach (RangeCell rangeCell in Card!.Range)
+            {
+                var dx = col + rangeCell.Offset.x;
+                var dy = row + rangeCell.Offset.y;
+                var isIndexInBounds = dy >= 0 && dy <= 2 && dx >= 0 && dx <= 4;
 
-            ExecuteAbility(game, grid, row, col);
+                if (!isIndexInBounds) continue;
+                var offsetTile = grid[dy, dx];
+
+                if (rangeCell.Colour.Contains("R") && isIndexInBounds)
+                {
+                    ExecuteAbility(game, grid, dy, dx);
+                }
+            }
+
+            if (Card!.Ability.Condition.Contains("1"))
+                game.OnCardEnfeebled -= HandleCardEnfeebled;
+        }
+
+        public int GetCumulativePower()
+        {
+            return Card!.Power + BonusPower + SelfBonusPower;
         }
     }
 }

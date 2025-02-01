@@ -656,5 +656,35 @@ namespace QueensBloodTest
             // Security Officer should have its power increased by 3 from the destruction of Sandhog Pie
             Assert.Equal(3, game.Player1Grid[0, 0].BonusPower);
         }
+
+        [Fact]
+        public void CheckWhenFirstEnhancedAbility()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            // Place a Security Officer in 1, 1 of Player1Grid
+            ForcePlace(game, _cards[0], game.Players[0], 1, 1);
+
+            // Place the Elena card so that it targets the Security Officer
+            var elena = _cards[129];
+            SetFirstCardInHand(game, elena);
+            game.PlaceCard(0, 1, 0);
+
+            // Place Crystalline Crab to enhance Elena
+            SetPlayer1Start(game);
+            var crystallineCrab = _cards[12];
+            SetFirstCardInHand(game, crystallineCrab);
+
+            Assert.Equal("Security Officer", game.Player1Grid[1, 1].Card!.Name);
+            game.PlaceCard(0, 2, 0);
+
+            // Security Officer card is gone
+            Assert.Null(game.Player1Grid[1, 1].Card);
+        }
+
+        // TODO: Replace usage of CumulativePower() with Tile's new method GetCumulativePower()
+        // Also make it so that the -BonusPower doesn't remain after the card is destroyed
     }
 }
