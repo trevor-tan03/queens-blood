@@ -5,8 +5,9 @@
         public Player? Owner { get; set; }
         public int Rank { get; set; }
         public Card? Card { get; set; }
-        public int BonusPower { get; set; } // Bonus Power from other cards
-        public int SelfBonusPower { get; set; } // Bonus Power from this card's ability
+        public int TileBonusPower { get; set; } = 0; // Bonus Power from other cards with the "While in play" (*) condition
+        public int CardBonusPower {  get; set; } = 0; // Bonus Power that only affects the card on the tile, not the tile itself
+        public int SelfBonusPower { get; set; } = 0; // Bonus Power from this card's ability
 
         // Private variables
         private List<string> onPlaceConditions = new List<string> { "AP", "EP" };
@@ -65,7 +66,7 @@
                     var isIndexInBounds = dy >= 0 && dy <= 2 && dx >= 0 && dx <= 4;
 
                     if (rangeCell.Colour.Contains("R") && isIndexInBounds && Card!.Ability.Value != null)
-                        grid[dy, dx].BonusPower -= (int) Card!.Ability.Value * operation;
+                        grid[dy, dx].TileBonusPower -= (int) Card!.Ability.Value * operation;
                 }
             }
         }
@@ -87,7 +88,8 @@
                 Card!.Ability.Value != null
             )
             {
-                game.ChangePower(tile, row, col, (int) Card!.Ability.Value * operation);
+                var isTilePowerBonus = Card!.Ability.Condition == "*";
+                game.ChangePower(tile, row, col, (int) Card!.Ability.Value * operation, isTilePowerBonus);
             }
         }
 
@@ -282,7 +284,7 @@
 
         public int GetCumulativePower()
         {
-            return Card!.Power + BonusPower + SelfBonusPower;
+            return Card!.Power + TileBonusPower + CardBonusPower + SelfBonusPower;
         }
     }
 }

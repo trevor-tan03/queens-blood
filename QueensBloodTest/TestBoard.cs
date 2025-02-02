@@ -377,7 +377,7 @@ namespace QueensBloodTest
             game.PlaceCard(0, 1, 0);
 
             // Tile above should have its power enhanced by 2
-            Assert.Equal(2, game.Player1Grid[0,0].BonusPower);
+            Assert.Equal(2, game.Player1Grid[0,0].TileBonusPower);
             SetPlayer1Start(game);
 
             // When an allied security officer is placed, its cumulative power should be 3 (1+2)
@@ -385,7 +385,7 @@ namespace QueensBloodTest
             SetFirstCardInHand(game, securityOfficer);
             game.PlaceCard(0, 0, 0);
 
-            Assert.Equal(3, CumulativePowerOnTile(game.Player1Grid[0, 0]));
+            Assert.Equal(3, game.Player1Grid[0, 0].GetCumulativePower());
             SetPlayer1Start(game);
 
             // When Crystalline Crab is destroyed, the security officer should lose its enhancement
@@ -393,7 +393,7 @@ namespace QueensBloodTest
             SetFirstCardInHand(game, insectoidChimera);
             game.PlaceCard(0, 1, 0);
 
-            Assert.Equal(1, CumulativePowerOnTile(game.Player1Grid[0, 0]));
+            Assert.Equal(1, game.Player1Grid[0, 0].GetCumulativePower());
         }
 
         // Used to place cards in "illegal" places and ignore abilities for more efficient testing
@@ -401,11 +401,6 @@ namespace QueensBloodTest
         {
             game.Player1Grid[row, col].Owner = owner;
             game.Player1Grid[row, col].Card = card;
-        }
-
-        private int CumulativePowerOnTile(Tile tile)
-        {
-            return tile.BonusPower + tile.SelfBonusPower + tile.Card!.Power;
         }
 
         [Fact]
@@ -424,12 +419,12 @@ namespace QueensBloodTest
             SetFirstCardInHand(game, loveless);
             game.PlaceCard(0, 1, 0);
 
-            Assert.Equal(2, CumulativePowerOnTile(game.Player1Grid[0, 0])); // Allied card enhanced
-            Assert.Equal(2, CumulativePowerOnTile(game.Player1Grid[0, 1])); // Enemy card enhanced
+            Assert.Equal(2, game.Player1Grid[0, 0].GetCumulativePower()); // Allied card enhanced
+            Assert.Equal(2, game.Player1Grid[0, 1].GetCumulativePower()); // Enemy card enhanced
 
             ForcePlace(game, securityOfficer, game.Players[1], 1, 1); // Place enemy card beneath the first enemy card
             // Card shouldn't have bonus power since it wasn't present at the time of Loveless being placed
-            Assert.Equal(1, CumulativePowerOnTile(game.Player1Grid[1,1])); 
+            Assert.Equal(1, game.Player1Grid[1, 1].GetCumulativePower()); 
         }
 
         [Fact]
@@ -441,14 +436,14 @@ namespace QueensBloodTest
 
             var elphadunk = _cards[10];
             ForcePlace(game, elphadunk, game.Players[0], 0, 0);
-            Assert.Equal(4, CumulativePowerOnTile(game.Player1Grid[0,0]));
+            Assert.Equal(4, game.Player1Grid[0, 0].GetCumulativePower());
 
             var resurrectedAmalgram = _cards[155];
             SetFirstCardInHand(game, resurrectedAmalgram);
             game.PlaceCard(0, 1, 0);
 
             // Elphadunk's cumulative power should be reduced to 2
-            Assert.Equal(2, CumulativePowerOnTile(game.Player1Grid[0, 0]));
+            Assert.Equal(2, game.Player1Grid[0, 0].GetCumulativePower());
 
             SetPlayer1Start(game);
 
@@ -457,7 +452,7 @@ namespace QueensBloodTest
             game.PlaceCard(0, 1, 0); // Replace the Resurrect Amalgram card
 
             // Elphadunk's power should be back to 4
-            Assert.Equal(4, CumulativePowerOnTile(game.Player1Grid[0, 0]));
+            Assert.Equal(4, game.Player1Grid[0, 0].GetCumulativePower());
         }
 
         [Fact]
@@ -475,7 +470,7 @@ namespace QueensBloodTest
             game.PlaceCard(0, 1, 0);
 
             // The Capparwire's ability should have affected the Elphadunk
-            Assert.Equal(3, CumulativePowerOnTile(game.Player1Grid[0, 0]));
+            Assert.Equal(3, game.Player1Grid[0, 0].GetCumulativePower());
 
             var securityOfficer = _cards[0];
             ForcePlace(game, securityOfficer, game.Players[0], 2, 0);
@@ -483,7 +478,7 @@ namespace QueensBloodTest
             /* Security Officer shouldn't be affected since it wasn't present at the
              * time of the Capparwire's ability being executed.
              */
-            Assert.Equal(1, CumulativePowerOnTile(game.Player1Grid[2, 0]));
+            Assert.Equal(1, game.Player1Grid[2, 0].GetCumulativePower());
         }
 
         [Fact]
@@ -510,7 +505,7 @@ namespace QueensBloodTest
 
 
             // Security Officer's power should be enhanced by 2
-            Assert.Equal(3, CumulativePowerOnTile(game.Player1Grid[1,0]));
+            Assert.Equal(3, game.Player1Grid[1, 0].GetCumulativePower());
             // Ifrit should enhance its own power because an allied card has been enhanced
             Assert.Equal(2, game.Player1Grid[0,0].SelfBonusPower);
         }
@@ -530,7 +525,7 @@ namespace QueensBloodTest
             var securityOfficer = _cards[0];
             SetFirstCardInHand(game, securityOfficer);
             game.PlaceCard(0, 1, 0);
-            Assert.Equal(3, CumulativePowerOnTile(game.Player1Grid[1,0]));
+            Assert.Equal(3, game.Player1Grid[1, 0].GetCumulativePower());
 
             SetPlayer1Start(game);
             var ifrit = _cards[94];
@@ -563,7 +558,7 @@ namespace QueensBloodTest
             var capparwire = _cards[25];
             SetFirstCardInHand(game, capparwire);
             game.PlaceCard(0, 2, 0);
-            Assert.Equal(-1, game.Player1Grid[1, 0].BonusPower);
+            Assert.Equal(-1, game.Player1Grid[1, 0].CardBonusPower);
 
             // Shadowblood Queen should have enhanced its own power by 3 due to the enfeeble
             Assert.Equal(3, game.Player1Grid[0, 0].SelfBonusPower);
@@ -585,7 +580,7 @@ namespace QueensBloodTest
             var capparwire = _cards[25];
             SetFirstCardInHand(game, capparwire);
             game.PlaceCard(0, 2, 0);
-            Assert.Equal(-1, game.Player1Grid[1, 0].BonusPower);
+            Assert.Equal(-1, game.Player1Grid[1, 0].CardBonusPower);
 
             SetPlayer1Start(game);
             var shadowBloodQueen = _cards[144];
@@ -619,7 +614,7 @@ namespace QueensBloodTest
             var crystallineCrab = _cards[12];
             SetFirstCardInHand(game, crystallineCrab);
             game.PlaceCard(0, 1, 0);
-            Assert.Equal(2, game.Player2Grid[0, 0].BonusPower);
+            Assert.Equal(2, game.Player2Grid[0, 0].TileBonusPower);
 
             // Dio should've received its own power by 1
             Assert.Equal(1, game.Player1Grid[0, 0].SelfBonusPower);
@@ -627,7 +622,7 @@ namespace QueensBloodTest
             // Enhancing Player 1's (ally) security officer using a Crystalline Crab
             SetFirstCardInHand(game, crystallineCrab);
             game.PlaceCard(0, 2, 0);
-            Assert.Equal(2, game.Player1Grid[1, 0].BonusPower);
+            Assert.Equal(2, game.Player1Grid[1, 0].TileBonusPower);
 
             // Dio should have raise its own power by 1 again
             Assert.Equal(2, game.Player1Grid[0, 0].SelfBonusPower);
@@ -654,7 +649,7 @@ namespace QueensBloodTest
             game.PlaceCard(0, 1, 0);
 
             // Security Officer should have its power increased by 3 from the destruction of Sandhog Pie
-            Assert.Equal(3, game.Player1Grid[0, 0].BonusPower);
+            Assert.Equal(3, game.Player1Grid[0, 0].CardBonusPower);
         }
 
         [Fact]
@@ -682,9 +677,37 @@ namespace QueensBloodTest
 
             // Security Officer card is gone
             Assert.Null(game.Player1Grid[1, 1].Card);
+
+            /* The "CardBonusPower" of the Tile (1, 1) should be reset to 0 since the
+             * Security Officer card was destroyed
+             */
+            Assert.Equal(0, game.Player1Grid[1, 1].CardBonusPower);
         }
 
-        // TODO: Replace usage of CumulativePower() with Tile's new method GetCumulativePower()
-        // Also make it so that the -BonusPower doesn't remain after the card is destroyed
+        [Fact]
+        public void CheckWhenFirstEnfeebledAbility()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            // Place an enemy Archdragon in 1, 1 of Player1Grid
+            ForcePlace(game, _cards[19], game.Players[1], 1, 1);
+
+            // Place Reapertail card
+            var reapertail = _cards[60];
+            SetFirstCardInHand(game, reapertail);
+            game.PlaceCard(0, 2, 0);
+
+            // Enfeeble the Reapertail using a Capparwire
+            SetPlayer1Start(game);
+            var capparwire = _cards[25];
+            SetFirstCardInHand(game, capparwire);
+            game.PlaceCard(0, 1, 0);
+
+            // The Archdragon's power should be reduced by 2 (final power of 1)
+            Assert.Equal(-2, game.Player1Grid[1, 1].CardBonusPower);
+            Assert.Equal(1, game.Player1Grid[1, 1].GetCumulativePower());
+        } 
     }
 }

@@ -164,12 +164,15 @@ namespace backend.Models
 			currentPlayer = Players.Find(p => p.Id != currentPlayer!.Id);
 		}
 
-		public void ChangePower(Tile tile, int row, int col, int amount)
+		public void ChangePower(Tile tile, int row, int col, int amount, bool isTilePowerBonus)
 		{
             var playerIndex = Players.IndexOf(currentPlayer!);
             var grid = playerIndex == 0 ? Player1Grid : Player2Grid;
 
-			tile.BonusPower += amount;
+			if (isTilePowerBonus)
+				tile.TileBonusPower += amount;
+			else
+				tile.CardBonusPower += amount;
 
 			if (amount > 0)
 			{
@@ -190,6 +193,10 @@ namespace backend.Models
 		{
 			OnCardDestroyed?.Invoke(this, grid, row, col);
 			grid[row, col].Card = null;
+
+            // Reset card specifc power bonus when destroyed
+            grid[row, col].CardBonusPower = 0;
+			grid[row, col].SelfBonusPower = 0;
 		}
 
 		public void PlaceCard(int handIndex, int row, int col)
