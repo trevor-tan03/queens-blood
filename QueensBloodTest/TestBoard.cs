@@ -71,16 +71,33 @@ namespace QueensBloodTest
             }
         }
 
+        private void SetChildCards(SqliteConnection connection)
+        {
+            var command = connection.CreateCommand();
+            command.CommandText = @"SELECT * FROM ParentChild";
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    var parentID = reader.GetInt32(0);
+                    var childID = reader.GetInt32(1);
+
+                    _cards[parentID - 1].AddChild(_cards[childID - 1]);
+                }
+            }
+        }
+
         public TestBoard()
         {
             SQLitePCL.Batteries.Init();
 
-            var connectionString = "Data Source=QB_card_info.db";
+            var connectionString = "Data Source=../../../../backend/QB_card_info.db";
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
                 PopulateCards(connection);
-
+                SetChildCards(connection);
 
                 CreateGameWithPlayers();
             }
