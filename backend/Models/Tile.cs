@@ -1,4 +1,6 @@
-﻿namespace backend.Models
+﻿using Newtonsoft.Json.Bson;
+
+namespace backend.Models
 {
     public class Tile
     {
@@ -11,7 +13,7 @@
 
         // Private variables
         private List<string> onPlaceConditions = new List<string> { "AP", "EP" };
-        private List<string> onDestroyConditions = new List<string> { "D", "AD", "ED", "*" };
+        private List<string> onDestroyConditions = new List<string> { "D", "AD", "ED", "AED", "*" };
         private List<string> onEnhanceConditions = new List<string> { "P1R", "1+", "+A", "+E", "+AE" };
         private List<string> onEnfeebleConditions = new List<string> { "1-", "-A", "-E", "-AE" };
         private List<string> onWinLane = new List<string> { "+Score", "L+V" };
@@ -46,10 +48,13 @@
         private void UninitAbility(Game game, Tile[,] grid, int row, int col)
         {
             // Unsubscribe the destroyed card from all events
-            game.OnCardPlaced -= HandleCardPlaced;
-            game.OnCardDestroyed -= HandleCardDestroyed;
-            game.OnCardEnhanced -= HandleCardEnhanced;
-            game.OnCardEnfeebled -= HandleCardEnfeebled;
+            if (this == grid[row, col])
+            {
+                game.OnCardPlaced -= HandleCardPlaced;
+                game.OnCardDestroyed -= HandleCardDestroyed;
+                game.OnCardEnhanced -= HandleCardEnhanced;
+                game.OnCardEnfeebled -= HandleCardEnfeebled;
+            }
 
             /*
 			 * Undo the effects of the ability on other cards if applicable. This includes abilities with:
@@ -93,6 +98,12 @@
             }
         }
 
+        private void HandleAddCardsToHandAbility(Game game, Tile[,] grid, int row, int col)
+        {
+            var children = grid[row, col].Card!.Children;
+            game.currentPlayer!.Hand.Concat(children);
+        }
+
         private void ExecuteAbility(Game game, Tile[,] grid, int row, int col)
         {
             // Targets allied or enemy cards means it uses the red tiles
@@ -107,10 +118,10 @@
                 {
                     CalculateSelfBoostFromPowerModifiedCards(game, grid, row, col);
                 }
-                // This card's ability doesn't affect other cards directly
-                else
+                // Add card(s) to hand
+                else if (Card!.Ability.Action == "+add")
                 {
-
+                    HandleAddCardsToHandAbility(game, grid, row, col);
                 }
             }
         }
@@ -218,6 +229,11 @@
                     }
                 }
             }
+
+            if (Card!.Ability.Condition == "AD" && grid[row, col].Owner == Owner ||
+                Card!.Ability.Condition == "ED" && grid[row, col].Owner != Owner ||
+                Card!.Ability.Condition == "AED")
+                SelfBonusPower += (int) Card!.Ability.Value!;
 
             UninitAbility(game, grid, row, col);
         }

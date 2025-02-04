@@ -194,6 +194,11 @@ namespace backend.Models
 			OnCardDestroyed?.Invoke(this, grid, row, col);
 			grid[row, col].Card = null;
 
+			if (EnhancedCards.Contains(grid[row, col]))
+				EnhancedCards.Remove(grid[row, col]);
+			if (EnfeebledCards.Contains(grid[row, col]))
+				EnfeebledCards.Remove(grid[row, col]);
+
             // Reset card specifc power bonus when destroyed
             grid[row, col].CardBonusPower = 0;
 			grid[row, col].SelfBonusPower = 0;

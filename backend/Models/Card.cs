@@ -25,7 +25,7 @@ namespace backend.Models
 		public int Power { get; set; }
 		public string Rarity { get; set; }
 		public string Image { get; set; }
-		public Card? Child { get; set; }
+		public List<Card> Children { get; set; } = new List<Card>();
 		public Ability Ability { get; set; }
 		public List<RangeCell> Range { get; set; } = new List<RangeCell>();
 
@@ -33,9 +33,9 @@ namespace backend.Models
 		public int RankUpAmount { get; set; } = 1;
 
 
-        public void SetChild(Card child)
+        public void AddChild(Card child)
 		{
-			Child = child; 
+			Children.Add(child);
 		}
 
 		public void AddRangeCell(string offsetString, string colour)

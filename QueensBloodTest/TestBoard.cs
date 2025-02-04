@@ -11,6 +11,66 @@ namespace QueensBloodTest
 
         private List<Card> _cards = new List<Card>();
 
+        private void PopulateCards(SqliteConnection connection)
+        {
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                    SELECT c.*, r.Offset, r.Colour 
+                    FROM Cards c 
+                    LEFT JOIN Ranges r 
+                    ON c.Id = r.CardId;";
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    var card = _cards.Find(c => c.Id == reader.GetInt32(0));
+                    var offsetString = reader.IsDBNull(11) ? null : reader.GetString(11);
+                    var colour = reader.IsDBNull(12) ? null : reader.GetString(12);
+
+                    if (card != null && offsetString != null && colour != null)
+                    {
+                        card.AddRangeCell(offsetString, colour);
+                    }
+                    else
+                    {
+                        card = new Card
+                        {
+                            Id = reader.GetInt32(0),
+                            Name = reader.GetString(1),
+                            Rank = reader.GetInt32(2),
+                            Power = reader.GetInt32(3),
+                            Rarity = reader.GetString(4),
+                            Image = reader.GetString(6),
+                        };
+
+                        Ability ability = new Ability()
+                        {
+                            Description = reader.GetString(5),
+                            Condition = reader.GetString(7),
+                            Action = reader.IsDBNull(8) ? null : reader.GetString(8),
+                            Target = reader.IsDBNull(9) ? null : reader.GetString(9),
+                            Value = reader.IsDBNull(10) ? null : reader.GetInt32(10),
+                        };
+
+                        card.Ability = ability;
+
+                        if (card.Ability.Action == "+R" && ability.Value != null)
+                        {
+                            card.RankUpAmount = (int)ability!.Value;
+                        }
+
+                        if (offsetString != null && colour != null)
+                        {
+                            card.AddRangeCell(offsetString, colour);
+                        }
+
+                        _cards.Add(card);
+                    }
+                }
+            }
+        }
+
         public TestBoard()
         {
             SQLitePCL.Batteries.Init();
@@ -19,63 +79,8 @@ namespace QueensBloodTest
             using (var connection = new SqliteConnection(connectionString))
             {
                 connection.Open();
+                PopulateCards(connection);
 
-                var command = connection.CreateCommand();
-                command.CommandText = @"
-                    SELECT c.*, r.Offset, r.Colour 
-                    FROM Cards c 
-                    LEFT JOIN Ranges r 
-                    ON c.Id = r.CardId;";
-
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        var card = _cards.Find(c => c.Id == reader.GetInt32(0));
-                        var offsetString = reader.IsDBNull(11) ? null : reader.GetString(11);
-                        var colour = reader.IsDBNull(12) ? null : reader.GetString(12);
-
-                        if (card != null && offsetString != null && colour != null)
-                        {
-                            card.AddRangeCell(offsetString, colour);
-                        }
-                        else
-                        {
-                            card = new Card
-                            {
-                                Id = reader.GetInt32(0),
-                                Name = reader.GetString(1),
-                                Rank = reader.GetInt32(2),
-                                Power = reader.GetInt32(3),
-                                Rarity = reader.GetString(4),
-                                Image = reader.GetString(6),
-                            };
-
-                            Ability ability = new Ability()
-                            {
-                                Description = reader.GetString(5),
-                                Condition = reader.GetString(7),
-                                Action = reader.IsDBNull(8) ? null : reader.GetString(8),
-                                Target = reader.IsDBNull(9) ? null : reader.GetString(9),
-                                Value = reader.IsDBNull(10) ? null : reader.GetInt32(10),
-                            };
-
-                            card.Ability = ability;
-
-                            if (card.Ability.Action == "+R" && ability.Value != null)
-                            {
-                                card.RankUpAmount = (int) ability!.Value;
-                            }
-
-                            if (offsetString != null && colour != null)
-                            {
-                                card.AddRangeCell(offsetString, colour);
-                            }
-
-                            _cards.Add(card);
-                        }
-                    }
-                }
 
                 CreateGameWithPlayers();
             }
@@ -708,6 +713,86 @@ namespace QueensBloodTest
             // The Archdragon's power should be reduced by 2 (final power of 1)
             Assert.Equal(-2, game.Player1Grid[1, 1].CardBonusPower);
             Assert.Equal(1, game.Player1Grid[1, 1].GetCumulativePower());
-        } 
+        }
+
+        [Fact]
+        public void PlaceCardWithADTriggerCondition()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            // Place an allied Security Officer
+            ForcePlace(game, _cards[0], game.Players[0], 0, 0);
+
+            var tonberryKing = _cards[34];
+            SetFirstCardInHand(game, tonberryKing);
+            game.Player1Grid[1, 0].RankUp(1);
+            game.PlaceCard(0, 1, 0);
+            Assert.Equal(0, game.Player1Grid[1, 0].SelfBonusPower);
+
+            // Place a Gigantoad to replace (and destroy) the allied Security Officer
+            SetPlayer1Start(game);
+            var gigantoad = _cards[51];
+            SetFirstCardInHand(game, gigantoad);
+            game.PlaceCard(0, 0, 0);
+
+            Assert.Equal(2, game.Player1Grid[1, 0].SelfBonusPower);
+        }
+
+        [Fact]
+        public void PlaceCardWithEDTriggerCondition()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            // Place an enemy Security Officer
+            ForcePlace(game, _cards[0], game.Players[1], 0, 4);
+
+            var deathClaw = _cards[42];
+            SetFirstCardInHand(game, deathClaw);
+            game.PlaceCard(0, 1, 0);
+            Assert.Equal(0, game.Player1Grid[1, 0].SelfBonusPower);
+
+            // Place a Gigantoad to replace (and destroy) the enemy Security Officer
+            var gigantoad = _cards[51];
+            SetFirstCardInHand(game, gigantoad);
+            game.PlaceCard(0, 0, 0);
+
+            Assert.Equal(1, game.Player1Grid[1, 0].SelfBonusPower);
+        }
+
+        [Fact]
+        public void PlaceCardWithAEDTriggerCondition()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            var joker = _cards[46];
+            SetFirstCardInHand(game, joker);
+            game.Player1Grid[1, 0].RankUp(1);
+            game.PlaceCard(0, 1, 0);
+
+            Assert.Equal(0, game.Player1Grid[0, 0].SelfBonusPower);
+
+            // Place allied Security Officer
+            ForcePlace(game, _cards[0], game.Players[0], 2, 4);
+
+            // Place enemy Security Officer
+            ForcePlace(game, _cards[0], game.Players[1], 0, 4);
+
+            // Place Capparwire to enfeeble/destroy both the Security Officers
+            var capparwire = _cards[25];
+            SetFirstCardInHand(game, capparwire);
+            game.PlaceCard(0, 1, 0);
+
+            // Confirm the Security Officer cards are gone
+            Assert.Null(game.Player1Grid[2, 4].Card);
+            Assert.Null(game.Player1Grid[0, 4].Card);
+
+            Assert.Equal(2, game.Player1Grid[1, 0].SelfBonusPower);
+        }
     }
 }
