@@ -144,6 +144,22 @@ namespace QueensBloodTest
         }
 
         [Fact]
+        public void CardsHaveChildrenSet()
+        {
+            // Cait Sith has Moogle as child card
+            Assert.Contains<Card>(_cards[146], _cards[91].Children);
+
+            // Moogle Trio has Moogle Mage and Moogle Bard as children cards
+            Assert.Contains<Card>(_cards[147], _cards[109].Children);
+            Assert.Contains<Card>(_cards[148], _cards[109].Children);
+
+            // Shiva has 3 Diamond Dusts as children cards
+            Assert.Contains<Card>(_cards[163], _cards[95].Children);
+            Assert.Contains<Card>(_cards[164], _cards[95].Children);
+            Assert.Contains<Card>(_cards[165], _cards[95].Children);
+        }
+
+        [Fact]
         public void PlayersHaveDefaultDeck()
         {
             Game game = CreateGameWithPlayers();
@@ -810,6 +826,26 @@ namespace QueensBloodTest
             Assert.Null(game.Player1Grid[0, 4].Card);
 
             Assert.Equal(2, game.Player1Grid[1, 0].SelfBonusPower);
+        }
+
+        [Fact]
+        public void PlaceCardWithChildrenCards()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            var moogleTrio = _cards[109];
+            SetFirstCardInHand(game, moogleTrio);
+            game.Player1Grid[0, 0].RankUp(1);
+            game.PlaceCard(0, 0, 0);
+
+            // Confirm Player 1 has Moogle Mage & Moogle Bard added to hand
+            var moogleMage = _cards[147];
+            var moogleBard = _cards[148];
+
+            Assert.Contains<Card>(moogleMage, game.Players[0].Hand);
+            Assert.Contains<Card>(moogleBard, game.Players[0].Hand);
         }
     }
 }

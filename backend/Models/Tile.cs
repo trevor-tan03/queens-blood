@@ -101,7 +101,7 @@ namespace backend.Models
         private void HandleAddCardsToHandAbility(Game game, Tile[,] grid, int row, int col)
         {
             var children = grid[row, col].Card!.Children;
-            game.currentPlayer!.Hand.Concat(children);
+            game.currentPlayer!.Hand.AddRange(children);
         }
 
         private void ExecuteAbility(Game game, Tile[,] grid, int row, int col)
@@ -118,8 +118,11 @@ namespace backend.Models
                 {
                     CalculateSelfBoostFromPowerModifiedCards(game, grid, row, col);
                 }
+            }
+            else
+            {
                 // Add card(s) to hand
-                else if (Card!.Ability.Action == "+add")
+                if (Card!.Ability.Action == "add")
                 {
                     HandleAddCardsToHandAbility(game, grid, row, col);
                 }
@@ -199,14 +202,19 @@ namespace backend.Models
             }
 
             var target = Card!.Ability.Target;
+            var action = Card!.Ability.Action;
             var triggerCondition = Card!.Ability.Condition;
 
             // If the card doesn't need to listen for other cards being placed, unsubscribe
             if (!onPlaceConditions.Contains(triggerCondition))
                 game.OnCardPlaced -= HandleCardPlaced;
+
             // Cards that boost their own power when other cards are enhanced/enfeebled need to look at the board's status and update
             if ((target == "s") && (triggerCondition.Contains("A") || triggerCondition.Contains("E")))
                 CalculateSelfBoostFromPowerModifiedCards(game, grid, row, col);
+
+            if (action == "add")
+                ExecuteAbility(game, grid, row, col);
         }
 
         private void HandleCardDestroyed(Game game, Tile[,] grid, int row, int col)
