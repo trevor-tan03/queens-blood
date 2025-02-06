@@ -159,7 +159,7 @@ namespace backend.Models
             return tileMeetsRankRequirement && playerOwnsTile && !tileOccupied;
         }
 
-		private void SwapPlayerTurns()
+		public void SwapPlayerTurns()
 		{
 			currentPlayer = Players.Find(p => p.Id != currentPlayer!.Id);
 		}
@@ -222,8 +222,6 @@ namespace backend.Models
 
                 tile.InitAbility(this);
                 OnCardPlaced?.Invoke(this, grid, row, col);
-
-                SwapPlayerTurns();
             }
 		}
 	}

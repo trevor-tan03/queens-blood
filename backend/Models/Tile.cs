@@ -11,6 +11,9 @@ namespace backend.Models
         public int CardBonusPower {  get; set; } = 0; // Bonus Power that only affects the card on the tile, not the tile itself
         public int SelfBonusPower { get; set; } = 0; // Bonus Power from this card's ability
 
+        private const int NUM_ROWS = 3;
+        private const int NUM_COLS = 5;
+
         // Private variables
         private List<string> onPlaceConditions = new List<string> { "AP", "EP" };
         private List<string> onDestroyConditions = new List<string> { "D", "AD", "ED", "AED", "*" };
@@ -104,11 +107,33 @@ namespace backend.Models
             game.currentPlayer!.Hand.AddRange(children);
         }
 
+        private void HandleSpawnCardsAbility(Game game, Tile[,] grid)
+        {
+            for (int i = 0; i < NUM_ROWS; i++)
+            {
+                for (int j = 0; j < NUM_COLS; j++)
+                {
+                    var tile = grid[i, j];
+                    if (tile.Card == null && tile.Owner == Owner)
+                    {
+                        var childIndex = tile.Rank - 1;
+                        var childCard = Card!.Children[childIndex];
+
+                        var hand = game.currentPlayer!.Hand;
+                        hand.Add(childCard);
+
+                        game.PlaceCard(hand.Count - 1, i, j);
+                    }
+                }
+            }
+        }
+
         private void ExecuteAbility(Game game, Tile[,] grid, int row, int col)
         {
             // Targets allied or enemy cards means it uses the red tiles
             if (Card!.Ability.Target != null)
             {
+                // Enhance/enfeeble/destroy cards on affected tiles
                 if (Card!.Ability.Target.Contains("a") || Card!.Ability.Target.Contains("e"))
                 {
                     HandleTargetingAbilties(grid[row,col], game, row, col);
@@ -125,6 +150,10 @@ namespace backend.Models
                 if (Card!.Ability.Action == "add")
                 {
                     HandleAddCardsToHandAbility(game, grid, row, col);
+                }
+                else if (Card!.Ability.Action == "spawn")
+                {
+                    HandleSpawnCardsAbility(game, grid);
                 }
             }
         }
@@ -213,7 +242,7 @@ namespace backend.Models
             if ((target == "s") && (triggerCondition.Contains("A") || triggerCondition.Contains("E")))
                 CalculateSelfBoostFromPowerModifiedCards(game, grid, row, col);
 
-            if (action == "add")
+            if (action == "add" || action == "spawn")
                 ExecuteAbility(game, grid, row, col);
         }
 
