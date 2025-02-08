@@ -15,11 +15,10 @@ namespace backend.Models
         private const int NUM_COLS = 5;
 
         // Private variables
-        private List<string> onPlaceConditions = new List<string> { "AP", "EP" };
-        private List<string> onDestroyConditions = new List<string> { "D", "AD", "ED", "AED", "*" };
-        private List<string> onEnhanceConditions = new List<string> { "P1R", "1+", "+A", "+E", "+AE" };
-        private List<string> onEnfeebleConditions = new List<string> { "1-", "-A", "-E", "-AE" };
-        private List<string> onWinLane = new List<string> { "+Score", "L+V" };
+        private readonly List<string> OnPlaceConditions = new List<string> { "AP", "EP" };
+        private readonly List<string> OnDestroyConditions = new List<string> { "D", "AD", "ED", "AED", "*" };
+        private readonly List<string> OnEnhanceConditions = new List<string> { "P1R", "1+", "+A", "+E", "+AE" };
+        private readonly List<string> OnEnfeebleConditions = new List<string> { "1-", "-A", "-E", "-AE" };
 
         public void RankUp(int amount)
         {
@@ -30,22 +29,14 @@ namespace backend.Models
         {
             game.OnCardPlaced += HandleCardPlaced;
 
-            if (onPlaceConditions.Contains(Card!.Ability.Condition))
-            {
+            if (OnPlaceConditions.Contains(Card!.Ability.Condition))
                 game.OnCardPlaced += HandleAnotherCardPlaced;
-            }
-            else if (onDestroyConditions.Contains(Card!.Ability.Condition))
-            {
+            else if (OnDestroyConditions.Contains(Card!.Ability.Condition))
                 game.OnCardDestroyed += HandleCardDestroyed;
-            }
-            else if (onEnhanceConditions.Contains(Card!.Ability.Condition))
-            {
+            else if (OnEnhanceConditions.Contains(Card!.Ability.Condition))
                 game.OnCardEnhanced += HandleCardEnhanced;
-            }
-            else if (onEnfeebleConditions.Contains(Card!.Ability.Condition))
-            {
+            else if (OnEnfeebleConditions.Contains(Card!.Ability.Condition))
                 game.OnCardEnfeebled += HandleCardEnfeebled;
-            }
         }
 
         private void UninitAbility(Game game, Tile[,] grid, int row, int col)
@@ -82,7 +73,9 @@ namespace backend.Models
         private void HandleTargetingAbilties(Tile tile, Game game, int row, int col)
         {
             if (Card!.Ability.Value == null) return;
+
             var operation = Card!.Ability.Action!.Contains("+") ? 1 : -1;
+            bool isTilePowerBonus = Card.Ability.Condition == "*";
 
             if (
                 // Check if we're allowed to use the ability on the tile on target
@@ -92,11 +85,8 @@ namespace backend.Models
                 &&
                 // If card doesn't have "While in play" (*) condition, don't target empty tiles
                 (tile.Card != null || Card!.Ability.Condition == "*")
-                &&
-                Card!.Ability.Value != null
             )
             {
-                var isTilePowerBonus = Card!.Ability.Condition == "*";
                 game.ChangePower(tile, row, col, (int) Card!.Ability.Value * operation, isTilePowerBonus);
             }
         }
@@ -104,7 +94,7 @@ namespace backend.Models
         private void HandleAddCardsToHandAbility(Game game, Tile[,] grid, int row, int col)
         {
             var children = grid[row, col].Card!.Children;
-            game.currentPlayer!.Hand.AddRange(children);
+            game.CurrentPlayer!.Hand.AddRange(children);
         }
 
         private void HandleSpawnCardsAbility(Game game, Tile[,] grid)
@@ -119,13 +109,21 @@ namespace backend.Models
                         var childIndex = tile.Rank - 1;
                         var childCard = Card!.Children[childIndex];
 
-                        var hand = game.currentPlayer!.Hand;
+                        var hand = game.CurrentPlayer!.Hand;
                         hand.Add(childCard);
 
                         game.PlaceCard(hand.Count - 1, i, j);
                     }
                 }
             }
+        }
+
+        private void HandleWinLaneBonusScore(Player player, int row)
+        {
+            var newWinBonus = player.Scores[row].winBonus + (int) Card!.Ability.Value!;
+            var score = player.Scores[row].score;
+
+            player.Scores[row] = (score, newWinBonus);
         }
 
         private void ExecuteAbility(Game game, Tile[,] grid, int row, int col)
@@ -146,14 +144,19 @@ namespace backend.Models
             }
             else
             {
-                // Add card(s) to hand
-                if (Card!.Ability.Action == "add")
+                switch (Card!.Ability.Action)
                 {
-                    HandleAddCardsToHandAbility(game, grid, row, col);
-                }
-                else if (Card!.Ability.Action == "spawn")
-                {
-                    HandleSpawnCardsAbility(game, grid);
+                    case "add":
+                        HandleAddCardsToHandAbility(game, grid, row, col);
+                        break;
+                    case "spawn":
+                        HandleSpawnCardsAbility(game, grid);
+                        break;
+                    case "+Score":
+                        HandleWinLaneBonusScore(game.CurrentPlayer!, row);
+                        break;
+                    default:
+                        break;
                 }
             }
         }
@@ -220,7 +223,7 @@ namespace backend.Models
 
                 if (rangeCell.Colour.Contains("O") && isIndexInBounds && offsetTile.Card == null)
                 {
-                    offsetTile.Owner = game.currentPlayer;
+                    offsetTile.Owner = game.CurrentPlayer;
                     offsetTile.RankUp(Card!.RankUpAmount);
                 }
 
@@ -235,14 +238,14 @@ namespace backend.Models
             var triggerCondition = Card!.Ability.Condition;
 
             // If the card doesn't need to listen for other cards being placed, unsubscribe
-            if (!onPlaceConditions.Contains(triggerCondition))
+            if (!OnPlaceConditions.Contains(triggerCondition))
                 game.OnCardPlaced -= HandleCardPlaced;
 
             // Cards that boost their own power when other cards are enhanced/enfeebled need to look at the board's status and update
             if ((target == "s") && (triggerCondition.Contains("A") || triggerCondition.Contains("E")))
                 CalculateSelfBoostFromPowerModifiedCards(game, grid, row, col);
 
-            if (action == "add" || action == "spawn")
+            if (action == "add" || action == "spawn" || action == "+Score")
                 ExecuteAbility(game, grid, row, col);
         }
 
@@ -337,7 +340,7 @@ namespace backend.Models
 
         public int GetCumulativePower()
         {
-            return Card!.Power + TileBonusPower + CardBonusPower + SelfBonusPower;
+            return (Card?.Power ?? 0) + TileBonusPower + CardBonusPower + SelfBonusPower;
         }
     }
 }

@@ -9,42 +9,38 @@ namespace backend.Models
 		public List<Player> Players { get; set; } = new List<Player>();
         public Tile[,] Player1Grid = new Tile[3, 5];
 		public Tile[,] Player2Grid = new Tile[3, 5];
-		public Player? currentPlayer { get; set; }
-		public Random Random { get; set; }
+		public Player? CurrentPlayer { get; set; }
+		public Random _random { get; set; }
 
 		public List<Tile> EnhancedCards { get; set; } = new List<Tile>();
 		public List<Tile> EnfeebledCards { get; set; } = new List<Tile>();
+		private int _consecutivePasses { get; set; } = 0;
+        const int ROWS = 3;
+        const int COLS = 5;
 
-		// Events
-		public event Action<Game, Tile[,], int, int> OnCardPlaced;
+        // Events
+        public event Action<Game, Tile[,], int, int> OnCardPlaced;
 		public event Action<Game, Tile[,], int, int> OnCardDestroyed;
 		public event Action<Game, Tile[,], int, int> OnCardEnhanced;
 		public event Action<Game, Tile[,], int, int> OnCardEnfeebled;
 
-        public Game(string id) { Id = id; }
-		public Game(string id, int seed)
-		{
-			Id = id;
-			Random = new Random(seed);
-		}
+        public Game(string id, int? seed = null)
+        {
+            Id = id;
+            _random = seed.HasValue ? new Random(seed.Value) : new Random();
+        }
 
-		public void AddPlayer (string playerId, string playerName)
+        public void AddPlayer (string playerId, string playerName)
 		{
-			var player = new Player(playerId, playerName);
-			if (Players.Count == 0)
-			{
-				player.IsHost = true;
-			}
-
-			if (Players.Count < 2 && !Players.Any(player => player.Id == playerId))
-			{
-				Players.Add (player);
-			}
+			if (Players.Count >= 2 || Players.Any(p => p.Id == playerId)) return;
+			
+			var player = new Player(playerId, playerName) { IsHost = Players.Count == 0 };
+			Players.Add(player);
 		}
 		public void MakePlayerHost (string playerId)
 		{
 			var player = Players.Find(p => p.Id == playerId);
-			player!.IsHost = true;
+			if (player != null) player.IsHost = true;
 		}
 
 		public bool PlayersReady ()
@@ -55,13 +51,12 @@ namespace backend.Models
 
 		private void ShuffleDeck(List<Card> deck)
 		{
-			Random rng = new Random();
 			int n = deck.Count;
 
 			while (n > 1)
 			{
 				n--;
-				int k = rng.Next(n + 1);
+				int k = _random.Next(n + 1);
 				Card card = deck[k];
 				deck[k] = deck[n];
 				deck[n] = card;
@@ -71,9 +66,9 @@ namespace backend.Models
         private void InitializeBoard()
         {
             // Populate player 1 board and set initial owner
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < ROWS; i++)
             {
-                for (int j = 0; j < 5; j++)
+                for (int j = 0; j < COLS; j++)
                 {
                     Player1Grid[i, j] = new Tile();
                 }
@@ -82,9 +77,9 @@ namespace backend.Models
             }
 
             // Mirror player 1's board for player 2
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < ROWS; i++)
             {
-                for (int j = 0; j < 5; j++)
+                for (int j = 0; j < COLS; j++)
                 {
                     Player2Grid[i, j] = Player1Grid[i, 4 - j];
                 }
@@ -102,8 +97,7 @@ namespace backend.Models
 
 		private void PickStartingPlayer()
 		{
-			Random rand = new Random();
-			currentPlayer = Players[rand.Next(0,2)];
+			CurrentPlayer = Players[_random.Next(0,2)];
 		}
 
 
@@ -147,7 +141,7 @@ namespace backend.Models
 		private bool CanPlaceCard(Card card, Tile tile)
 		{
 			var tileMeetsRankRequirement = tile.Rank >= card.Rank;
-			var playerOwnsTile = tile.Owner == currentPlayer;
+			var playerOwnsTile = tile.Owner == CurrentPlayer;
 			var tileOccupied = tile.Card != null;
 
             if (card.Ability.Action == "replace")
@@ -161,12 +155,16 @@ namespace backend.Models
 
 		public void SwapPlayerTurns()
 		{
-			currentPlayer = Players.Find(p => p.Id != currentPlayer!.Id);
+			CurrentPlayer = Players.Find(p => p.Id != CurrentPlayer!.Id);
+
+			if (++_consecutivePasses > 1)
+				EndGame();
+			
 		}
 
 		public void ChangePower(Tile tile, int row, int col, int amount, bool isTilePowerBonus)
 		{
-            var playerIndex = Players.IndexOf(currentPlayer!);
+            var playerIndex = Players.IndexOf(CurrentPlayer!);
             var grid = playerIndex == 0 ? Player1Grid : Player2Grid;
 
 			if (isTilePowerBonus)
@@ -204,25 +202,82 @@ namespace backend.Models
 			grid[row, col].SelfBonusPower = 0;
 		}
 
+		private (int player1Score, int player2Score) CalculatePlayerScores()
+		{
+            var player1Total = 0;
+            var player2Total = 0;
+
+            for (int row = 0; row < ROWS; row++)
+			{
+				var player1Score = 0;
+				var player2Score = 0;
+
+                for (int col = 0; col < COLS; col++)
+				{
+					var tile = Player1Grid[row, col];
+					int tilePower = tile.GetCumulativePower();
+
+					if (tile.Owner == Players[0])
+						player1Score += tilePower;
+					else if (tile.Owner == Players[1])
+						player2Score += tilePower;
+
+                }
+
+				Players[0].Scores[row] = (player1Score, Players[0].Scores[row].winBonus);
+				Players[1].Scores[row] = (player2Score, Players[1].Scores[row].winBonus);
+
+                player1Total += Players[0].Scores[row].score;
+                player2Total += Players[1].Scores[row].score;
+
+                var winner = GetLaneWinner(row);
+                if (winner == Players[0])
+                    player1Total += winner.Scores[row].winBonus;
+                else if (winner == Players[1])
+                    player2Total += winner.Scores[row].winBonus;
+            }
+
+			return (player1Total, player2Total);
+        }
+
+		public Player? GetLaneWinner(int row)
+		{
+			if (Players[0].Scores[row].score > Players[1].Scores[row].score)
+				return Players[0];
+			else if (Players[0].Scores[row].score < Players[1].Scores[row].score)
+				return Players[1];
+			else
+				return null;
+		}
+
 		public void PlaceCard(int handIndex, int row, int col)
 		{
-			var playerIndex = Players.IndexOf(currentPlayer!);
-			var card = currentPlayer!.Hand[handIndex];
+			var playerIndex = Players.IndexOf(CurrentPlayer!);
+			var card = CurrentPlayer!.Hand[handIndex];
 			var grid = playerIndex == 0 ? Player1Grid : Player2Grid;
 			var tile = grid[row, col];
 
 			if (CanPlaceCard(card, tile))
 			{
+				_consecutivePasses = 0; // Reset to keep game going
+
                 // Invoke card destroyed if replace card
                 if (card.Ability.Condition == "R")
                     OnCardDestroyed?.Invoke(this, grid, row, col);
 
                 tile.Card = card;
-                currentPlayer.Hand.RemoveAt(handIndex);
+                CurrentPlayer.Hand.RemoveAt(handIndex);
 
                 tile.InitAbility(this);
                 OnCardPlaced?.Invoke(this, grid, row, col);
+
+				CalculatePlayerScores();
             }
+		}
+
+		public void EndGame()
+		{
+			CurrentPlayer = null;
 		}
 	}
 }

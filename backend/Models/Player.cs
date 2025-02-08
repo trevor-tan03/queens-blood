@@ -10,6 +10,13 @@
 		public List<Card> Deck { get; set; } = new List<Card>();
 		public List<Card> Hand { get; set; } = new List<Card>();
 
+		public Dictionary<int, (int score, int winBonus)> Scores = new Dictionary<int, (int score, int winBonus)>
+		{
+			{ 0, (0, 0) },
+			{ 1, (0, 0) },
+			{ 2, (0, 0) },
+		};
+
 		public Player(string Id, string Name)
 		{
 			this.Id = Id;

@@ -127,7 +127,7 @@ namespace QueensBloodTest
 
         private void SetFirstCardInHand(Game game, Card card)
         {
-            game.currentPlayer!.Hand[0] = card;
+            game.CurrentPlayer!.Hand[0] = card;
         }
 
         [Fact]
@@ -228,13 +228,13 @@ namespace QueensBloodTest
         {
             var game = CreateGameWithPlayers();
             game.Start();
-            Assert.NotNull(game.currentPlayer);
+            Assert.NotNull(game.CurrentPlayer);
 
         }
 
         private void SetPlayer1Start(Game game)
         {
-            game.currentPlayer = game.Players.First();
+            game.CurrentPlayer = game.Players.First();
         }
 
         [Fact]
@@ -244,10 +244,10 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            Assert.Equal("Player1", game.currentPlayer!.Name);
+            Assert.Equal("Player1", game.CurrentPlayer!.Name);
             game.SwapPlayerTurns();
 
-            Assert.Equal("Player2", game.currentPlayer!.Name);
+            Assert.Equal("Player2", game.CurrentPlayer!.Name);
         }
 
         [Fact]
@@ -316,7 +316,7 @@ namespace QueensBloodTest
             SetFirstCardInHand(game, securityOfficer);
             game.PlaceCard(0, 1, 0);
 
-            game.currentPlayer = game.Players[0]; // Back to Player 1's turn
+            game.CurrentPlayer = game.Players[0]; // Back to Player 1's turn
 
             var insectoidChimera = _cards[50];
             SetFirstCardInHand(game, insectoidChimera);
@@ -862,6 +862,68 @@ namespace QueensBloodTest
 
             Assert.NotNull(game.Player1Grid[2, 0]);
             Assert.Equal(6, game.Player1Grid[2, 0].Card!.Power);
+        }
+
+        [Fact]
+        public void VerifyScoreAfterPlay()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            SetFirstCardInHand(game, _cards[0]);
+            game.PlaceCard(0, 0, 0);
+
+            SetFirstCardInHand(game, _cards[12]);
+            game.PlaceCard(0, 1, 0);
+            
+            Assert.Equal(3, game.Players[0].Scores[0].score);
+            Assert.Equal(1, game.Players[0].Scores[1].score);
+        }
+
+        [Fact]
+        public void GetLaneWinnerForTie()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            SetFirstCardInHand(game, _cards[0]);
+            game.PlaceCard(0, 0, 0);
+            game.SwapPlayerTurns();
+
+            SetFirstCardInHand(game, _cards[0]);
+            game.PlaceCard(0, 0, 0);
+
+            Assert.Null(game.GetLaneWinner(0));
+        }
+
+        [Fact]
+        public void GetLaneWinnerForWin()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            SetFirstCardInHand(game, _cards[0]);
+            game.PlaceCard(0, 0, 0);
+
+            var player1 = game.Players[0];
+            Assert.Equal(player1, game.GetLaneWinner(0));
+        }
+
+        [Fact]
+        public void VerifyBonusLanePointsWhenPlayed()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            var tifa = _cards[87];
+            SetFirstCardInHand(game, tifa);
+            game.PlaceCard(0, 0, 0);
+
+            Assert.Equal(5, game.Players[0].Scores[0].winBonus);
         }
     }
 }
