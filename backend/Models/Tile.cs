@@ -16,9 +16,10 @@ namespace backend.Models
 
         // Private variables
         private readonly List<string> OnPlaceConditions = new List<string> { "AP", "EP" };
-        private readonly List<string> OnDestroyConditions = new List<string> { "D", "AD", "ED", "AED", "*" };
+        private readonly List<string> OnDestroyConditions = new List<string> { "D", "AD", "ED", "AED", "*", "W" };
         private readonly List<string> OnEnhanceConditions = new List<string> { "P1R", "1+", "+A", "+E", "+AE" };
         private readonly List<string> OnEnfeebleConditions = new List<string> { "1-", "-A", "-E", "-AE" };
+        private readonly string OnGameEndCondition = "L+V";
 
         public void RankUp(int amount)
         {
@@ -37,6 +38,9 @@ namespace backend.Models
                 game.OnCardEnhanced += HandleCardEnhanced;
             else if (OnEnfeebleConditions.Contains(Card!.Ability.Condition))
                 game.OnCardEnfeebled += HandleCardEnfeebled;
+
+            if (OnGameEndCondition == Card!.Ability.Action)
+                game.OnGameEnd += HandleAddLaneLoserScoreToVictor;
         }
 
         private void UninitAbility(Game game, Tile[,] grid, int row, int col)
@@ -48,13 +52,17 @@ namespace backend.Models
                 game.OnCardDestroyed -= HandleCardDestroyed;
                 game.OnCardEnhanced -= HandleCardEnhanced;
                 game.OnCardEnfeebled -= HandleCardEnfeebled;
+                game.OnGameEnd -= HandleAddLaneLoserScoreToVictor;
             }
 
             /*
 			 * Undo the effects of the ability on other cards if applicable. This includes abilities with:
 			 *  - "While in play" condition (*)
 			 */
-            if (Card!.Ability.Condition == "*")
+            var abilityCondition = Card!.Ability.Condition;
+            var abilityAction = Card!.Ability.Action;
+
+            if (abilityCondition == "*" && abilityAction != "L+V")
             {
                 var operation = Card!.Ability.Action!.Contains("+") ? 1 : -1;
 
@@ -68,11 +76,17 @@ namespace backend.Models
                         grid[dy, dx].TileBonusPower -= (int) Card!.Ability.Value * operation;
                 }
             }
+            else if (abilityCondition == "W")
+            {
+                int winBonusFromCard = (int)Card!.Ability.Value!;
+                // Subtract the destroyed card's win bonus score
+                Owner!.Scores[row].winBonus -= winBonusFromCard;
+            }
         }
 
         private void HandleTargetingAbilties(Tile tile, Game game, int row, int col)
         {
-            if (Card!.Ability.Value == null) return;
+            if (Card!.Ability.Value == null || Card!.Ability.Target == null) return;
 
             var operation = Card!.Ability.Action!.Contains("+") ? 1 : -1;
             bool isTilePowerBonus = Card.Ability.Condition == "*";
@@ -84,7 +98,7 @@ namespace backend.Models
                 Card!.Ability.Target == "ae")
                 &&
                 // If card doesn't have "While in play" (*) condition, don't target empty tiles
-                (tile.Card != null || Card!.Ability.Condition == "*")
+                (tile.Card != null || Card!.Ability.Condition == "*" || Card!.Ability.Action == "destroy")
             )
             {
                 game.ChangePower(tile, row, col, (int) Card!.Ability.Value * operation, isTilePowerBonus);
@@ -121,9 +135,24 @@ namespace backend.Models
         private void HandleWinLaneBonusScore(Player player, int row)
         {
             var newWinBonus = player.Scores[row].winBonus + (int) Card!.Ability.Value!;
-            var score = player.Scores[row].score;
+            player.Scores[row].winBonus = newWinBonus;
+        }
 
-            player.Scores[row] = (score, newWinBonus);
+        private void HandleAddLaneLoserScoreToVictor(Game game)
+        {
+            // Look at the lanes the owner is winning and subtract the enemy's points in that lane and subtract winBonus
+            for (int i = 0; i < NUM_ROWS; i++)
+            {
+                var enemy = game.Players.Find(p => p != Owner);
+                var laneWinner = game.GetLaneWinner(i);
+
+                // Owner is the victor. Add enemy's score to owner's
+                if (laneWinner == Owner)
+                    Owner!.Scores[i].winBonus = Owner.Scores[i].winBonus + enemy!.Scores[i].score;
+                // Enemy is the victor. Add owner's score to enemy's
+                else if (laneWinner == enemy)
+                    enemy!.Scores[i].winBonus = enemy.Scores[i].winBonus + Owner!.Scores[i].score;
+            }
         }
 
         private void ExecuteAbility(Game game, Tile[,] grid, int row, int col)
@@ -154,6 +183,9 @@ namespace backend.Models
                         break;
                     case "+Score":
                         HandleWinLaneBonusScore(game.CurrentPlayer!, row);
+                        break;
+                    case "L+V":
+                        HandleAddLaneLoserScoreToVictor(game);
                         break;
                     default:
                         break;

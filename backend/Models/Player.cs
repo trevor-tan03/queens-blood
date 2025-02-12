@@ -1,5 +1,11 @@
 ﻿namespace backend.Models
 {
+	public struct LaneScore
+	{
+		public int score;
+		public int winBonus;
+	}
+
 	public class Player
 	{
 		public string Id { get; set; }
@@ -10,11 +16,11 @@
 		public List<Card> Deck { get; set; } = new List<Card>();
 		public List<Card> Hand { get; set; } = new List<Card>();
 
-		public Dictionary<int, (int score, int winBonus)> Scores = new Dictionary<int, (int score, int winBonus)>
+		public LaneScore[] Scores =
 		{
-			{ 0, (0, 0) },
-			{ 1, (0, 0) },
-			{ 2, (0, 0) },
+			new LaneScore() { score = 0, winBonus = 0 },
+			new LaneScore() { score = 0, winBonus = 0 },
+			new LaneScore() { score = 0, winBonus = 0 }
 		};
 
 		public Player(string Id, string Name)

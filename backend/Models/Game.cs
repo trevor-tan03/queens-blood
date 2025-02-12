@@ -11,6 +11,7 @@ namespace backend.Models
 		public Tile[,] Player2Grid = new Tile[3, 5];
 		public Player? CurrentPlayer { get; set; }
 		public Random _random { get; set; }
+		public bool GameOver { get; set; }
 
 		public List<Tile> EnhancedCards { get; set; } = new List<Tile>();
 		public List<Tile> EnfeebledCards { get; set; } = new List<Tile>();
@@ -23,6 +24,7 @@ namespace backend.Models
 		public event Action<Game, Tile[,], int, int> OnCardDestroyed;
 		public event Action<Game, Tile[,], int, int> OnCardEnhanced;
 		public event Action<Game, Tile[,], int, int> OnCardEnfeebled;
+		public event Action<Game> OnGameEnd;
 
         public Game(string id, int? seed = null)
         {
@@ -159,7 +161,6 @@ namespace backend.Models
 
 			if (++_consecutivePasses > 1)
 				EndGame();
-			
 		}
 
 		public void ChangePower(Tile tile, int row, int col, int amount, bool isTilePowerBonus)
@@ -190,7 +191,7 @@ namespace backend.Models
 		public void DestroyCard(Tile[,] grid, int row, int col)
 		{
 			OnCardDestroyed?.Invoke(this, grid, row, col);
-			grid[row, col].Card = null;
+            grid[row, col].Card = null;
 
 			if (EnhancedCards.Contains(grid[row, col]))
 				EnhancedCards.Remove(grid[row, col]);
@@ -202,17 +203,14 @@ namespace backend.Models
 			grid[row, col].SelfBonusPower = 0;
 		}
 
-		private (int player1Score, int player2Score) CalculatePlayerScores()
+		private void CalculatePlayerScores()
 		{
-            var player1Total = 0;
-            var player2Total = 0;
-
-            for (int row = 0; row < ROWS; row++)
+			for (int row = 0; row < ROWS; row++)
 			{
 				var player1Score = 0;
 				var player2Score = 0;
 
-                for (int col = 0; col < COLS; col++)
+				for (int col = 0; col < COLS; col++)
 				{
 					var tile = Player1Grid[row, col];
 					int tilePower = tile.GetCumulativePower();
@@ -221,12 +219,20 @@ namespace backend.Models
 						player1Score += tilePower;
 					else if (tile.Owner == Players[1])
 						player2Score += tilePower;
+				}
 
-                }
+				Players[0].Scores[row].score = player1Score;
+				Players[1].Scores[row].score = player2Score;
+			}
+        }
 
-				Players[0].Scores[row] = (player1Score, Players[0].Scores[row].winBonus);
-				Players[1].Scores[row] = (player2Score, Players[1].Scores[row].winBonus);
+		public (int player1Score, int player2Score) GetFinalScores()
+        {
+            var player1Total = 0;
+            var player2Total = 0;
 
+			for (int row = 0; row < ROWS; row++)
+			{
                 player1Total += Players[0].Scores[row].score;
                 player2Total += Players[1].Scores[row].score;
 
@@ -238,9 +244,9 @@ namespace backend.Models
             }
 
 			return (player1Total, player2Total);
-        }
+		}
 
-		public Player? GetLaneWinner(int row)
+        public Player? GetLaneWinner(int row)
 		{
 			if (Players[0].Scores[row].score > Players[1].Scores[row].score)
 				return Players[0];
@@ -248,6 +254,11 @@ namespace backend.Models
 				return Players[1];
 			else
 				return null;
+		}
+
+		public int GetPlayerLaneScore(int playerIndex, int row)
+		{
+			return Players[playerIndex].Scores[row].score;
 		}
 
 		public void PlaceCard(int handIndex, int row, int col)
@@ -263,7 +274,7 @@ namespace backend.Models
 
                 // Invoke card destroyed if replace card
                 if (card.Ability.Condition == "R")
-                    OnCardDestroyed?.Invoke(this, grid, row, col);
+                    DestroyCard(grid, row, col);
 
                 tile.Card = card;
                 CurrentPlayer.Hand.RemoveAt(handIndex);
@@ -278,6 +289,8 @@ namespace backend.Models
 		public void EndGame()
 		{
 			CurrentPlayer = null;
+			GameOver = true;
+			OnGameEnd?.Invoke(this);
 		}
 	}
 }
