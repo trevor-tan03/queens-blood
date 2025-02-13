@@ -84,24 +84,39 @@ namespace backend.Models
             }
         }
 
+        private bool IsTileTargettable(Card card, Tile tile)
+        {
+            var target = Card!.Ability.Target;
+            var condition = Card!.Ability.Condition;
+
+            return ((target == "a" && tile.Owner == Owner) ||
+                (target == "e" && tile.Owner != Owner) ||
+                target == "ae")
+                &&
+                // If card doesn't have "While in play" (*) condition, don't target empty tiles
+                (tile.Card != null || Card!.Ability.Condition == "*");
+        }
+
         private void HandleTargetingAbilties(Tile tile, Game game, int row, int col)
         {
-            if (Card!.Ability.Value == null || Card!.Ability.Target == null) return;
+            var abilityValue = Card!.Ability.Value;
+            var abilityAction = Card!.Ability.Action;
+            var abilityTarget = Card!.Ability.Target;
+
+            if (!IsTileTargettable(Card, tile)) return;
 
             var operation = Card!.Ability.Action!.Contains("+") ? 1 : -1;
             bool isTilePowerBonus = Card.Ability.Condition == "*";
 
-            if (
-                // Check if we're allowed to use the ability on the tile on target
-                ((Card!.Ability.Target == "a" && tile.Owner == Owner) ||
-                (Card!.Ability.Target == "e" && tile.Owner != Owner) ||
-                Card!.Ability.Target == "ae")
-                &&
-                // If card doesn't have "While in play" (*) condition, don't target empty tiles
-                (tile.Card != null || Card!.Ability.Condition == "*" || Card!.Ability.Action == "destroy")
-            )
+            if (abilityValue != null)
             {
-                game.ChangePower(tile, row, col, (int) Card!.Ability.Value * operation, isTilePowerBonus);
+                game.ChangePower(tile, row, col, (int) abilityValue * operation, isTilePowerBonus);
+            }
+            else if (abilityAction == "destroy")
+            {
+                var currPlayerIndex = game.Players.FindIndex(p => p == Owner);
+                var grid = currPlayerIndex == 0 ? game.Player1Grid : game.Player2Grid;
+                game.DestroyCard(grid, row, col);
             }
         }
 

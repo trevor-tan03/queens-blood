@@ -604,5 +604,27 @@ namespace QueensBloodTest
             Assert.Equal(3, finalScores.player1Score);
             Assert.Equal(1, finalScores.player2Score);
         }
+
+        [Fact]
+        public void TestCardWithDestroyAbility()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            // Place down enemy Security Officer cards
+            ForcePlace(game, _cards[0], game.Players[1], 0, 0);
+            ForcePlace(game, _cards[0], game.Players[1], 2, 0);
+
+            // Place down Sephiroth card
+            var sephiroth = _cards[142];
+            game.Player1Grid[1, 0].RankUp(2);
+            SetFirstCardInHand(game, sephiroth);
+            game.PlaceCard(0, 1, 0);
+
+            // Security Officers should be destroyed
+            Assert.Null(game.Player1Grid[0, 0].Card);
+            Assert.Null(game.Player1Grid[2, 0].Card);
+        }
     }
 }
