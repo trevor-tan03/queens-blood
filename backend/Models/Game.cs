@@ -12,7 +12,7 @@ namespace backend.Models
 		public Player? CurrentPlayer { get; set; }
 		public Random _random { get; set; }
 		public bool GameOver { get; set; }
-
+		private Queue<Action> ActionQueue { get; set; } = new Queue<Action>();
 		public List<Tile> EnhancedCards { get; set; } = new List<Tile>();
 		public List<Tile> EnfeebledCards { get; set; } = new List<Tile>();
 		private int _consecutivePasses { get; set; } = 0;
@@ -176,15 +176,15 @@ namespace backend.Models
 			if (amount > 0)
 			{
                 if (!EnhancedCards.Contains(tile)) EnhancedCards.Add(tile);
-                OnCardEnhanced?.Invoke(this, grid, row, col);
+				ActionQueue.Enqueue(() => OnCardEnhanced?.Invoke(this, grid, row, col));
             }
 			else
 			{
                 if (!EnfeebledCards.Contains(tile)) EnfeebledCards.Add(tile);
-				OnCardEnfeebled?.Invoke(this, grid, row, col);
+				ActionQueue.Enqueue(() => OnCardEnfeebled?.Invoke(this, grid, row, col));
 
 				if (tile.Card != null && tile.GetCumulativePower() <= 0)
-					DestroyCard(grid, row, col);
+					ActionQueue.Enqueue(() => DestroyCard(grid, row, col));
 			}
 		}
 
@@ -261,6 +261,15 @@ namespace backend.Models
 			return Players[playerIndex].Scores[row].score;
 		}
 
+		private void ExecuteQueuedActions()
+		{
+			while (ActionQueue.Count > 0)
+			{
+				Action action = ActionQueue.Dequeue();
+				action();
+			}
+		}
+
 		public void PlaceCard(int handIndex, int row, int col)
 		{
 			var playerIndex = Players.IndexOf(CurrentPlayer!);
@@ -283,6 +292,7 @@ namespace backend.Models
                 OnCardPlaced?.Invoke(this, grid, row, col);
 
 				CalculatePlayerScores();
+				ExecuteQueuedActions();
             }
 		}
 

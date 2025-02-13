@@ -17,8 +17,8 @@ namespace backend.Models
         // Private variables
         private readonly List<string> OnPlaceConditions = new List<string> { "AP", "EP" };
         private readonly List<string> OnDestroyConditions = new List<string> { "D", "AD", "ED", "AED", "*", "W" };
-        private readonly List<string> OnEnhanceConditions = new List<string> { "P1R", "1+", "+A", "+E", "+AE" };
-        private readonly List<string> OnEnfeebleConditions = new List<string> { "1-", "-A", "-E", "-AE" };
+        private readonly List<string> OnEnhanceConditions = new List<string> { "P1R", "1+", "+A", "+E", "+AE", "EE" };
+        private readonly List<string> OnEnfeebleConditions = new List<string> { "1-", "-A", "-E", "-AE", "EE" };
         private readonly string OnGameEndCondition = "L+V";
 
         public void RankUp(int amount)
@@ -36,7 +36,8 @@ namespace backend.Models
                 game.OnCardDestroyed += HandleCardDestroyed;
             else if (OnEnhanceConditions.Contains(Card!.Ability.Condition))
                 game.OnCardEnhanced += HandleCardEnhanced;
-            else if (OnEnfeebleConditions.Contains(Card!.Ability.Condition))
+
+            if (OnEnfeebleConditions.Contains(Card!.Ability.Condition))
                 game.OnCardEnfeebled += HandleCardEnfeebled;
 
             if (OnGameEndCondition == Card!.Ability.Action)
@@ -99,13 +100,19 @@ namespace backend.Models
 
         private void HandleTargetingAbilties(Tile tile, Game game, int row, int col)
         {
+            var abilityCondition = Card!.Ability.Condition;
             var abilityValue = Card!.Ability.Value;
             var abilityAction = Card!.Ability.Action;
             var abilityTarget = Card!.Ability.Target;
 
             if (!IsTileTargettable(Card, tile)) return;
 
-            var operation = Card!.Ability.Action!.Contains("+") ? 1 : -1;
+            int operation;
+            if (abilityCondition == "EE")
+                operation = game.EnhancedCards.Contains(this) ? 1 : -1;
+            else
+                operation = abilityAction!.Contains("+") ? 1 : -1;
+
             bool isTilePowerBonus = Card.Ability.Condition == "*";
 
             if (abilityValue != null)
@@ -258,6 +265,7 @@ namespace backend.Models
              * - Change owner
              */
             var executeAbilityImmediately = Card!.Ability.Condition == "P" || Card!.Ability.Condition == "*";
+            var rankUpAmount = Card!.RankUpAmount;
 
             foreach (RangeCell rangeCell in Card!.Range)
             {
@@ -271,7 +279,7 @@ namespace backend.Models
                 if (rangeCell.Colour.Contains("O") && isIndexInBounds && offsetTile.Card == null)
                 {
                     offsetTile.Owner = game.CurrentPlayer;
-                    offsetTile.RankUp(Card!.RankUpAmount);
+                    offsetTile.RankUp(rankUpAmount);
                 }
 
                 if (rangeCell.Colour.Contains("R") && isIndexInBounds && executeAbilityImmediately)
@@ -338,8 +346,13 @@ namespace backend.Models
             if (Card!.Ability.Condition == "P1R" && GetCumulativePower() < 7) return;
 
             // Unsubscribe so that the ability doesn't trigger again
-            if (Card!.Ability.Condition.Contains("1") || (Card!.Ability.Condition == "P1R" && GetCumulativePower() >= 7))
+            if (
+                Card!.Ability.Condition.Contains("1") || 
+                (Card!.Ability.Condition == "P1R" && GetCumulativePower() >= 7) ||
+                Card!.Ability.Condition == "EE")
                 game.OnCardEnhanced -= HandleCardEnhanced;
+            if (Card!.Ability.Condition == "EE")
+                game.OnCardEnfeebled -= HandleCardEnfeebled;
 
             // Handle targetting ability
             foreach (RangeCell rangeCell in Card!.Range)
@@ -366,6 +379,12 @@ namespace backend.Models
                 return;
             }
 
+            if (Card!.Ability.Condition.Contains("1") ||
+                Card!.Ability.Condition == "EE")
+                game.OnCardEnfeebled -= HandleCardEnfeebled;
+            if (Card!.Ability.Condition == "EE")
+                game.OnCardEnhanced -= HandleCardEnhanced;
+
             // Handle ability trigger when first enfeebled
             foreach (RangeCell rangeCell in Card!.Range)
             {
@@ -381,9 +400,6 @@ namespace backend.Models
                     ExecuteAbility(game, grid, dy, dx);
                 }
             }
-
-            if (Card!.Ability.Condition.Contains("1"))
-                game.OnCardEnfeebled -= HandleCardEnfeebled;
         }
 
         public int GetCumulativePower()

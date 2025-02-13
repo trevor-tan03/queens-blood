@@ -654,5 +654,46 @@ namespace QueensBloodTest
             Assert.Equal(3, game.Player1Grid[0, 0].GetCumulativePower());
             Assert.Equal(3, game.Player1Grid[2, 0].GetCumulativePower());
         }
+
+        [Fact]
+        public void TestTwoFaceEnhanced()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            var twoFace = _cards[65];
+            SetFirstCardInHand(game, twoFace);
+            game.Player1Grid[0, 0].RankUp(2);
+            game.PlaceCard(0, 0, 0);
+
+            var crystallineCrab = _cards[12];
+            Assert.Equal(1, crystallineCrab.Power);
+            SetFirstCardInHand(game, crystallineCrab);
+            game.PlaceCard(0, 1, 0);
+
+            // Two Face should have enhanced the card's power by 4
+            Assert.Equal(5, game.Player1Grid[1, 0].GetCumulativePower());
+        }
+
+        [Fact]
+        public void TestTwoFaceEnfeebled()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            var twoFace = _cards[65];
+            SetFirstCardInHand(game, twoFace);
+            game.Player1Grid[0, 0].RankUp(2);
+            game.PlaceCard(0, 0, 0);
+
+            var capparwire = _cards[25];
+            SetFirstCardInHand(game, capparwire);
+            game.PlaceCard(0, 1, 0);
+
+            // Two Face should have enfeebled capparwire, destroying it
+            Assert.Null(game.Player1Grid[1, 0].Card);
+        }
     }
 }
