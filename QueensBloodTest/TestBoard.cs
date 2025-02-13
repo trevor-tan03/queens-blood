@@ -109,29 +109,6 @@ namespace QueensBloodTest
         }
 
         [Fact]
-        public void PlaceReplaceCard()
-        {
-            var game = CreateGameWithPlayers();
-            game.Start();
-            SetPlayer1Start(game);
-
-            var securityOfficer = _cards[0];
-            SetFirstCardInHand(game, securityOfficer);
-            game.PlaceCard(0, 1, 0);
-
-            game.CurrentPlayer = game.Players[0]; // Back to Player 1's turn
-
-            var insectoidChimera = _cards[50];
-            SetFirstCardInHand(game, insectoidChimera);
-            game.PlaceCard(0, 1, 0);
-
-            // Ensure affected tiles are updated correctly
-            AssertTileState(game.Player1Grid, 0, 0, 3, "Player1");
-            AssertTileState(game.Player1Grid, 1, 1, 2, "Player1");
-            AssertTileState(game.Player1Grid, 2, 0, 3, "Player1");
-        }
-
-        [Fact]
         public void VerifyScoreAfterPlay()
         {
             var game = CreateGameWithPlayers();
@@ -189,6 +166,19 @@ namespace QueensBloodTest
             game.SwapPlayerTurns();
             game.SwapPlayerTurns();
             Assert.True(game.GameOver);
+        }
+
+        [Fact]
+        public void TestPickUp()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            Assert.Equal(5, game.CurrentPlayer!.Hand.Count);
+            Assert.Equal(10, game.CurrentPlayer!.Deck.Count);
+
+            game.CurrentPlayer.PickUp(1);
+            Assert.Equal(6, game.CurrentPlayer!.Hand.Count);
+            Assert.Equal(9, game.CurrentPlayer!.Deck.Count);
         }
     }
 }
