@@ -626,5 +626,33 @@ namespace QueensBloodTest
             Assert.Null(game.Player1Grid[0, 0].Card);
             Assert.Null(game.Player1Grid[2, 0].Card);
         }
+
+        [Fact]
+        public void TestAbilityTriggerOnceCardReachesPowerThreshold()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            var cloud = _cards[85];
+            SetFirstCardInHand(game, cloud);
+            game.Player1Grid[1, 0].RankUp(2);
+            game.PlaceCard(0, 1, 0);
+            Assert.Equal(3, game.Player1Grid[1, 0].GetCumulativePower());
+
+            var spearhawk = _cards[30];
+            SetFirstCardInHand(game, spearhawk);
+            game.PlaceCard(0, 0, 0);
+            Assert.Equal(1, game.Player1Grid[0, 0].GetCumulativePower());
+
+            var crystallineCrab = _cards[12];
+            SetFirstCardInHand(game, crystallineCrab);
+            game.PlaceCard(0, 2, 0);
+
+            // Cloud's power should be raised to 7, and it will boost the power of adjacent cards by 2
+            Assert.Equal(7, game.Player1Grid[1, 0].GetCumulativePower());
+            Assert.Equal(3, game.Player1Grid[0, 0].GetCumulativePower());
+            Assert.Equal(3, game.Player1Grid[2, 0].GetCumulativePower());
+        }
     }
 }

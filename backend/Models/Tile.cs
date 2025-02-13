@@ -337,6 +337,10 @@ namespace backend.Models
             // Cloud's ability should only execute once it reaches >= 7 power
             if (Card!.Ability.Condition == "P1R" && GetCumulativePower() < 7) return;
 
+            // Unsubscribe so that the ability doesn't trigger again
+            if (Card!.Ability.Condition.Contains("1") || (Card!.Ability.Condition == "P1R" && GetCumulativePower() >= 7))
+                game.OnCardEnhanced -= HandleCardEnhanced;
+
             // Handle targetting ability
             foreach (RangeCell rangeCell in Card!.Range)
             {
@@ -352,9 +356,6 @@ namespace backend.Models
                     ExecuteAbility(game, grid, dy, dx);
                 }
             }
-
-            if (Card!.Ability.Condition.Contains("1"))
-                game.OnCardEnhanced -= HandleCardEnhanced;
         }
 
         private void HandleCardEnfeebled(Game game, Tile[,] grid, int row, int col)
