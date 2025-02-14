@@ -1,5 +1,11 @@
 ﻿namespace backend.Models
 {
+	public struct LaneScore
+	{
+		public int score;
+		public int winBonus;
+	}
+
 	public class Player
 	{
 		public string Id { get; set; }
@@ -9,6 +15,13 @@
 		public Boolean HasMulliganed { get; set; } = false;
 		public List<Card> Deck { get; set; } = new List<Card>();
 		public List<Card> Hand { get; set; } = new List<Card>();
+
+		public LaneScore[] Scores =
+		{
+			new LaneScore() { score = 0, winBonus = 0 },
+			new LaneScore() { score = 0, winBonus = 0 },
+			new LaneScore() { score = 0, winBonus = 0 }
+		};
 
 		public Player(string Id, string Name)
 		{

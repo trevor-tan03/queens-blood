@@ -43,28 +43,11 @@ def add_extra_cards():
   conn = sqlite3.connect('QB_card_info.db')
   cursor = conn.cursor()
 
-  # Create a table for the extra cards
+  # Add extra cards to the Cards table
   try:
-    cursor.execute('''
-                    CREATE TABLE 'Extra Cards' (
-                        ID INTEGER PRIMARY KEY,
-                        Parent INTEGER,
-                        Name TEXT,
-                        Rank TEXT,
-                        Power TEXT,
-                        Rarity TEXT,
-                        Ability TEXT,
-                        Image TEXT,
-                        FOREIGN KEY("Parent") REFERENCES Cards("ID")
-                    )
-                ''')
     for added_card in added_cards:
       name, rank, power, rarity, ability = added_card
       image = f'player-{name.replace(" ", "-").lower()}.webp'
-
-      cursor.execute('''
-        INSERT INTO 'Extra Cards' (Name,Rank,Power,Rarity,Ability,Image) VALUES (?,?,?,?,?,?)
-      ''', (name, rank, power, rarity, ability, image))
 
       cursor.execute('''
           INSERT INTO Cards (Name,Rank,Power,Rarity,Ability,Image) VALUES (?,?,?,?,?,?)
@@ -73,10 +56,6 @@ def add_extra_cards():
     for spawned_card in spawned_cards:
       name, rank, power, rarity, ability = spawned_card
       image = f'player-{name.replace(" ", "-").lower()}-{rank}.webp'
-
-      cursor.execute('''
-        INSERT INTO 'Extra Cards' (Name,Rank,Power,Rarity,Ability,Image) VALUES (?,?,?,?,?,?)
-      ''', (name, rank, power, rarity, ability, image))
 
       cursor.execute('''
         INSERT INTO Cards (Name,Rank,Power,Rarity,Ability,Image) VALUES (?,?,?,?,?,?)
