@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Numerics;
+using static backend.Models.TileConstants;
 
 namespace backend.Models
 {
@@ -16,8 +17,6 @@ namespace backend.Models
 		public List<Tile> EnhancedCards { get; set; } = new List<Tile>();
 		public List<Tile> EnfeebledCards { get; set; } = new List<Tile>();
 		private int _consecutivePasses { get; set; } = 0;
-        const int ROWS = 3;
-        const int COLS = 5;
 
         // Events
         public event Action<Game, Tile[,], int, int> OnCardPlaced;
@@ -68,9 +67,9 @@ namespace backend.Models
         private void InitializeBoard()
         {
             // Populate player 1 board and set initial owner
-            for (int i = 0; i < ROWS; i++)
+            for (int i = 0; i < NUM_ROWS; i++)
             {
-                for (int j = 0; j < COLS; j++)
+                for (int j = 0; j < NUM_COLS; j++)
                 {
                     Player1Grid[i, j] = new Tile();
                 }
@@ -79,9 +78,9 @@ namespace backend.Models
             }
 
             // Mirror player 1's board for player 2
-            for (int i = 0; i < ROWS; i++)
+            for (int i = 0; i < NUM_ROWS; i++)
             {
-                for (int j = 0; j < COLS; j++)
+                for (int j = 0; j < NUM_COLS; j++)
                 {
                     Player2Grid[i, j] = Player1Grid[i, 4 - j];
                 }
@@ -205,12 +204,12 @@ namespace backend.Models
 
 		private void CalculatePlayerScores()
 		{
-			for (int row = 0; row < ROWS; row++)
+			for (int row = 0; row < NUM_ROWS; row++)
 			{
 				var player1Score = 0;
 				var player2Score = 0;
 
-				for (int col = 0; col < COLS; col++)
+				for (int col = 0; col < NUM_COLS; col++)
 				{
 					var tile = Player1Grid[row, col];
 					int tilePower = tile.GetCumulativePower();
@@ -231,7 +230,7 @@ namespace backend.Models
             var player1Total = 0;
             var player2Total = 0;
 
-			for (int row = 0; row < ROWS; row++)
+			for (int row = 0; row < NUM_ROWS; row++)
 			{
                 player1Total += Players[0].Scores[row].score;
                 player2Total += Players[1].Scores[row].score;

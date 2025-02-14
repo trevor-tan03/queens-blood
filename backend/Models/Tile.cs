@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Bson;
+using static backend.Models.TileConstants;
 
 namespace backend.Models
 {
@@ -10,16 +11,6 @@ namespace backend.Models
         public int TileBonusPower { get; set; } = 0; // Bonus Power from other cards with the "While in play" (*) condition
         public int CardBonusPower {  get; set; } = 0; // Bonus Power that only affects the card on the tile, not the tile itself
         public int SelfBonusPower { get; set; } = 0; // Bonus Power from this card's ability
-
-        private const int NUM_ROWS = 3;
-        private const int NUM_COLS = 5;
-
-        // Private variables
-        private readonly List<string> OnPlaceConditions = new List<string> { "AP", "EP" };
-        private readonly List<string> OnDestroyConditions = new List<string> { "D", "AD", "ED", "AED", "*", "W" };
-        private readonly List<string> OnEnhanceConditions = new List<string> { "P1R", "1+", "+A", "+E", "+AE", "EE" };
-        private readonly List<string> OnEnfeebleConditions = new List<string> { "1-", "-A", "-E", "-AE", "EE" };
-        private readonly string OnGameEndCondition = "L+V";
 
         public void RankUp(int amount)
         {

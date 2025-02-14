@@ -126,11 +126,6 @@ namespace QueensBloodTest
             return game;
         }
 
-        public void SetFirstCardInHand(Game game, Card card)
-        {
-            game.CurrentPlayer!.Hand[0] = card;
-        }
-
         public void AssertTileState(Tile[,] grid, int row, int column, int expectedRank, string expectedOwner)
         {
             Assert.Equal(expectedRank, grid[row, column].Rank);
@@ -140,6 +135,15 @@ namespace QueensBloodTest
         public void SetPlayer1Start(Game game)
         {
             game.CurrentPlayer = game.Players[0];
+        }
+
+        public void AddToHandAndPlaceCard(Game game, Cards cardEnum, int row, int col)
+        {
+            var card = _cards[(int) cardEnum];
+            game.CurrentPlayer!.Hand.Add(card);
+
+            var lastCardInHandIndex = game.CurrentPlayer.Hand.Count - 1;
+            game.PlaceCard(lastCardInHandIndex, row, col);
         }
     }
 }

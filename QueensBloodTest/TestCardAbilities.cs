@@ -16,15 +16,8 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            var securityOfficer = _cards[0];
-            SetFirstCardInHand(game, securityOfficer);
-            game.PlaceCard(0, 1, 0);
-
-            game.CurrentPlayer = game.Players[0]; // Back to Player 1's turn
-
-            var insectoidChimera = _cards[50];
-            SetFirstCardInHand(game, insectoidChimera);
-            game.PlaceCard(0, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 1, 0);
 
             // Ensure affected tiles are updated correctly
             AssertTileState(game.Player1Grid, 0, 0, 3, "Player1");
@@ -40,10 +33,7 @@ namespace QueensBloodTest
             SetPlayer1Start(game);
 
             // Place Twin Brain to raise position rank of tile 
-            var twinBrain = _cards[70];
-            SetFirstCardInHand(game, twinBrain);
-            game.PlaceCard(0, 0, 0);
-
+            AddToHandAndPlaceCard(game, Cards.TwinBrain, 0, 0);
             AssertTileState(game.Player1Grid, 2, 0, 3, "Player1");
         }
 
@@ -55,15 +45,10 @@ namespace QueensBloodTest
             SetPlayer1Start(game);
 
             // Place security officer at [2,0]
-            var securityOfficer = _cards[0];
-            SetFirstCardInHand(game, securityOfficer);
-            game.PlaceCard(0, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 2, 0);
 
             // Place Twin Brain but it shouldn't change the position rank of the affected tiles since there's already a card there
-            var twinBrain = _cards[70];
-            SetFirstCardInHand(game, twinBrain);
-            game.PlaceCard(0, 0, 0);
-
+            AddToHandAndPlaceCard(game, Cards.TwinBrain, 0, 0);
             AssertTileState(game.Player1Grid, 2, 0, 1, "Player1");
         }
 
@@ -80,24 +65,17 @@ namespace QueensBloodTest
             game.Player2Grid[1, 0].RankUp(2);
 
             // Player 1 places sea devil which raises its power by 1 when an allied card is played (AP)
-            var seaDevil = _cards[31];
-            SetFirstCardInHand(game, seaDevil);
-            game.PlaceCard(0, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.SeaDevil, 1, 0);
             Assert.Equal(0, game.Player1Grid[1, 0].SelfBonusPower);
 
             // Player 2 places sea devil which raises its power by 1 when an enemy card is played (EP)
             game.SwapPlayerTurns();
-            var bagnadrana = _cards[37];
-            SetFirstCardInHand(game, bagnadrana);
-            game.PlaceCard(0, 1, 0);
-
+            AddToHandAndPlaceCard(game, Cards.Bagnadrana, 1, 0);
             /* Player 1 places an allied card (security officer) in the first column. This is an enemy card for Player 2.
              * This should raise the power of both the Sea Devil and Bagnadrana.
              */
             game.SwapPlayerTurns();
-            var securityOfficer = _cards[0];
-            SetFirstCardInHand(game, securityOfficer);
-            game.PlaceCard(0, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0);
 
             Assert.Equal(1, game.Player1Grid[1, 0].SelfBonusPower);
             Assert.Equal(1, game.Player2Grid[1, 0].SelfBonusPower);
@@ -111,31 +89,25 @@ namespace QueensBloodTest
             SetPlayer1Start(game);
 
             // Play Crystalline Crab
-            var crystallineCrab = _cards[12];
-            SetFirstCardInHand(game, crystallineCrab);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0);
             game.PlaceCard(0, 1, 0);
 
             // Tile above should have its power enhanced by 2
             Assert.Equal(2, game.Player1Grid[0, 0].TileBonusPower);
 
             // When an allied security officer is placed, its cumulative power should be 3 (1+2)
-            var securityOfficer = _cards[0];
-            SetFirstCardInHand(game, securityOfficer);
-            game.PlaceCard(0, 0, 0);
-
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0);
             Assert.Equal(3, game.Player1Grid[0, 0].GetCumulativePower());
 
             // When Crystalline Crab is destroyed, the security officer should lose its enhancement
-            var insectoidChimera = _cards[51];
-            SetFirstCardInHand(game, insectoidChimera);
-            game.PlaceCard(0, 1, 0);
-
+            AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 1, 0);
             Assert.Equal(1, game.Player1Grid[0, 0].GetCumulativePower());
         }
 
         // Used to place cards in "illegal" places and ignore abilities for more efficient testing
-        private void ForcePlace(Game game, Card card, Player owner, int row, int col)
+        private void ForcePlace(Game game, Cards cardEnum, Player owner, int row, int col)
         {
+            var card = _cards[(int)cardEnum];
             game.Player1Grid[row, col].Owner = owner;
             game.Player1Grid[row, col].Card = card;
         }
@@ -147,19 +119,16 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            var securityOfficer = _cards[0];
-            ForcePlace(game, securityOfficer, game.Players[0], 0, 0); // Allied card
-            ForcePlace(game, securityOfficer, game.Players[1], 0, 1); // Enemy card
+            ForcePlace(game, Cards.SecurityOfficer, game.Players[0], 0, 0); // Allied card
+            ForcePlace(game, Cards.SecurityOfficer, game.Players[1], 0, 1); // Enemy card
 
             // Loveless is the only card with first played (P) condition with the enhance abiltiy
-            var loveless = _cards[138];
-            SetFirstCardInHand(game, loveless);
-            game.PlaceCard(0, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.Loveless, 1, 0);
 
             Assert.Equal(2, game.Player1Grid[0, 0].GetCumulativePower()); // Allied card enhanced
             Assert.Equal(2, game.Player1Grid[0, 1].GetCumulativePower()); // Enemy card enhanced
 
-            ForcePlace(game, securityOfficer, game.Players[1], 1, 1); // Place enemy card beneath the first enemy card
+            ForcePlace(game, Cards.SecurityOfficer, game.Players[1], 1, 1); // Place enemy card beneath the first enemy card
             // Card shouldn't have bonus power since it wasn't present at the time of Loveless being placed
             Assert.Equal(1, game.Player1Grid[1, 1].GetCumulativePower());
         }
@@ -171,20 +140,15 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            var elphadunk = _cards[10];
-            ForcePlace(game, elphadunk, game.Players[0], 0, 0);
+            ForcePlace(game, Cards.Elphadunk, game.Players[0], 0, 0);
             Assert.Equal(4, game.Player1Grid[0, 0].GetCumulativePower());
 
-            var resurrectedAmalgram = _cards[155];
-            SetFirstCardInHand(game, resurrectedAmalgram);
-            game.PlaceCard(0, 1, 0);
-
+            AddToHandAndPlaceCard(game, Cards.ResurrectedAmalgram, 1, 0);
             // Elphadunk's cumulative power should be reduced to 2
             Assert.Equal(2, game.Player1Grid[0, 0].GetCumulativePower());
 
-            var insectoidChimera = _cards[50];
-            SetFirstCardInHand(game, insectoidChimera);
-            game.PlaceCard(0, 1, 0); // Replace the Resurrect Amalgram card
+            // Replace the Resurrect Amalgram card
+            AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 1, 0);
 
             // Elphadunk's power should be back to 4
             Assert.Equal(4, game.Player1Grid[0, 0].GetCumulativePower());
@@ -197,19 +161,13 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            var elphadunk = _cards[10];
-            ForcePlace(game, elphadunk, game.Players[0], 0, 0);
+            ForcePlace(game, Cards.Elphadunk, game.Players[0], 0, 0);
 
-            var capparwire = _cards[25];
-            SetFirstCardInHand(game, capparwire);
-            game.PlaceCard(0, 1, 0);
-
+            AddToHandAndPlaceCard(game, Cards.Capparwire, 1, 0);
             // The Capparwire's ability should have affected the Elphadunk
             Assert.Equal(3, game.Player1Grid[0, 0].GetCumulativePower());
 
-            var securityOfficer = _cards[0];
-            ForcePlace(game, securityOfficer, game.Players[0], 2, 0);
-
+            ForcePlace(game, Cards.SecurityOfficer, game.Players[0], 2, 0);
             /* Security Officer shouldn't be affected since it wasn't present at the
              * time of the Capparwire's ability being executed.
              */
@@ -224,18 +182,14 @@ namespace QueensBloodTest
             SetPlayer1Start(game);
 
             // Place Ifrit at the top of the first column
-            var ifrit = _cards[94];
-            SetFirstCardInHand(game, ifrit);
             game.Player1Grid[0, 0].RankUp(2);
-            game.PlaceCard(0, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.Ifrit, 0, 0);
 
             // Place security officer in middle of first column
-            ForcePlace(game, _cards[0], game.Players[0], 1, 0);
+            ForcePlace(game, Cards.SecurityOfficer, game.Players[0], 1, 0);
 
             // Place crystalline crab at bottom of first column, enhancing security officer
-            var crystallineCrab = _cards[12];
-            SetFirstCardInHand(game, crystallineCrab);
-            game.PlaceCard(0, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
 
             // Security Officer's power should be enhanced by 2
             Assert.Equal(3, game.Player1Grid[1, 0].GetCumulativePower());
@@ -250,19 +204,14 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            var crystallineCrab = _cards[12];
-            SetFirstCardInHand(game, crystallineCrab);
-            game.PlaceCard(0, 2, 0);
-
-            var securityOfficer = _cards[0];
-            SetFirstCardInHand(game, securityOfficer);
-            game.PlaceCard(0, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
+            // Security officer should be enhanced 
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
             Assert.Equal(3, game.Player1Grid[1, 0].GetCumulativePower());
 
-            var ifrit = _cards[94];
-            SetFirstCardInHand(game, ifrit);
             game.Player1Grid[0, 0].RankUp(2);
-            game.PlaceCard(0, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.Ifrit, 0, 0);
+            // Ifrit should enhance its own power by 2
             Assert.Equal(2, game.Player1Grid[0, 0].SelfBonusPower);
         }
 
@@ -273,20 +222,13 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            var shadowBloodQueen = _cards[144];
-            SetFirstCardInHand(game, shadowBloodQueen);
             game.Player1Grid[0, 0].RankUp(2);
-            game.PlaceCard(0, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.ShadowBloodQueen, 0, 0);
             Assert.Equal(0, game.Player1Grid[0, 0].SelfBonusPower);
 
-            var grasslandsWolf = _cards[7];
-            SetFirstCardInHand(game, grasslandsWolf);
-            game.PlaceCard(0, 1, 0);
-
+            AddToHandAndPlaceCard(game, Cards.GrasslandsWolf, 1, 0);
             // Place Capparwire to enfeeble Grasslands Wolf
-            var capparwire = _cards[25];
-            SetFirstCardInHand(game, capparwire);
-            game.PlaceCard(0, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.Capparwire, 2, 0);
             Assert.Equal(-1, game.Player1Grid[1, 0].CardBonusPower);
 
             // Shadowblood Queen should have enhanced its own power by 3 due to the enfeeble
@@ -300,22 +242,15 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            var grasslandsWolf = _cards[7];
-            SetFirstCardInHand(game, grasslandsWolf);
-            game.PlaceCard(0, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.GrasslandsWolf, 1, 0);
 
             // Place Capparwire to enfeeble Grasslands Wolf
-            var capparwire = _cards[25];
-            SetFirstCardInHand(game, capparwire);
-            game.PlaceCard(0, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.Capparwire, 2, 0);
             Assert.Equal(-1, game.Player1Grid[1, 0].CardBonusPower);
-            ;
-            var shadowBloodQueen = _cards[144];
-            SetFirstCardInHand(game, shadowBloodQueen);
-            game.Player1Grid[0, 0].RankUp(2);
-            game.PlaceCard(0, 0, 0);
 
             // Shadowblood Queen should have enhanced its own power by 3 due to the enfeeble
+            game.Player1Grid[0, 0].RankUp(2);
+            AddToHandAndPlaceCard(game, Cards.ShadowBloodQueen, 0, 0);
             Assert.Equal(3, game.Player1Grid[0, 0].SelfBonusPower);
         }
 
@@ -327,21 +262,16 @@ namespace QueensBloodTest
             SetPlayer1Start(game);
 
             game.Player1Grid[0, 0].RankUp(2);
-            var dio = _cards[140];
-            SetFirstCardInHand(game, dio);
-            game.PlaceCard(0, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.Dio, 0, 0);
             Assert.Equal(0, game.Player1Grid[0, 0].SelfBonusPower);
 
             // Place security officers for both players
-            var securityOfficer = _cards[0];
-            ForcePlace(game, securityOfficer, game.Players[1], 0, 4);
-            ForcePlace(game, securityOfficer, game.Players[0], 1, 0);
+            ForcePlace(game, Cards.SecurityOfficer, game.Players[1], 0, 4);
+            ForcePlace(game, Cards.SecurityOfficer, game.Players[0], 1, 0);
 
             // Enhance player 2's (enemy) security officer using a Crystalline Crab
             game.SwapPlayerTurns();
-            var crystallineCrab = _cards[12];
-            SetFirstCardInHand(game, crystallineCrab);
-            game.PlaceCard(0, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0);
             Assert.Equal(2, game.Player2Grid[0, 0].TileBonusPower);
 
             // Dio should've received its own power by 1
@@ -349,8 +279,7 @@ namespace QueensBloodTest
 
             // Enhancing Player 1's (ally) security officer using a Crystalline Crab
             game.SwapPlayerTurns();
-            SetFirstCardInHand(game, crystallineCrab);
-            game.PlaceCard(0, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
             Assert.Equal(2, game.Player1Grid[1, 0].TileBonusPower);
 
             // Dio should have raise its own power by 1 again
@@ -364,17 +293,11 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            var securityOfficer = _cards[0];
-            ForcePlace(game, securityOfficer, game.Players[0], 0, 0);
-
-            var sandhogPie = _cards[35];
-            SetFirstCardInHand(game, sandhogPie);
-            game.PlaceCard(0, 1, 0);
+            ForcePlace(game, Cards.SecurityOfficer, game.Players[0], 0, 0);
+            AddToHandAndPlaceCard(game, Cards.SandhogPie, 1, 0);
 
             // Destroy the Sandhog Pie using a replace card (Insectoid Chimera)
-            var insectoidChimera = _cards[50];
-            SetFirstCardInHand(game, insectoidChimera);
-            game.PlaceCard(0, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 1, 0);
 
             // Security Officer should have its power increased by 3 from the destruction of Sandhog Pie
             Assert.Equal(3, game.Player1Grid[0, 0].CardBonusPower);
@@ -388,25 +311,19 @@ namespace QueensBloodTest
             SetPlayer1Start(game);
 
             // Place a Security Officer in 1, 1 of Player1Grid
-            ForcePlace(game, _cards[0], game.Players[0], 1, 1);
+            ForcePlace(game, Cards.SecurityOfficer, game.Players[0], 1, 1);
             Assert.Equal("Security Officer", game.Player1Grid[1, 1].Card!.Name);
 
             // Place the Elena card so that it targets the Security Officer
-            var elena = _cards[129];
-            SetFirstCardInHand(game, elena);
-            game.PlaceCard(0, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.Elena, 1, 0);
 
             // Place Crystalline Crab to enhance Elena
-            var crystallineCrab = _cards[12];
-            SetFirstCardInHand(game, crystallineCrab);
-            game.PlaceCard(0, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
 
             // Security Officer card is gone
             Assert.Null(game.Player1Grid[1, 1].Card);
 
-            /* The "CardBonusPower" of the Tile (1, 1) should be reset to 0 since the
-             * Security Officer card was destroyed
-             */
+            // The "CardBonusPower" of the Tile (1, 1) should be reset to 0 since the Security Officer card was destroyed
             Assert.Equal(0, game.Player1Grid[1, 1].CardBonusPower);
         }
 
@@ -418,17 +335,13 @@ namespace QueensBloodTest
             SetPlayer1Start(game);
 
             // Place an enemy Archdragon in 1, 1 of Player1Grid
-            ForcePlace(game, _cards[19], game.Players[1], 1, 1);
+            ForcePlace(game, Cards.Archdragon, game.Players[1], 1, 1);
 
             // Place Reapertail card
-            var reapertail = _cards[60];
-            SetFirstCardInHand(game, reapertail);
-            game.PlaceCard(0, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.Reapertail, 2, 0);
 
             // Enfeeble the Reapertail using a Capparwire
-            var capparwire = _cards[25];
-            SetFirstCardInHand(game, capparwire);
-            game.PlaceCard(0, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.Capparwire, 1, 0);
 
             // The Archdragon's power should be reduced by 2 (final power of 1)
             Assert.Equal(-2, game.Player1Grid[1, 1].CardBonusPower);
@@ -443,19 +356,16 @@ namespace QueensBloodTest
             SetPlayer1Start(game);
 
             // Place an allied Security Officer
-            ForcePlace(game, _cards[0], game.Players[0], 0, 0);
+            ForcePlace(game, Cards.SecurityOfficer, game.Players[0], 0, 0);
 
-            var tonberryKing = _cards[34];
-            SetFirstCardInHand(game, tonberryKing);
             game.Player1Grid[1, 0].RankUp(1);
-            game.PlaceCard(0, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.TonberryKing, 1, 0);
             Assert.Equal(0, game.Player1Grid[1, 0].SelfBonusPower);
 
             // Place a Gigantoad to replace (and destroy) the allied Security Officer
-            var gigantoad = _cards[51];
-            SetFirstCardInHand(game, gigantoad);
-            game.PlaceCard(0, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.Gigantoad, 0, 0);
 
+            // Tonberry King's power should raise by 2
             Assert.Equal(2, game.Player1Grid[1, 0].SelfBonusPower);
         }
 
@@ -467,18 +377,14 @@ namespace QueensBloodTest
             SetPlayer1Start(game);
 
             // Place an enemy Security Officer
-            ForcePlace(game, _cards[0], game.Players[1], 0, 4);
+            ForcePlace(game, Cards.SecurityOfficer, game.Players[1], 0, 4);
 
-            var deathClaw = _cards[42];
-            SetFirstCardInHand(game, deathClaw);
-            game.PlaceCard(0, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.DeathClaw, 1, 0);
             Assert.Equal(0, game.Player1Grid[1, 0].SelfBonusPower);
 
-            // Place a Gigantoad to replace (and destroy) the enemy Security Officer
+            // Place a Gigantoad to replace (and destroy) the enemy Security Officer, enhancing Deathclaw
             game.SwapPlayerTurns();
-            var gigantoad = _cards[51];
-            SetFirstCardInHand(game, gigantoad);
-            game.PlaceCard(0, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.Gigantoad, 0, 0);
 
             Assert.Equal(1, game.Player1Grid[1, 0].SelfBonusPower);
         }
@@ -491,24 +397,20 @@ namespace QueensBloodTest
             SetPlayer1Start(game);
 
             // Player 1: Place Joker
-            var joker = _cards[46];
-            SetFirstCardInHand(game, joker);
             game.Player1Grid[1, 0].RankUp(1);
-            game.PlaceCard(0, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.Joker, 1, 0);
 
             Assert.Equal(0, game.Player1Grid[0, 0].SelfBonusPower);
 
             // Player 1: Place Security Officer
-            ForcePlace(game, _cards[0], game.Players[0], 2, 4);
+            ForcePlace(game, Cards.SecurityOfficer, game.Players[0], 2, 4);
 
             // Player 2: Place Security Officer
-            ForcePlace(game, _cards[0], game.Players[1], 0, 4);
+            ForcePlace(game, Cards.SecurityOfficer, game.Players[1], 0, 4);
 
             // Player 2: Place Capparwire to enfeeble/destroy both the Security Officers
             game.SwapPlayerTurns();
-            var capparwire = _cards[25];
-            SetFirstCardInHand(game, capparwire);
-            game.PlaceCard(0, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.Capparwire, 1, 0);
 
             // Confirm the Security Officer cards are gone
             Assert.Null(game.Player1Grid[2, 4].Card);
@@ -524,14 +426,12 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            var moogleTrio = _cards[109];
-            SetFirstCardInHand(game, moogleTrio);
             game.Player1Grid[0, 0].RankUp(1);
-            game.PlaceCard(0, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.MoogleTrio, 0, 0);
 
             // Confirm Player 1 has Moogle Mage & Moogle Bard added to hand
-            var moogleMage = _cards[147];
-            var moogleBard = _cards[148];
+            var moogleMage = _cards[(int) Cards.MoogleMage];
+            var moogleBard = _cards[(int) Cards.MoogleBard];
 
             Assert.Contains<Card>(moogleMage, game.Players[0].Hand);
             Assert.Contains<Card>(moogleBard, game.Players[0].Hand);
@@ -553,9 +453,7 @@ namespace QueensBloodTest
             game.Player1Grid[2, 0].RankUp(2); // Diamond Dust (6)
 
             // Place Shiva
-            var shiva = _cards[95];
-            SetFirstCardInHand(game, shiva);
-            game.PlaceCard(0, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.Shiva, 0, 0);
 
             // Confirm that the different Diamond Dust cards are spawned
             Assert.NotNull(game.Player1Grid[0, 1]);
@@ -575,10 +473,8 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            var tifa = _cards[87];
-            SetFirstCardInHand(game, tifa);
-            game.PlaceCard(0, 0, 0);
-
+            // After placing Tifa, ensure bonus points are added
+            AddToHandAndPlaceCard(game, Cards.Tifa, 0, 0);
             Assert.Equal(5, game.Players[0].Scores[0].winBonus);
         }
 
@@ -588,16 +484,10 @@ namespace QueensBloodTest
             var game = CreateGameWithPlayers();
             game.Start();
             SetPlayer1Start(game);
+            AddToHandAndPlaceCard(game, Cards.Tifa, 0, 0);
 
-            var tifa = _cards[87];
-            SetFirstCardInHand(game, tifa);
-            game.PlaceCard(0, 0, 0);
-
-            // Destroy Tifa card
-            var insectoidChimera = _cards[51];
-            SetFirstCardInHand(game, insectoidChimera);
-            game.PlaceCard(0, 0, 0);
-
+            // Destroy Tifa card and ensure bonus points are removed
+            AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 0, 0);
             Assert.Equal(0, game.Players[0].Scores[0].winBonus);
         }
 
@@ -608,18 +498,12 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            var UPA = _cards[141];
-            SetFirstCardInHand(game, UPA);
-            game.PlaceCard(0, 0, 0);
-
-            var securityOfficer = _cards[0];
-            SetFirstCardInHand(game, securityOfficer);
-            game.PlaceCard(0, 0, 1);
+            AddToHandAndPlaceCard(game, Cards.UltimatePartyAnimal, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 1);
             Assert.Equal(2, game.GetPlayerLaneScore(0, 0));
 
             game.SwapPlayerTurns();
-            SetFirstCardInHand(game, securityOfficer);
-            game.PlaceCard(0, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0);
 
             game.EndGame();
             var finalScores = game.GetFinalScores();
@@ -636,14 +520,12 @@ namespace QueensBloodTest
             SetPlayer1Start(game);
 
             // Place down enemy Security Officer cards
-            ForcePlace(game, _cards[0], game.Players[1], 0, 0);
-            ForcePlace(game, _cards[0], game.Players[1], 2, 0);
+            ForcePlace(game, Cards.SecurityOfficer, game.Players[1], 0, 0);
+            ForcePlace(game, Cards.SecurityOfficer, game.Players[1], 2, 0);
 
             // Place down Sephiroth card
-            var sephiroth = _cards[142];
             game.Player1Grid[1, 0].RankUp(2);
-            SetFirstCardInHand(game, sephiroth);
-            game.PlaceCard(0, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.Sephiroth, 1, 0);
 
             // Security Officers should be destroyed
             Assert.Null(game.Player1Grid[0, 0].Card);
@@ -657,20 +539,16 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            var cloud = _cards[85];
-            SetFirstCardInHand(game, cloud);
             game.Player1Grid[1, 0].RankUp(2);
-            game.PlaceCard(0, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.Cloud, 1, 0);
             Assert.Equal(3, game.Player1Grid[1, 0].GetCumulativePower());
 
-            var spearhawk = _cards[30];
-            SetFirstCardInHand(game, spearhawk);
-            game.PlaceCard(0, 0, 0);
+            // Enhance Cloud (5)
+            AddToHandAndPlaceCard(game, Cards.Spearhawk, 0, 0);
             Assert.Equal(1, game.Player1Grid[0, 0].GetCumulativePower());
 
-            var crystallineCrab = _cards[12];
-            SetFirstCardInHand(game, crystallineCrab);
-            game.PlaceCard(0, 2, 0);
+            // Enhance Cloud (7)
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
 
             // Cloud's power should be raised to 7, and it will boost the power of adjacent cards by 2
             Assert.Equal(7, game.Player1Grid[1, 0].GetCumulativePower());
@@ -685,18 +563,14 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            var twoFace = _cards[65];
-            SetFirstCardInHand(game, twoFace);
             game.Player1Grid[0, 0].RankUp(2);
-            game.PlaceCard(0, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.TwoFace, 0, 0);
 
-            var crystallineCrab = _cards[12];
-            Assert.Equal(1, crystallineCrab.Power);
-            SetFirstCardInHand(game, crystallineCrab);
-            game.PlaceCard(0, 1, 0);
+            // Enhance Two Face to trigger its ability when enhanced (+P)
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0);
 
             // Two Face should have enhanced the card's power by 4
-            Assert.Equal(5, game.Player1Grid[1, 0].GetCumulativePower());
+            Assert.Equal(4, game.Player1Grid[1, 0].CardBonusPower);
         }
 
         [Fact]
@@ -706,14 +580,11 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            var twoFace = _cards[65];
-            SetFirstCardInHand(game, twoFace);
             game.Player1Grid[0, 0].RankUp(2);
-            game.PlaceCard(0, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.TwoFace, 0, 0);
 
-            var capparwire = _cards[25];
-            SetFirstCardInHand(game, capparwire);
-            game.PlaceCard(0, 1, 0);
+            // Capparwire enfeeble Two Face to trigger its -P ability
+            AddToHandAndPlaceCard(game, Cards.Capparwire, 1, 0);
 
             // Two Face should have enfeebled capparwire, destroying it
             Assert.Null(game.Player1Grid[1, 0].Card);
