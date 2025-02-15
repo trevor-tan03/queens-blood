@@ -62,7 +62,7 @@ namespace QueensBloodTest
         [Fact]
         public void InitializeCardRangeCorrectly()
         {
-            var redXIII = _cards[89];
+            var redXIII = _cards[(int) Cards.RedXIII];
             Assert.Equal(10, redXIII.Range.Count);
             var expectedRedXIIIRanges = new List<RangeCell>()
             {
@@ -94,9 +94,7 @@ namespace QueensBloodTest
             SetPlayer1Start(game);
 
             // Place security officer in the 2nd row, 1st column
-            var securityOfficer = _cards[0];
-            SetFirstCardInHand(game, securityOfficer);
-            game.PlaceCard(0, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
 
             // Ensure affected tiles are updated correctly
             AssertTileState(game.Player1Grid, 0, 0, 2, "Player1");
@@ -115,11 +113,8 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            SetFirstCardInHand(game, _cards[0]);
-            game.PlaceCard(0, 0, 0);
-
-            SetFirstCardInHand(game, _cards[12]);
-            game.PlaceCard(0, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0);
             
             Assert.Equal(3, game.Players[0].Scores[0].score);
             Assert.Equal(1, game.Players[0].Scores[1].score);
@@ -132,12 +127,9 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            SetFirstCardInHand(game, _cards[0]);
-            game.PlaceCard(0, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0);
             game.SwapPlayerTurns();
-
-            SetFirstCardInHand(game, _cards[0]);
-            game.PlaceCard(0, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0);
 
             Assert.Null(game.GetLaneWinner(0));
         }
@@ -149,9 +141,8 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            SetFirstCardInHand(game, _cards[0]);
-            game.PlaceCard(0, 0, 0);
-
+            // Player 1 is winning
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0);
             var player1 = game.Players[0];
             Assert.Equal(player1, game.GetLaneWinner(0));
         }
