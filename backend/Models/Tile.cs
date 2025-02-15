@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Bson;
+﻿using System.Text.Json.Serialization;
+using Newtonsoft.Json.Bson;
 using static backend.Models.TileConstants;
 
 namespace backend.Models

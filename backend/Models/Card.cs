@@ -1,23 +1,38 @@
 ﻿using System.Drawing;
+using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 
 namespace backend.Models
 {
-	public struct RangeCell
+    public struct RangeCell
 	{
-		public string Colour;
-		public (int x, int y) Offset;
+		public string Colour { get; set; }
+        public (int x, int y) Offset { get; set; }
+
+		[JsonConstructor]
+		public RangeCell(string colour, int x, int y)
+		{
+			(Colour, Offset) = (colour, (x, y));
+		}
 	}
 
 	public struct Ability
 	{
-		public string Description;
-		public string Condition;
-		public string? Action;
-		public string? Target;
-		public int? Value;
+		public string Description { get; set; }
+		public string Condition { get; set; }
+		public string? Action { get; set; }
+		public string? Target { get; set; }
+		public int? Value { get; set; }
+
+		[JsonConstructor]
+		public Ability(string description, string condition, string? action, string? target, int? value)
+		{
+			(Description, Condition, Action, Target, Value) = (description, condition, action, target, value);
+		}
 	}
 
-	public class Card 
+     public class Card
 	{
 		public int Id { get; set; }
 		public string Name { get; set; }
@@ -44,11 +59,7 @@ namespace backend.Models
 			var x = Int32.Parse(offsetTuple[0].Trim());
 			var y = Int32.Parse(offsetTuple[1].Trim());
 
-            RangeCell cell = new RangeCell()
-            {
-                Colour = colour,
-                Offset = (x, y)
-            };
+			RangeCell cell = new RangeCell(colour, x, y);
             Range.Add(cell);
         }
 	}

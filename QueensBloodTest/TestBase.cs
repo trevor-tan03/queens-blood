@@ -45,14 +45,18 @@ namespace QueensBloodTest
                             Image = reader.GetString(6),
                         };
 
-                        Ability ability = new Ability()
-                        {
-                            Description = reader.GetString(5),
-                            Condition = reader.GetString(7),
-                            Action = reader.IsDBNull(8) ? null : reader.GetString(8),
-                            Target = reader.IsDBNull(9) ? null : reader.GetString(9),
-                            Value = reader.IsDBNull(10) ? null : reader.GetInt32(10),
-                        };
+                        var Description = reader.GetString(5);
+                        var Condition = reader.GetString(7);
+                        var Action = reader.IsDBNull(8) ? null : reader.GetString(8);
+                        var Target = reader.IsDBNull(9) ? null : reader.GetString(9);
+                        int? Value = reader.IsDBNull(10) ? null : reader.GetInt32(10);
+
+                        Ability ability = new Ability(
+                            Description,
+                            Condition,
+                            Action,
+                            Target,
+                            Value);
 
                         card.Ability = ability;
 

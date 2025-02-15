@@ -2,6 +2,7 @@
 using backend.Repositories;
 using Microsoft.AspNetCore.SignalR;
 using HashidsNet;
+using backend.Utility;
 
 namespace backend.Hubs
 {
@@ -186,6 +187,19 @@ namespace backend.Hubs
 				await Clients.Group(gameId).SendAsync("MulliganPhaseEnded", true);
 			}
 		}
+
+		public async Task PreviewMove(string gameId, int cardIndex, int row, int col)
+		{
+            var (game, player) = await FetchGameAndPlayer(gameId);
+
+			if (game == null || player == null) return;
+			if (game.CurrentPlayer != player) return; // Check if player can move or not
+
+			var gameCopy = Copy.DeepCopy(game);
+			game.PlaceCard(cardIndex, row, col);
+
+            await Clients.Client(Context.ConnectionId).SendAsync($"gameCopy", gameCopy);
+        }
 
 	}
 }
