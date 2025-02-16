@@ -14,9 +14,18 @@ namespace QueensBloodTest
         {
             var game = CreateGameWithPlayers();
             game.Start();
+            SetPlayer1Start(game);
 
+            // Ensure modifying the copy won't alter the original
             var gameCopy = Copy.DeepCopy(game);
             Assert.NotSame(game, gameCopy);
+
+            if (gameCopy == null) return;
+
+            // Card should only be placed in the copy
+            gameCopy.PlaceCard(0, 0, 0);
+            Assert.Null(game.Player1Grid[0, 0].Card);
+            Assert.NotNull(gameCopy.Player1Grid[0, 0].Card);
         }
 
         [Fact]
@@ -27,7 +36,7 @@ namespace QueensBloodTest
         }
 
         [Fact]
-        public void TestDeepCopyTupleCorrect()
+        public void TestDeepCopyOffsetTupleCorrect()
         {
             var tuple = _cards[0].Range[0].Offset;
             var tupleCopy = Copy.DeepCopy(tuple);

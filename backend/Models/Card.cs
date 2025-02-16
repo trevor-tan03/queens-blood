@@ -47,6 +47,14 @@ namespace backend.Models
 		// Default is 1, but some cards have abilities which increases this up to 3.
 		public int RankUpAmount { get; set; } = 1;
 
+		public Card(int id, string name, int rank, int power, string rarity, string image)
+		{
+			Id = id;
+			Name = name;
+			Rank = rank;
+			Rarity = rarity;
+			Image = image;
+		}
 
         public void AddChild(Card child)
 		{

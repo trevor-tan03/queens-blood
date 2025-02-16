@@ -5,12 +5,13 @@ using System.Data;
 using System.Collections.Generic;
 using Microsoft.AspNet.SignalR.Hubs;
 using Newtonsoft.Json.Linq;
+using backend.Utility;
 
 namespace backend.Repositories
 {
 	public interface ICardRepository
 	{
-		List<Card> GetBaseCards();
+		List<CardDTO> GetBaseCards();
 		Card GetCardById(int id);
 		Boolean IsDeckLegal(List<int> cardIds);
 	}
@@ -29,49 +30,23 @@ namespace backend.Repositories
 			using (var connection = new SqliteConnection(connectionString))
 			{
 				connection.Open();
-				
-				var command = connection.CreateCommand();
-				command.CommandText = "SELECT * FROM Cards UNION ALL SELECT * FROM Ranges";
-
-				using (var reader = command.ExecuteReader())
-				{
-					while (reader.Read())
-					{
-                        var card = new Card
-                        {
-                            Id = reader.GetInt32(0),
-                            Name = reader.GetString(1),
-                            Rank = reader.GetInt32(2),
-                            Power = reader.GetInt32(3),
-                            Rarity = reader.GetString(4),
-                            Image = reader.GetString(6),
-                        };
-
-						var Description = reader.GetString(5);
-						var Condition = reader.GetString(7);
-						var Action = reader.IsDBNull(8) ? null : reader.GetString(8);
-						var Target = reader.IsDBNull(9) ? null : reader.GetString(9);
-						int? Value = reader.IsDBNull(10) ? null : reader.GetInt32(10);
-
-						Ability ability = new Ability(
-							Description,
-							Condition,
-							Action,
-							Target,
-							Value);
-
-                        card.Ability = ability;
-
-                        _cards.Add(card);
-					}
-				}
+				ReadDatabase.PopulateCards(connection, _cards);
+				ReadDatabase.SetChildCards(connection, _cards);
 			}
 		}
 
-		public List<Card> GetBaseCards ()
+		/* This should only be called when outside of a game
+		   e.g. In lobby or main menu */
+		public List<CardDTO> GetBaseCards ()
 		{
 			// There are 145 base cards
-			return _cards.GetRange(0, 145);
+			var baseCards = _cards.GetRange(0, 145);
+			var baseCardsDTO = new List<CardDTO>();
+
+			foreach (var card in baseCards)
+				baseCardsDTO.Add(DTOConverter.GetCardDTO(card));
+
+            return baseCardsDTO;
 		}
 
 		public Card GetCardById (int id)
