@@ -11,8 +11,7 @@ const SelectedDeck = () => {
     const storedDeck = localStorage.getItem("deck");
     if (storedDeck) {
       const parsedDeck = JSON.parse(storedDeck) as Card[];
-      if (isLegalDeck(parsedDeck))
-        setSelectedDeck(parsedDeck);
+      if (isLegalDeck(parsedDeck)) setSelectedDeck(parsedDeck);
     }
   }, []);
 
@@ -26,11 +25,11 @@ const SelectedDeck = () => {
           key={`card-${i}`}
           card={card}
           containerRef={containerRef}
-          handleClick={() => { }}
+          handleClick={() => {}}
         />
       ))}
     </div>
-  )
-}
+  );
+};
 
-export default SelectedDeck
+export default SelectedDeck;

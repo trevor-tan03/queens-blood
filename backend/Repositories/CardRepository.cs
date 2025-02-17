@@ -41,12 +41,7 @@ namespace backend.Repositories
 		{
 			// There are 145 base cards
 			var baseCards = _cards.GetRange(0, 145);
-			var baseCardsDTO = new List<CardDTO>();
-
-			foreach (var card in baseCards)
-				baseCardsDTO.Add(DTOConverter.GetCardDTO(card));
-
-            return baseCardsDTO;
+            return DTOConverter.GetCardDTOList(baseCards);
 		}
 
 		public Card GetCardById (int id)

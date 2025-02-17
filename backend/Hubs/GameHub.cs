@@ -166,7 +166,7 @@ namespace backend.Hubs
 
 			if (game != null && player != null)
 			{
-				await Clients.Client(Context.ConnectionId).SendAsync("CardsInHand", player.Hand);
+				await Clients.Client(Context.ConnectionId).SendAsync("CardsInHand", DTOConverter.GetCardDTOList(player.Hand));
 			}
 		}
 
@@ -178,7 +178,7 @@ namespace backend.Hubs
 
 			game.MulliganCards(player, handIndices);
 			player.HasMulliganed = true;
-			await Clients.Client(Context.ConnectionId).SendAsync("CardsInHand", player.Hand);
+			await Clients.Client(Context.ConnectionId).SendAsync("CardsInHand", DTOConverter.GetCardDTOList(player.Hand));
 
 			var bothPlayersMulliganed = game.Players.All(p => p.HasMulliganed);
 

@@ -4,15 +4,13 @@ export type Card = {
   rank: number;
   power: number;
   rarity: "Standard" | "Legendary";
-  ability: string;
   image: string;
   condition: string;
-  action: Ability | null;
-  target?: string;
-  value?: number;
+  ability: string;
+  action: Action | null;
 };
 
-export enum Ability {
+export enum Action {
   Enhance = "+P",
   Enfeeble = "-P",
   AddToHand = "add",

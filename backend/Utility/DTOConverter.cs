@@ -32,5 +32,13 @@ namespace backend.Utility
         {
             return new CardDTO(card);
         }
+
+        public static List<CardDTO> GetCardDTOList(List<Card> cards)
+        {
+            List<CardDTO> cardsDTO = new List<CardDTO>();
+            foreach (Card card in cards)
+                cardsDTO.Add(new CardDTO(card));
+            return cardsDTO;
+        }
     }
 }
