@@ -56,8 +56,8 @@ const Board = () => {
   }
 
   return (
-    <div>
-      <CardsInHand hand={hand} cardsToMulligan={cardsToMulligan} />
+    <div className="relative">
+      <CardsInHand hand={hand} />
     </div>
   );
 };

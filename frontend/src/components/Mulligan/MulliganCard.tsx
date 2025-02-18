@@ -1,7 +1,8 @@
-import type { Card } from "../../types/Card";
+import type { Card as CardType } from "../../types/Card";
+import Card from "../Game/Card";
 
 interface Props {
-  card: Card;
+  card: CardType;
   offsetX: number;
   offsetY: number;
   rotate: number;
@@ -20,25 +21,20 @@ const MulliganCard = ({
   setShownAbility,
 }: Props) => {
   return (
-    <div
+    <Card
+      card={card}
+      rotate={rotate}
+      offsetX={offsetX}
+      offsetY={offsetY}
+      className="card"
       onClick={handleClick}
-      className="relative hover:cursor-pointer border-r-red-400 card"
-      style={{
-        transform: `translate(${offsetX}px, ${offsetY}px) rotateZ(${rotate}deg)`,
-      }}
       onMouseOver={() => setShownAbility(card.ability)}
       onMouseLeave={() => setShownAbility("")}
     >
       {isSelectedToMulligan ? (
         <div className="absolute top-0 right-0 z-[99] w-full h-full bg-black opacity-80 pointer-events-none card-overlay"></div>
       ) : null}
-      <img
-        className="w-fit transition-transform duration-200 max-h-[200px] hover:scale-125"
-        draggable={false}
-        src={`../../../../assets/cards/${card.image}`}
-        alt={card.name}
-      />
-    </div>
+    </Card>
   );
 };
 
