@@ -136,6 +136,7 @@ namespace backend.Hubs
 						game.Start();
 						// Update the player's screens
 						await Clients.Group(gameId).SendAsync("GameStart", true);
+						await Clients.Group(gameId).SendAsync("Playing", game.CurrentPlayer!.Id);
 					}
                 }
 				else if (!isReadyUp)

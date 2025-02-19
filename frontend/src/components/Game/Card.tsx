@@ -1,3 +1,4 @@
+import { useSignalR } from "../../SignalR/SignalRProvider";
 import type { Card as CardType } from "../../types/Card";
 
 interface Props {
@@ -23,9 +24,14 @@ const Card = ({
   onMouseOver,
   onMouseLeave,
 }: Props) => {
+  const { currPlayer, playing } = useSignalR();
+  const isCurrentPlayer = () => currPlayer?.id === playing;
+
   return (
     <div
-      className={`hover:cursor-pointer ${className}`}
+      className={`hover:cursor-pointer ${className} ${
+        isCurrentPlayer() ? "border border-blue-700" : ""
+      }`}
       style={{
         transform: `translate(${offsetX}px, ${offsetY}px) rotateZ(${rotate}deg)`,
       }}
@@ -36,7 +42,6 @@ const Card = ({
       {children}
       <img
         className="w-fit h-fit hover:scale-125 transition-transform duration-200 max-h-[200px]"
-        draggable={false}
         src={`../../../../assets/cards/${card.image}`}
         alt={card.name}
       />
