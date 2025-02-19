@@ -1,15 +1,20 @@
 import { useSignalR } from "../SignalR/SignalRProvider";
-import Board from "../components/Game/Board";
+import GameBoard from "../components/Game/Board/GameBoard";
+import { CardAbilityProvider } from "../components/Game/CardAbilityContext";
+import MulliganPhase from "../components/Game/Mulligan/MulliganPhase";
 import Lobby from "./Lobby";
 
 const Game = () => {
-  const { gameStart, gameCode } = useSignalR();
+  const { gameStart, gameCode, mulliganPhaseEnded } = useSignalR();
 
-  if (!gameCode) {
-    window.location.replace("/");
-  }
+  if (!gameCode) window.location.replace("/");
+  if (!gameStart) return <Lobby />;
 
-  return <>{gameStart ? <Board /> : <Lobby />}</>;
+  return (
+    <CardAbilityProvider>
+      {!mulliganPhaseEnded ? <MulliganPhase /> : <GameBoard />}
+    </CardAbilityProvider>
+  );
 };
 
 export default Game;

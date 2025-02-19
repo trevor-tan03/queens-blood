@@ -8,3 +8,7 @@
 .card:hover .card-overlay {
   scale: 1.25;
 }
+
+.hand:hover {
+  transform: translateY(-10rem);
+}

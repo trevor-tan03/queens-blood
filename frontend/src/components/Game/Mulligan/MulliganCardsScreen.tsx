@@ -1,8 +1,12 @@
-import { useState } from "react";
-import "../../../public/css/Card.css";
-import type { Card } from "../../types/Card";
-import { getRotation, getXOffset, getYOffset } from "../../utils/cardRotation";
-import { getTimeFormat } from "../../utils/formatDate";
+import "../../../../public/css/Card.css";
+import type { Card } from "../../../types/Card";
+import {
+  getRotation,
+  getXOffset,
+  getYOffset,
+} from "../../../utils/cardRotation";
+import { getTimeFormat } from "../../../utils/formatDate";
+import { useCardAbility } from "../CardAbilityContext";
 import MulliganCard from "./MulliganCard";
 
 interface Props {
@@ -22,7 +26,7 @@ const MulliganCardsScreen = ({
   confirmMulligan,
   deadline,
 }: Props) => {
-  const [shownAbility, setShownAbility] = useState("");
+  const { shownAbility } = useCardAbility();
 
   return (
     <div className="absolute top-0 h-screen w-screen bg-black bg-opacity-40">
@@ -45,7 +49,6 @@ const MulliganCardsScreen = ({
               rotate={rotate}
               isSelectedToMulligan={isSelectedToMulligan(index)}
               handleClick={() => mulliganCardAtIndex(index)}
-              setShownAbility={setShownAbility}
             />
           );
         })}

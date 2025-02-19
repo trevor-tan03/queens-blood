@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { useSignalR } from "../../SignalR/SignalRProvider";
-import { getTimeFormat } from "../../utils/formatDate";
-import MulliganCardsScreen from "../Mulligan/MulliganCardsScreen";
-import { default as CardsInHand } from "./Hand";
+import { useSignalR } from "../../../SignalR/SignalRProvider";
+import { getTimeFormat } from "../../../utils/formatDate";
+import MulliganCardsScreen from "./MulliganCardsScreen";
 
-const Board = () => {
+const MulliganPhase = () => {
   const [cardsToMulligan, setCardsToMulligan] = useState<number[]>([]);
-  const { hand, gameCode, mulliganPhaseEnded, getHand, mulliganCards } =
-    useSignalR();
+  const { hand, gameCode, getHand, mulliganCards } = useSignalR();
   const [hasMulliganed, setHasMulliganed] = useState(false);
   const [deadline] = useState<Date>(new Date(new Date().getTime() + 30500));
 
@@ -30,9 +28,7 @@ const Board = () => {
   }, [cardsToMulligan]);
 
   useEffect(() => {
-    if (getTimeFormat(deadline) === 0) {
-      confirmMulligan();
-    }
+    if (getTimeFormat(deadline) === 0) confirmMulligan();
 
     return;
   }, [getTimeFormat(deadline), deadline]);
@@ -40,26 +36,18 @@ const Board = () => {
   const isSelectedToMulligan = (index: number) =>
     cardsToMulligan.includes(index);
 
-  if (!mulliganPhaseEnded) {
-    return (
-      <div className="relative">
-        <MulliganCardsScreen
-          cards={hand}
-          mulliganCardAtIndex={mulliganCardAtIndex}
-          isSelectedToMulligan={isSelectedToMulligan}
-          hasConfirmedMulligan={hasMulliganed}
-          confirmMulligan={confirmMulligan}
-          deadline={deadline}
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="relative">
-      <CardsInHand hand={hand} />
+      <MulliganCardsScreen
+        cards={hand}
+        mulliganCardAtIndex={mulliganCardAtIndex}
+        isSelectedToMulligan={isSelectedToMulligan}
+        hasConfirmedMulligan={hasMulliganed}
+        confirmMulligan={confirmMulligan}
+        deadline={deadline}
+      />
     </div>
   );
 };
 
-export default Board;
+export default MulliganPhase;

@@ -1,5 +1,6 @@
-import type { Card as CardType } from "../../types/Card";
-import Card from "../Game/Card";
+import type { Card as CardType } from "../../../types/Card";
+import Card from "../../Game/Card";
+import { useCardAbility } from "../CardAbilityContext";
 
 interface Props {
   card: CardType;
@@ -8,7 +9,6 @@ interface Props {
   rotate: number;
   isSelectedToMulligan: boolean;
   handleClick: () => void;
-  setShownAbility: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const MulliganCard = ({
@@ -18,8 +18,9 @@ const MulliganCard = ({
   rotate,
   isSelectedToMulligan,
   handleClick,
-  setShownAbility,
 }: Props) => {
+  const { setShownAbility } = useCardAbility();
+
   return (
     <Card
       card={card}
