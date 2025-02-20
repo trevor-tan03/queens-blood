@@ -24,14 +24,12 @@ const Card = ({
   onMouseOver,
   onMouseLeave,
 }: Props) => {
-  const { currPlayer, playing } = useSignalR();
+  const { currPlayer, playing, mulliganPhaseEnded } = useSignalR();
   const isCurrentPlayer = () => currPlayer?.id === playing;
 
   return (
     <div
-      className={`hover:cursor-pointer ${className} ${
-        isCurrentPlayer() ? "border border-blue-700" : ""
-      }`}
+      className={`pointer-events-auto ${className}`}
       style={{
         transform: `translate(${offsetX}px, ${offsetY}px) rotateZ(${rotate}deg)`,
       }}
@@ -41,9 +39,14 @@ const Card = ({
     >
       {children}
       <img
-        className="w-fit h-fit hover:scale-125 transition-transform duration-200 max-h-[200px]"
+        className={`w-fit h-fit hover:scale-125 transition-transform duration-200 max-h-[200px] rounded-lg ${
+          isCurrentPlayer() && mulliganPhaseEnded
+            ? "ring-4 ring-blue-600 ring-opacity-20 shadow-blue-500 shadow-[0px_0px_20px]"
+            : ""
+        }`}
         src={`../../../../assets/cards/${card.image}`}
         alt={card.name}
+        draggable={false}
       />
     </div>
   );

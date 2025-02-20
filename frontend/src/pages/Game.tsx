@@ -1,5 +1,6 @@
 import { useSignalR } from "../SignalR/SignalRProvider";
-import GameBoard from "../components/Game/Board/GameBoard";
+import BoardContext from "../components/Game/Board/BoardContext";
+import GameScreen from "../components/Game/Board/GameScreen";
 import { CardAbilityProvider } from "../components/Game/CardAbilityContext";
 import MulliganPhase from "../components/Game/Mulligan/MulliganPhase";
 import Lobby from "./Lobby";
@@ -11,9 +12,11 @@ const Game = () => {
   if (!gameStart) return <Lobby />;
 
   return (
-    <CardAbilityProvider>
-      {!mulliganPhaseEnded ? <MulliganPhase /> : <GameBoard />}
-    </CardAbilityProvider>
+    <BoardContext>
+      <CardAbilityProvider>
+        {!mulliganPhaseEnded ? <MulliganPhase /> : <GameScreen />}
+      </CardAbilityProvider>
+    </BoardContext>
   );
 };
 

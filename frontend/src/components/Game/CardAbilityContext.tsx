@@ -27,7 +27,7 @@ export const CardAbilityProvider = ({
 export const useCardAbility = () => {
   const context = useContext(CardAbilityContext);
   if (!context) {
-    throw new Error("useSignalR must be used within a SignalRProvider");
+    throw new Error("useCardAbility must be used within a CardAbilityContext");
   }
   return context;
 };
