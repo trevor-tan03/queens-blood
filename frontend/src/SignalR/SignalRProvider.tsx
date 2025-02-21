@@ -1,7 +1,13 @@
-import * as signalR from '@microsoft/signalr';
-import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import type { Card } from '../types/Card';
-import type { Player } from '../types/Player';
+import * as signalR from "@microsoft/signalr";
+import React, {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import type { Card } from "../types/Card";
+import type { Player } from "../types/Player";
 
 interface SignalRContextProps {
   connection: signalR.HubConnection | null;
@@ -20,23 +26,31 @@ interface SignalRContextProps {
   gameStart: boolean;
   hand: Card[];
   mulliganPhaseEnded: boolean;
+  playing: string;
 }
 
-const SignalRContext = createContext<SignalRContextProps | undefined>(undefined);
+const SignalRContext = createContext<SignalRContextProps | undefined>(
+  undefined
+);
 
-export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-  const [gameCode, setGameCode] = useState('');
+export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
+  const [connection, setConnection] = useState<signalR.HubConnection | null>(
+    null
+  );
+  const [gameCode, setGameCode] = useState("");
   const [currPlayer, setCurrPlayer] = useState<Player | undefined>();
   const [players, setPlayers] = useState<Player[]>([]);
   const [messageLog, setMessageLog] = useState<string[]>([]);
   const [gameStart, setGameStart] = useState(false);
   const [hand, setHand] = useState<Card[]>([]);
   const [mulliganPhaseEnded, setMulliganPhaseEnded] = useState(false);
+  const [playing, setPlaying] = useState(""); //
 
   const setupSignalREvents = (conn: signalR.HubConnection) => {
     conn.on("ReceiveMessage", (message: string) => {
-      setMessageLog(prevLog => [...prevLog, message]);
+      setMessageLog((prevLog) => [...prevLog, message]);
     });
 
     conn.on("ErrorMessage", (message: string) => {
@@ -48,7 +62,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
     });
 
     conn.on("ReceivePlayerList", (players: Player[]) => {
-      const currPlayer = players.find(p => p.id === conn.connectionId);
+      const currPlayer = players.find((p) => p.id === conn.connectionId);
       setCurrPlayer(currPlayer);
       setPlayers(players);
     });
@@ -64,7 +78,11 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
     conn.on("MulliganPhaseEnded", (hasEnded: boolean) => {
       setMulliganPhaseEnded(hasEnded);
     });
-  }
+
+    conn.on("Playing", (playingId: string) => {
+      setPlaying(playingId);
+    });
+  };
 
   useEffect(() => {
     const connect = async () => {
@@ -103,32 +121,38 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const handleError = (err: Error, context: string) => {
     console.error(`[${context}] Error:`, err);
-  }
+  };
 
   const sendMessage = async (message: string) => {
     if (connection) {
       await connection.invoke("SendMessage", gameCode, message);
     }
-  }
+  };
 
   const createGame = async (playerName: string) => {
     if (connection) {
-      await connection.invoke("CreateGame", playerName).catch((error) => handleError(error, "CreateGame"))
+      await connection
+        .invoke("CreateGame", playerName)
+        .catch((error) => handleError(error, "CreateGame"));
     }
-  }
+  };
 
-  const joinGame = async (gameId: string, playerName: string,) => {
+  const joinGame = async (gameId: string, playerName: string) => {
     if (connection) {
-      await connection.invoke("JoinGame", gameId, playerName).catch((error) => handleError(error, "JoinGame"))
+      await connection
+        .invoke("JoinGame", gameId, playerName)
+        .catch((error) => handleError(error, "JoinGame"));
       setGameCode(gameId);
     }
-  }
+  };
 
   const leaveGame = async (gameId: string) => {
     if (connection) {
-      await connection.invoke("LeaveGame", gameId).catch((error) => handleError(error, "LeaveGame"))
+      await connection
+        .invoke("LeaveGame", gameId)
+        .catch((error) => handleError(error, "LeaveGame"));
     }
-  }
+  };
 
   const readyUp = async (gameId: string) => {
     if (connection) {
@@ -136,49 +160,52 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({ children })
 
       if (rawDeck) {
         const deck = JSON.parse(rawDeck) as Card[];
-        const cardIds = deck.map(card => card.id);
+        const cardIds = deck.map((card) => card.id);
         await connection.invoke("ToggleReady", gameId, true, cardIds);
       }
     }
-  }
+  };
 
   const unready = async (gameId: string) => {
     if (connection) {
       await connection.invoke("ToggleReady", gameId, false, []);
     }
-  }
+  };
 
   const getHand = async (gameId: string) => {
     if (connection) {
       await connection.invoke("GetHand", gameId);
     }
-  }
+  };
 
   const mulliganCards = async (gameId: string, cardsToMulligan: number[]) => {
     if (connection) {
       connection.invoke("MulliganCards", gameId, cardsToMulligan);
     }
-  }
+  };
 
   return (
-    <SignalRContext.Provider value={{
-      connection,
-      createGame,
-      joinGame,
-      leaveGame,
-      readyUp,
-      unready,
-      sendMessage,
-      getHand,
-      mulliganCards,
-      gameCode,
-      currPlayer,
-      players,
-      messageLog,
-      gameStart,
-      hand,
-      mulliganPhaseEnded,
-    }}>
+    <SignalRContext.Provider
+      value={{
+        connection,
+        createGame,
+        joinGame,
+        leaveGame,
+        readyUp,
+        unready,
+        sendMessage,
+        getHand,
+        mulliganCards,
+        gameCode,
+        currPlayer,
+        players,
+        messageLog,
+        gameStart,
+        hand,
+        mulliganPhaseEnded,
+        playing,
+      }}
+    >
       {children}
     </SignalRContext.Provider>
   );

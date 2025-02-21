@@ -142,7 +142,7 @@ namespace backend.Models
 		private bool CanPlaceCard(Card card, Tile tile)
 		{
 			var tileMeetsRankRequirement = tile.Rank >= card.Rank;
-			var playerOwnsTile = tile.Owner == CurrentPlayer;
+			var playerOwnsTile = tile.Owner!.Id == CurrentPlayer!.Id;
 			var tileOccupied = tile.Card != null;
 
             if (card.Ability.Action == "replace")
@@ -271,7 +271,7 @@ namespace backend.Models
 
 		public void PlaceCard(int handIndex, int row, int col)
 		{
-			var playerIndex = Players.IndexOf(CurrentPlayer!);
+			var playerIndex = Players.FindIndex(p => p.Id == CurrentPlayer!.Id);
 			var card = CurrentPlayer!.Hand[handIndex];
 			var grid = playerIndex == 0 ? Player1Grid : Player2Grid;
 			var tile = grid[row, col];

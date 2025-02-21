@@ -1,34 +1,23 @@
 import { useSignalR } from "../SignalR/SignalRProvider";
-import Board from "../components/Game/Board";
-import GameBackground from "../components/Game/GameBackground";
-import DeckHeader from "../components/Lobby/DeckHeader";
-import PlayersSection from "../components/Lobby/PlayersSection";
-import SelectedDeck from "../components/Lobby/SelectedDeck";
+import BoardContext from "../components/Game/Board/BoardContext";
+import GameScreen from "../components/Game/Board/GameScreen";
+import { CardAbilityProvider } from "../components/Game/CardAbilityContext";
+import MulliganPhase from "../components/Game/Mulligan/MulliganPhase";
+import Lobby from "./Lobby";
 
 const Game = () => {
-  const { gameStart, gameCode } = useSignalR();
+  const { gameStart, gameCode, mulliganPhaseEnded } = useSignalR();
 
-  if (!gameCode) {
-    window.location.replace("/");
-  }
+  if (!gameCode) window.location.replace("/");
+  if (!gameStart) return <Lobby />;
 
   return (
-    <>
-      {gameStart
-        ?
-        <Board />
-        :
-        <div className="flex gap-4 p-6 h-dvh overflow-y-visible md:overflow-y-hidden md:grid-cols-1 flex-col-reverse md:flex-row">
-          <div className="overflow-y-hidden">
-            <DeckHeader />
-            <SelectedDeck />
-          </div>
-          <PlayersSection />
-          <GameBackground />
-        </div>
-      }
-    </>
-  )
-}
+    <BoardContext>
+      <CardAbilityProvider>
+        {!mulliganPhaseEnded ? <MulliganPhase /> : <GameScreen />}
+      </CardAbilityProvider>
+    </BoardContext>
+  );
+};
 
-export default Game
+export default Game;

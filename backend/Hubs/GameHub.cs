@@ -2,6 +2,7 @@
 using backend.Repositories;
 using Microsoft.AspNetCore.SignalR;
 using HashidsNet;
+using backend.Utility;
 
 namespace backend.Hubs
 {
@@ -135,6 +136,7 @@ namespace backend.Hubs
 						game.Start();
 						// Update the player's screens
 						await Clients.Group(gameId).SendAsync("GameStart", true);
+						await Clients.Group(gameId).SendAsync("Playing", game.CurrentPlayer!.Id);
 					}
                 }
 				else if (!isReadyUp)
@@ -165,7 +167,7 @@ namespace backend.Hubs
 
 			if (game != null && player != null)
 			{
-				await Clients.Client(Context.ConnectionId).SendAsync("CardsInHand", player.Hand);
+				await Clients.Client(Context.ConnectionId).SendAsync("CardsInHand", DTOConverter.GetCardDTOList(player.Hand));
 			}
 		}
 
@@ -177,7 +179,7 @@ namespace backend.Hubs
 
 			game.MulliganCards(player, handIndices);
 			player.HasMulliganed = true;
-			await Clients.Client(Context.ConnectionId).SendAsync("CardsInHand", player.Hand);
+			await Clients.Client(Context.ConnectionId).SendAsync("CardsInHand", DTOConverter.GetCardDTOList(player.Hand));
 
 			var bothPlayersMulliganed = game.Players.All(p => p.HasMulliganed);
 
@@ -186,6 +188,19 @@ namespace backend.Hubs
 				await Clients.Group(gameId).SendAsync("MulliganPhaseEnded", true);
 			}
 		}
+
+		public async Task PreviewMove(string gameId, int cardIndex, int row, int col)
+		{
+            var (game, player) = await FetchGameAndPlayer(gameId);
+
+			if (game == null || player == null) return;
+			if (game.CurrentPlayer != player) return; // Check if player can move or not
+
+			var gameCopy = Copy.DeepCopy(game);
+			game.PlaceCard(cardIndex, row, col);
+
+            await Clients.Client(Context.ConnectionId).SendAsync($"gameCopy", gameCopy);
+        }
 
 	}
 }

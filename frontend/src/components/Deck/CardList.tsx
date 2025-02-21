@@ -14,8 +14,6 @@ interface Props {
   cardsList: Card[];
 }
 
-
-
 const CardList = ({ deck, setDeck }: Props) => {
   const { toggleOrder, order, shownCards, filterCardName } = useFilters();
 
@@ -26,18 +24,19 @@ const CardList = ({ deck, setDeck }: Props) => {
   const handleAdd = (card: Card) => {
     if (deck.length < 15) {
       const rarity = card.rarity;
-      const copiesInDeck = deck.filter(c => c.id === card.id).length;
+      const copiesInDeck = deck.filter((c) => c.id === card.id).length;
 
       // Player can only have one copy of a particular legendary card
       // Player can have at most two copies of a particular standard card
       if (
         (rarity === "Legendary" && copiesInDeck === 1) ||
         (rarity === "Standard" && copiesInDeck === 2)
-      ) return;
+      )
+        return;
 
-      setDeck(d => [...d, card]);
+      setDeck((d) => [...d, card]);
     }
-  }
+  };
 
   return (
     <div className="flex flex-col bg-slate-700 border border-orange-300 max-h-[500px] overflow-y-hidden bg-opacity-60 h-[70rem]">
@@ -46,20 +45,28 @@ const CardList = ({ deck, setDeck }: Props) => {
 
         <button
           className="py-2 px-4 border border-orange-300 bg-orange-300 rounded-full hidden sm:block"
-          onClick={toggleOrder}>
+          onClick={toggleOrder}
+        >
           {order === "asc" ? "Ascending" : "Descending"}
         </button>
         <button
           className="py-2 px-4 border border-orange-300 bg-orange-300 rounded-full sm:hidden"
-          onClick={toggleOrder}>
+          onClick={toggleOrder}
+        >
           {order === "asc" ? <GrAscend /> : <GrDescend />}
         </button>
 
-        <button className="py-2 px-4 border border-orange-300 rounded-full text-orange-300 sm:hidden" onClick={showOverlay}>
+        <button
+          className="py-2 px-4 border border-orange-300 rounded-full text-orange-300 sm:hidden"
+          onClick={showOverlay}
+        >
           <GrFilter />
         </button>
 
-        <button className="py-2 px-4 border border-orange-300 rounded-full text-orange-300 hidden sm:block" onClick={showOverlay}>
+        <button
+          className="py-2 px-4 border border-orange-300 rounded-full text-orange-300 hidden sm:block"
+          onClick={showOverlay}
+        >
           Filters
         </button>
 
@@ -80,7 +87,7 @@ const CardList = ({ deck, setDeck }: Props) => {
         className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-11 max-w-full gap-2 p-6 flex-1 overflow-y-scroll"
         ref={cardListRef}
       >
-        {shownCards.length > 0 ?
+        {shownCards.length > 0 ? (
           shownCards.map((d, i) => {
             const remCopies = getRemainingCopies(deck, d);
 
@@ -96,13 +103,15 @@ const CardList = ({ deck, setDeck }: Props) => {
                     {`${remCopies}/${getCopiesLimit(d.rarity)}`}
                   </CardCopiesText>
                 </div>
-              )
+              );
             }
-          }) :
-          <span className="text-slate-50">No results</span>}
+          })
+        ) : (
+          <span className="text-slate-50">No results</span>
+        )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CardList
+export default CardList;

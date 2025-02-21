@@ -1,0 +1,14 @@
+.card-overlay {
+  transition: scale 0.2s;
+  background-image: url("../assets/effects/mulligan.webp");
+  background-position: center;
+  background-size: contain;
+}
+
+.card:hover .card-overlay {
+  scale: 1.25;
+}
+
+.hand:hover {
+  transform: translateY(-10rem);
+}
