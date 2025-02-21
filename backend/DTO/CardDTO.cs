@@ -1,6 +1,6 @@
 ﻿using backend.Models;
 
-namespace backend.Utility
+namespace backend.DTO
 {
     public class CardDTO
     {
@@ -23,22 +23,6 @@ namespace backend.Utility
             Image = card.Image;
             Ability = card.Ability.Description;
             Action = card.Ability.Action;
-        }
-    } 
-
-    public class DTOConverter
-    {
-        public static CardDTO GetCardDTO(Card card)
-        {
-            return new CardDTO(card);
-        }
-
-        public static List<CardDTO> GetCardDTOList(List<Card> cards)
-        {
-            List<CardDTO> cardsDTO = new List<CardDTO>();
-            foreach (Card card in cards)
-                cardsDTO.Add(new CardDTO(card));
-            return cardsDTO;
         }
     }
 }

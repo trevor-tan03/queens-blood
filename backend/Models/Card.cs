@@ -52,6 +52,7 @@ namespace backend.Models
 			Id = id;
 			Name = name;
 			Rank = rank;
+			Power = power;
 			Rarity = rarity;
 			Image = image;
 		}

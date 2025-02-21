@@ -6,10 +6,11 @@ using System.Collections.Generic;
 using Microsoft.AspNet.SignalR.Hubs;
 using Newtonsoft.Json.Linq;
 using backend.Utility;
+using backend.DTO;
 
 namespace backend.Repositories
 {
-	public interface ICardRepository
+    public interface ICardRepository
 	{
 		List<CardDTO> GetBaseCards();
 		Card GetCardById(int id);

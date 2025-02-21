@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 import type { Card } from "../types/Card";
+import type { Game, GameDTO } from "../types/Game";
 import type { Player } from "../types/Player";
 
 interface SignalRContextProps {
@@ -19,6 +20,12 @@ interface SignalRContextProps {
   sendMessage: (message: string) => Promise<void>;
   getHand: (gameId: string) => Promise<void>;
   mulliganCards: (gameId: string, cardsToMulligan: number[]) => Promise<void>;
+  playCard: (
+    gameId: string,
+    cardIndex: number,
+    row: number,
+    col: number
+  ) => Promise<void>;
   currPlayer: Player | undefined;
   gameCode: string;
   players: Player[];
@@ -27,6 +34,7 @@ interface SignalRContextProps {
   hand: Card[];
   mulliganPhaseEnded: boolean;
   playing: string;
+  gameState: Game | null;
 }
 
 const SignalRContext = createContext<SignalRContextProps | undefined>(
@@ -47,6 +55,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
   const [hand, setHand] = useState<Card[]>([]);
   const [mulliganPhaseEnded, setMulliganPhaseEnded] = useState(false);
   const [playing, setPlaying] = useState(""); //
+  const [gameState, setGameState] = useState<Game | null>(null);
 
   const setupSignalREvents = (conn: signalR.HubConnection) => {
     conn.on("ReceiveMessage", (message: string) => {
@@ -81,6 +90,21 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
 
     conn.on("Playing", (playingId: string) => {
       setPlaying(playingId);
+    });
+
+    conn.on("GameState", (gameState: GameDTO) => {
+      const board = [
+        gameState.board.slice(0, 5),
+        gameState.board.slice(5, 10),
+        gameState.board.slice(10, 15),
+      ];
+
+      const game: Game = {
+        laneScores: gameState.laneScores,
+        board,
+      };
+
+      setGameState(game);
     });
   };
 
@@ -184,6 +208,17 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  const playCard = async (
+    gameId: string,
+    cardIndex: number,
+    row: number,
+    col: number
+  ) => {
+    if (connection) {
+      connection.invoke("PlaceCard", gameId, cardIndex, row, col);
+    }
+  };
+
   return (
     <SignalRContext.Provider
       value={{
@@ -196,6 +231,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
         sendMessage,
         getHand,
         mulliganCards,
+        playCard,
         gameCode,
         currPlayer,
         players,
@@ -204,6 +240,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
         hand,
         mulliganPhaseEnded,
         playing,
+        gameState,
       }}
     >
       {children}

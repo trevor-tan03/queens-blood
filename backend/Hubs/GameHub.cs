@@ -3,10 +3,11 @@ using backend.Repositories;
 using Microsoft.AspNetCore.SignalR;
 using HashidsNet;
 using backend.Utility;
+using backend.DTO;
 
 namespace backend.Hubs
 {
-	public class GameHub : Hub
+    public class GameHub : Hub
 	{
 		private IGameRepository _gameRepository;
 		private ICardRepository _cardRepository;
@@ -199,8 +200,20 @@ namespace backend.Hubs
 			var gameCopy = Copy.DeepCopy(game);
 			game.PlaceCard(cardIndex, row, col);
 
-            await Clients.Client(Context.ConnectionId).SendAsync($"gameCopy", gameCopy);
+            await Clients.Client(Context.ConnectionId).SendAsync("gameCopy", gameCopy);
         }
 
+		public async Task PlaceCard(string gameId, int cardIndex, int row, int col)
+		{
+            var (game, player) = await FetchGameAndPlayer(gameId);
+
+            if (game == null || player == null) return;
+            if (game.CurrentPlayer != player) return; // Check if player can move or not
+
+            game.PlaceCard(cardIndex, row, col);
+
+            await Clients.Client(game.Players[0].Id).SendAsync("gameState", DTOConverter.GetGameDTO(game, 0));
+			await Clients.Client(game.Players[1].Id).SendAsync("gameState", DTOConverter.GetGameDTO(game, 1));
+        }
 	}
 }

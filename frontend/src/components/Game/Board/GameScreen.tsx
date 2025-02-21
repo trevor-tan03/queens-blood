@@ -7,19 +7,22 @@ import { useBoardContext } from "./BoardContext";
 import BoardTile from "./BoardTile";
 
 const GameScreen = () => {
-  const { hand } = useSignalR();
+  const { gameCode, hand, playCard, gameState } = useSignalR();
   const { shownAbility } = useCardAbility();
   const { setChild } = useBoardContext();
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    console.log(active);
-    console.log(over);
 
     if (over) {
+      const cardId = parseInt(active.id.toString().slice(5));
+
       setChild(active.id);
+      playCard(gameCode, cardId, 0, 0);
     }
   };
+
+  console.log(gameState);
 
   return (
     <DndContext onDragEnd={(event) => handleDragEnd(event)}>
