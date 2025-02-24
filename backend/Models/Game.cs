@@ -142,7 +142,7 @@ namespace backend.Models
 		private bool CanPlaceCard(Card card, Tile tile)
 		{
 			var tileMeetsRankRequirement = tile.Rank >= card.Rank;
-			var playerOwnsTile = tile.Owner!.Id == CurrentPlayer!.Id;
+			var playerOwnsTile = tile.Owner?.Id == CurrentPlayer!.Id;
 			var tileOccupied = tile.Card != null;
 
             if (card.Ability.Action == "replace")

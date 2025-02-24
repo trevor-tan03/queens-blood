@@ -1,28 +1,22 @@
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { useSignalR } from "../../../SignalR/SignalRProvider";
-import Droppable from "../../dnd-kit/Droppable";
 import { useCardAbility } from "../CardAbilityContext";
 import CardsInHand from "../Hand";
-import { useBoardContext } from "./BoardContext";
-import BoardTile from "./BoardTile";
+import Board from "./Board";
 
 const GameScreen = () => {
-  const { gameCode, hand, playCard, gameState } = useSignalR();
+  const { gameCode, hand, playCard } = useSignalR();
   const { shownAbility } = useCardAbility();
-  const { setChild } = useBoardContext();
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over) {
       const cardId = parseInt(active.id.toString().slice(5));
-
-      setChild(active.id);
-      playCard(gameCode, cardId, 0, 0);
+      const [row, col] = over.id.toString().split(",");
+      playCard(gameCode, cardId, parseInt(row), parseInt(col));
     }
   };
-
-  console.log(gameState);
 
   return (
     <DndContext onDragEnd={(event) => handleDragEnd(event)}>
@@ -31,9 +25,7 @@ const GameScreen = () => {
           <CardsInHand hand={hand} />
         </div>
 
-        <Droppable id="droppable">
-          <BoardTile />
-        </Droppable>
+        <Board />
 
         <div className="absolute bottom-[1rem] left-[1rem] text-2xl">
           {shownAbility}

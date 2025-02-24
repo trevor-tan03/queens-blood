@@ -112,6 +112,12 @@ namespace backend.Hubs
 			}
 		}
 
+		private void ShowGameBoard(Game game)
+		{
+            Clients.Client(game.Players[0].Id).SendAsync("gameState", DTOConverter.GetGameDTO(game, 0));
+            Clients.Client(game.Players[1].Id).SendAsync("gameState", DTOConverter.GetGameDTO(game, 1));
+        }
+
 		public async Task ToggleReady(string gameId, bool isReadyUp, List<int> cardIds)
 		{
 			var (game, player) = await FetchGameAndPlayer(gameId);
@@ -138,6 +144,7 @@ namespace backend.Hubs
 						// Update the player's screens
 						await Clients.Group(gameId).SendAsync("GameStart", true);
 						await Clients.Group(gameId).SendAsync("Playing", game.CurrentPlayer!.Id);
+						ShowGameBoard(game);
 					}
                 }
 				else if (!isReadyUp)
@@ -217,10 +224,9 @@ namespace backend.Hubs
 				game.SwapPlayerTurns();
             }
 
-            await Clients.Client(game.Players[0].Id).SendAsync("gameState", DTOConverter.GetGameDTO(game, 0));
-			await Clients.Client(game.Players[1].Id).SendAsync("gameState", DTOConverter.GetGameDTO(game, 1));
+			ShowGameBoard(game);
 
-			await Clients.Client(Context.ConnectionId).SendAsync("CardsInHand", DTOConverter.GetCardDTOList(player.Hand));
+            await Clients.Client(Context.ConnectionId).SendAsync("CardsInHand", DTOConverter.GetCardDTOList(player.Hand));
             await Clients.Group(gameId).SendAsync("Playing", game.CurrentPlayer.Id);
         }
 	}
