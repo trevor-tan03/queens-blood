@@ -210,10 +210,18 @@ namespace backend.Hubs
             if (game == null || player == null) return;
             if (game.CurrentPlayer != player) return; // Check if player can move or not
 
-            game.PlaceCard(cardIndex, row, col);
+            var success = game.PlaceCard(cardIndex, row, col);
+			if (success)
+			{
+                player.PickUp(1);
+				game.SwapPlayerTurns();
+            }
 
             await Clients.Client(game.Players[0].Id).SendAsync("gameState", DTOConverter.GetGameDTO(game, 0));
 			await Clients.Client(game.Players[1].Id).SendAsync("gameState", DTOConverter.GetGameDTO(game, 1));
+
+			await Clients.Client(Context.ConnectionId).SendAsync("CardsInHand", DTOConverter.GetCardDTOList(player.Hand));
+            await Clients.Group(gameId).SendAsync("Playing", game.CurrentPlayer.Id);
         }
 	}
 }

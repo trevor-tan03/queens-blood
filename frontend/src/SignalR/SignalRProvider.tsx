@@ -88,8 +88,9 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
       setMulliganPhaseEnded(hasEnded);
     });
 
-    conn.on("Playing", (playingId: string) => {
-      setPlaying(playingId);
+    conn.on("Playing", (playing: string) => {
+      setPlaying(playing);
+      console.log(playing);
     });
 
     conn.on("GameState", (gameState: GameDTO) => {

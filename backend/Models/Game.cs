@@ -269,7 +269,7 @@ namespace backend.Models
 			}
 		}
 
-		public void PlaceCard(int handIndex, int row, int col)
+		public bool PlaceCard(int handIndex, int row, int col)
 		{
 			var playerIndex = Players.FindIndex(p => p.Id == CurrentPlayer!.Id);
 			var card = CurrentPlayer!.Hand[handIndex];
@@ -292,7 +292,10 @@ namespace backend.Models
 
 				CalculatePlayerScores();
 				ExecuteQueuedActions();
+				return true;
             }
+
+			return false;
 		}
 
 		public void EndGame()

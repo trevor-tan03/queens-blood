@@ -29,7 +29,7 @@ namespace backend.DTO
             var ownerId = tile.Owner?.Id;
             var bonusPower = tile.TileBonusPower + tile.SelfBonusPower + tile.CardBonusPower;
             var card = tile.Card != null ? GetSmallCardDTO(tile.Card) : null;
-            return new TileDTO(ownerId, bonusPower, card);
+            return new TileDTO(ownerId, bonusPower, card, tile.Rank);
         }
 
         public static GameDTO GetGameDTO(Game game, int playerIndex)
