@@ -23,7 +23,7 @@ namespace QueensBloodTest
             if (gameCopy == null) return;
 
             // Card should only be placed in the copy
-            gameCopy.PlaceCard(0, 0, 0);
+            AddToHandAndPlaceCard(gameCopy, Cards.SecurityOfficer, 0, 0);
             Assert.Null(game.Player1Grid[0, 0].Card);
             Assert.NotNull(gameCopy.Player1Grid[0, 0].Card);
         }

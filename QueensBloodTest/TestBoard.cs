@@ -153,9 +153,16 @@ namespace QueensBloodTest
             var game = CreateGameWithPlayers();
             game.Start();
             Assert.False(game.GameOver);
+            
+            // Non-consecutive pass
+            game.Pass(); // P1 - pass
+            game.PlaceCard(0, 0, 0); // P2 - play
+            game.SwapPlayerTurns();
+            Assert.False(game.GameOver);
 
-            game.SwapPlayerTurns();
-            game.SwapPlayerTurns();
+            // Consecutive passes
+            game.Pass();
+            game.Pass();
             Assert.True(game.GameOver);
         }
 

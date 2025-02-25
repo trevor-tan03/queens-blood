@@ -158,11 +158,17 @@ namespace backend.Models
 		{
 			CurrentPlayer = Players.Find(p => p.Id != CurrentPlayer!.Id);
 
-			if (++_consecutivePasses > 1)
-				EndGame();
-		}
+            if (_consecutivePasses == 2)
+                EndGame();
+        }
 
-		public void ChangePower(Tile tile, int row, int col, int amount, bool isTilePowerBonus)
+        public void Pass()
+        {
+            _consecutivePasses++;
+            SwapPlayerTurns();
+        }
+
+        public void ChangePower(Tile tile, int row, int col, int amount, bool isTilePowerBonus)
 		{
             var playerIndex = Players.IndexOf(CurrentPlayer!);
             var grid = playerIndex == 0 ? Player1Grid : Player2Grid;
