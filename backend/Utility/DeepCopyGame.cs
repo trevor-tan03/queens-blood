@@ -6,10 +6,10 @@ namespace backend.Utility
 {
     public class Copy
     {
-        public static T? DeepCopy<T>(T obj)
+        public static T DeepCopy<T>(T obj)
         {
             var json = JsonConvert.SerializeObject(obj);
-            return JsonConvert.DeserializeObject<T?>(json);
+            return JsonConvert.DeserializeObject<T>(json);
         }
     }
 }

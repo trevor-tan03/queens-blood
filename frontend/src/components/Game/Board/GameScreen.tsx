@@ -5,7 +5,8 @@ import CardsInHand from "../Hand";
 import Board from "./Board";
 
 const GameScreen = () => {
-  const { gameCode, hand, playCard } = useSignalR();
+  const { gameCode, hand, playCard, playing, currPlayer, skipTurn } =
+    useSignalR();
   const { shownAbility } = useCardAbility();
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -26,6 +27,15 @@ const GameScreen = () => {
         </div>
 
         <Board />
+
+        {currPlayer?.id === playing && (
+          <button
+            className="z-50 cursor-pointer absolute right-0 bottom-[6rem]"
+            onClick={() => skipTurn(gameCode)}
+          >
+            Pass
+          </button>
+        )}
 
         <div className="absolute bottom-[1rem] left-[1rem] text-2xl">
           {shownAbility}

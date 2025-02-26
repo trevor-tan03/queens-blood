@@ -26,6 +26,7 @@ interface SignalRContextProps {
     row: number,
     col: number
   ) => Promise<void>;
+  skipTurn: (gameId: string) => Promise<void>;
   currPlayer: Player | undefined;
   gameCode: string;
   players: Player[];
@@ -35,6 +36,7 @@ interface SignalRContextProps {
   mulliganPhaseEnded: boolean;
   playing: string;
   gameState: Game | null;
+  isGameOver: boolean;
 }
 
 const SignalRContext = createContext<SignalRContextProps | undefined>(
@@ -56,6 +58,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
   const [mulliganPhaseEnded, setMulliganPhaseEnded] = useState(false);
   const [playing, setPlaying] = useState(""); //
   const [gameState, setGameState] = useState<Game | null>(null);
+  const [isGameOver, setIsGameOver] = useState(false);
 
   const setupSignalREvents = (conn: signalR.HubConnection) => {
     conn.on("ReceiveMessage", (message: string) => {
@@ -90,7 +93,10 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
 
     conn.on("Playing", (playing: string) => {
       setPlaying(playing);
-      console.log(playing);
+    });
+
+    conn.on("GameOver", () => {
+      setIsGameOver(true);
     });
 
     conn.on("GameState", (gameState: GameDTO) => {
@@ -220,6 +226,10 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  const skipTurn = async (gameId: string) => {
+    if (connection) connection.invoke("SkipTurn", gameId);
+  };
+
   return (
     <SignalRContext.Provider
       value={{
@@ -233,6 +243,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
         getHand,
         mulliganCards,
         playCard,
+        skipTurn,
         gameCode,
         currPlayer,
         players,
@@ -242,6 +253,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
         mulliganPhaseEnded,
         playing,
         gameState,
+        isGameOver,
       }}
     >
       {children}

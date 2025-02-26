@@ -205,9 +205,11 @@ namespace backend.Hubs
 			if (game.CurrentPlayer != player) return; // Check if player can move or not
 
 			var gameCopy = Copy.DeepCopy(game);
-			game.PlaceCard(cardIndex, row, col);
+            gameCopy.PlaceCard(cardIndex, row, col);
+			var playerIndex = game.Players.IndexOf(player);
 
-            await Clients.Client(Context.ConnectionId).SendAsync("gameCopy", gameCopy);
+            await Clients.Client(Context.ConnectionId).SendAsync("GameCopy", DTOConverter.GetGameDTO(gameCopy, playerIndex));
+
         }
 
 		public async Task PlaceCard(string gameId, int cardIndex, int row, int col)
@@ -228,6 +230,22 @@ namespace backend.Hubs
 
             await Clients.Client(Context.ConnectionId).SendAsync("CardsInHand", DTOConverter.GetCardDTOList(player.Hand));
             await Clients.Group(gameId).SendAsync("Playing", game.CurrentPlayer.Id);
+        }
+
+		public async Task SkipTurn(string gameId)
+		{
+            var (game, player) = await FetchGameAndPlayer(gameId);
+
+            if (game == null || player == null) return;
+            if (game.CurrentPlayer != player) return; // Check if player can move or not
+
+			game.Pass();
+			var currPlayer = game.CurrentPlayer;
+
+            if (game.GameOver)
+				await Clients.Group(gameId).SendAsync("GameOver");
+
+            await Clients.Group(gameId).SendAsync("Playing", currPlayer != null ? currPlayer.Id : null);
         }
 	}
 }
