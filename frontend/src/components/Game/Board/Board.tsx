@@ -3,9 +3,9 @@ import Droppable from "../../dnd-kit/Droppable";
 import BoardTile from "./BoardTile";
 
 const Board = () => {
-  const { gameState } = useSignalR();
+  const { gameState, gameStatePreview } = useSignalR();
   if (!gameState) return null;
-  const { board } = gameState;
+  const { board } = gameStatePreview ?? gameState;
 
   const renderBoard = () => {
     return (

@@ -1,12 +1,21 @@
-import { DndContext, DragEndEvent } from "@dnd-kit/core";
+import { DndContext, DragEndEvent, DragOverEvent } from "@dnd-kit/core";
 import { useSignalR } from "../../../SignalR/SignalRProvider";
 import { useCardAbility } from "../CardAbilityContext";
 import CardsInHand from "../Hand";
 import Board from "./Board";
 
 const GameScreen = () => {
-  const { gameCode, hand, playCard, playing, currPlayer, skipTurn } =
-    useSignalR();
+  const {
+    gameCode,
+    hand,
+    playCard,
+    playing,
+    currPlayer,
+    skipTurn,
+    previewPlay,
+    cancelPreview,
+  } = useSignalR();
+
   const { shownAbility } = useCardAbility();
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -19,8 +28,24 @@ const GameScreen = () => {
     }
   };
 
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+
+    if (over) {
+      const cardId = parseInt(active.id.toString().slice(5));
+      const [row, col] = over.id.toString().split(",");
+      previewPlay(gameCode, cardId, parseInt(row), parseInt(col));
+    }
+  };
+
   return (
-    <DndContext onDragEnd={(event) => handleDragEnd(event)}>
+    <DndContext
+      onDragEnd={(event) => handleDragEnd(event)}
+      onDragOver={(event) => handleDragOver(event)}
+      onDragCancel={() => {
+        cancelPreview();
+      }}
+    >
       <div>
         <div className="relative">
           <CardsInHand hand={hand} />

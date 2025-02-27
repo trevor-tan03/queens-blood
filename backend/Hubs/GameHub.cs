@@ -209,7 +209,6 @@ namespace backend.Hubs
 			var playerIndex = game.Players.IndexOf(player);
 
             await Clients.Client(Context.ConnectionId).SendAsync("GameCopy", DTOConverter.GetGameDTO(gameCopy, playerIndex));
-
         }
 
 		public async Task PlaceCard(string gameId, int cardIndex, int row, int col)

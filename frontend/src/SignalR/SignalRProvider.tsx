@@ -26,6 +26,13 @@ interface SignalRContextProps {
     row: number,
     col: number
   ) => Promise<void>;
+  previewPlay: (
+    gameId: string,
+    cardIndex: number,
+    row: number,
+    col: number
+  ) => Promise<void>;
+  cancelPreview: () => void;
   skipTurn: (gameId: string) => Promise<void>;
   currPlayer: Player | undefined;
   gameCode: string;
@@ -37,6 +44,7 @@ interface SignalRContextProps {
   playing: string;
   gameState: Game | null;
   isGameOver: boolean;
+  gameStatePreview: Game | null;
 }
 
 const SignalRContext = createContext<SignalRContextProps | undefined>(
@@ -58,6 +66,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
   const [mulliganPhaseEnded, setMulliganPhaseEnded] = useState(false);
   const [playing, setPlaying] = useState(""); //
   const [gameState, setGameState] = useState<Game | null>(null);
+  const [gameStatePreview, setGameStatePreview] = useState<Game | null>(null);
   const [isGameOver, setIsGameOver] = useState(false);
 
   const setupSignalREvents = (conn: signalR.HubConnection) => {
@@ -97,6 +106,21 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
 
     conn.on("GameOver", () => {
       setIsGameOver(true);
+    });
+
+    conn.on("GameCopy", (gameCopy: GameDTO) => {
+      const board = [
+        gameCopy.board.slice(0, 5),
+        gameCopy.board.slice(5, 10),
+        gameCopy.board.slice(10, 15),
+      ];
+
+      const game: Game = {
+        laneScores: gameCopy.laneScores,
+        board,
+      };
+
+      setGameStatePreview(game);
     });
 
     conn.on("GameState", (gameState: GameDTO) => {
@@ -230,6 +254,19 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
     if (connection) connection.invoke("SkipTurn", gameId);
   };
 
+  const previewPlay = async (
+    gameId: string,
+    cardIndex: number,
+    row: number,
+    col: number
+  ) => {
+    if (connection) {
+      connection.invoke("PreviewMove", gameId, cardIndex, row, col);
+    }
+  };
+
+  const cancelPreview = () => setGameStatePreview(null);
+
   return (
     <SignalRContext.Provider
       value={{
@@ -243,6 +280,8 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
         getHand,
         mulliganCards,
         playCard,
+        previewPlay,
+        cancelPreview,
         skipTurn,
         gameCode,
         currPlayer,
@@ -253,6 +292,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
         mulliganPhaseEnded,
         playing,
         gameState,
+        gameStatePreview,
         isGameOver,
       }}
     >

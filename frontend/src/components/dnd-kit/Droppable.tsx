@@ -1,4 +1,5 @@
 import { useDroppable } from "@dnd-kit/core";
+import { useEffect, useState } from "react";
 import { useSignalR } from "../../SignalR/SignalRProvider";
 import type { Tile } from "../../types/Tile";
 
@@ -14,16 +15,24 @@ const Droppable = ({
   const { isOver, setNodeRef } = useDroppable({
     id: id,
   });
-
   const { currPlayer } = useSignalR();
+  const [isOccupied, setIsOccupied] = useState(tile?.card !== null);
+  const [isMine, setIsMine] = useState(
+    currPlayer && currPlayer?.id === tile?.ownerId
+  );
 
   const style = {
-    borderColor: isOver ? "green" : "red",
+    borderColor: isOver && !isOccupied && isMine ? "green" : "red",
   };
+
+  useEffect(() => {
+    setIsOccupied(tile?.card !== null);
+    setIsMine(currPlayer && currPlayer?.id === tile?.ownerId);
+  }, [tile?.ownerId]);
 
   return (
     <div
-      ref={currPlayer && currPlayer?.id === tile?.ownerId ? setNodeRef : null}
+      ref={isMine && !isOccupied ? setNodeRef : null}
       className="border w-fit"
       style={style}
     >
