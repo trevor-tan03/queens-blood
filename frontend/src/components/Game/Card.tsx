@@ -39,7 +39,7 @@ const Card = ({
     >
       {children}
       <img
-        className={`w-fit h-fit hover:scale-125 transition-transform duration-200 max-h-[200px] rounded-lg ${
+        className={`h-[170px] hover:scale-125 transition-transform duration-200 max-h-[200px] rounded-lg ${
           isCurrentPlayer() && mulliganPhaseEnded
             ? "ring-4 ring-blue-600 ring-opacity-20 shadow-blue-500 shadow-[0px_0px_20px]"
             : ""

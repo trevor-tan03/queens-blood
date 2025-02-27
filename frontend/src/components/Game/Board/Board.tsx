@@ -4,12 +4,18 @@ import BoardTile from "./BoardTile";
 
 const Board = () => {
   const { gameState, gameStatePreview } = useSignalR();
+
   if (!gameState) return null;
   const { board } = gameStatePreview ?? gameState;
 
   const renderBoard = () => {
     return (
-      <div className="grid grid-cols-5 min-w-fit">
+      <div
+        className="grid min-w-fit"
+        style={{
+          gridTemplateColumns: "repeat(5, auto)",
+        }}
+      >
         {board.map((_, row) => {
           return board[row].map((tile, col) => (
             <Droppable key={`${row},${col}`} id={`${row},${col}`} tile={tile}>

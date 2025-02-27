@@ -11,7 +11,7 @@ const BoardTile = ({ tile }: Props) => {
   const isMine = currPlayer !== undefined && currPlayer.id === tile?.ownerId;
 
   return (
-    <div className={`w-[170px] h-[200px] grid place-items-center`}>
+    <div className={`w-[130px] h-[178px] grid place-items-center`}>
       {tile.card ? (
         <img
           className="h-full"

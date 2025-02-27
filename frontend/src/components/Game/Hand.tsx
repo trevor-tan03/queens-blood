@@ -13,10 +13,10 @@ const CardsInHand = ({ hand }: HandProps) => {
   const { setShownAbility } = useCardAbility();
 
   return (
-    <div className="absolute top-0 h-screen w-screen overflow-y-hidden">
+    <div className="fixed left-0 top-0 h-screen w-screen overflow-y-hidden">
       <div className="flex fixed bottom-[-6rem] left-[3rem] hand transition-all duration-200">
         {hand.map((card, i) => (
-          <Draggable key={`hand-${i}`} id={`hand-${i}`}>
+          <Draggable key={`hand-${i}`} id={`hand-${i}`} card={card}>
             <Card
               card={card}
               rotate={getRotation(i, hand.length)}

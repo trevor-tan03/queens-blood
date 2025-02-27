@@ -2,6 +2,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { useEffect, useState } from "react";
 import { useSignalR } from "../../SignalR/SignalRProvider";
 import type { Tile } from "../../types/Tile";
+import { useCompatibleTiles } from "../Game/Board/LegalTilesContext";
 
 const Droppable = ({
   children,
@@ -16,6 +17,7 @@ const Droppable = ({
     id: id,
   });
   const { currPlayer } = useSignalR();
+  const { compatibleTiles } = useCompatibleTiles();
   const [isOccupied, setIsOccupied] = useState(tile?.card !== null);
   const [isMine, setIsMine] = useState(
     currPlayer && currPlayer?.id === tile?.ownerId
@@ -29,7 +31,9 @@ const Droppable = ({
   return (
     <div
       ref={isMine && !isOccupied ? setNodeRef : null}
-      className="border w-fit"
+      className={`border w-fit ${
+        compatibleTiles.includes(id) ? "bg-yellow-300" : ""
+      }`}
     >
       {children}
     </div>
