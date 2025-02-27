@@ -12,7 +12,7 @@ const Droppable = ({
   tile: Tile;
   id: string;
 }) => {
-  const { isOver, setNodeRef } = useDroppable({
+  const { setNodeRef } = useDroppable({
     id: id,
   });
   const { currPlayer } = useSignalR();
@@ -20,10 +20,6 @@ const Droppable = ({
   const [isMine, setIsMine] = useState(
     currPlayer && currPlayer?.id === tile?.ownerId
   );
-
-  const style = {
-    borderColor: isOver && !isOccupied && isMine ? "green" : "red",
-  };
 
   useEffect(() => {
     setIsOccupied(tile?.card !== null);
@@ -34,7 +30,6 @@ const Droppable = ({
     <div
       ref={isMine && !isOccupied ? setNodeRef : null}
       className="border w-fit"
-      style={style}
     >
       {children}
     </div>

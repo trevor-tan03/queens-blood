@@ -1,4 +1,5 @@
 import { DndContext, DragEndEvent, DragOverEvent } from "@dnd-kit/core";
+import { useEffect } from "react";
 import { useSignalR } from "../../../SignalR/SignalRProvider";
 import { useCardAbility } from "../CardAbilityContext";
 import CardsInHand from "../Hand";
@@ -17,6 +18,11 @@ const GameScreen = () => {
   } = useSignalR();
 
   const { shownAbility } = useCardAbility();
+
+  useEffect(() => {
+    document.addEventListener("mouseup", () => cancelPreview());
+    return () => document.removeEventListener("mouseup", () => cancelPreview());
+  }, [cancelPreview]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -62,7 +68,7 @@ const GameScreen = () => {
           </button>
         )}
 
-        <div className="absolute bottom-[1rem] left-[1rem] text-2xl">
+        <div className="absolute bottom-[1rem] left-[1rem] text-2xl pointer-events-none">
           {shownAbility}
         </div>
       </div>

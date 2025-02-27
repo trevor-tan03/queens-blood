@@ -14,7 +14,7 @@ const CardsInHand = ({ hand }: HandProps) => {
 
   return (
     <div className="absolute top-0 h-screen w-screen overflow-y-hidden">
-      <div className="flex absolute bottom-[-6rem] left-[3rem] hand transition-transform duration-200">
+      <div className="flex fixed bottom-[-6rem] left-[3rem] hand transition-all duration-200">
         {hand.map((card, i) => (
           <Draggable key={`hand-${i}`} id={`hand-${i}`}>
             <Card
