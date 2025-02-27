@@ -34,7 +34,7 @@ const MulliganCardsScreen = ({
         Select cards to mulligan
       </h1>
 
-      <div className="flex absolute bottom-[4rem] left-[3rem]">
+      <div className="flex absolute bottom-[16rem] left-[3rem]">
         {cards.map((card, index) => {
           const offsetX = getXOffset(index);
           const offsetY = getYOffset(index, cards.length);
