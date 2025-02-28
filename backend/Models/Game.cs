@@ -17,6 +17,7 @@ namespace backend.Models
 		public List<Tile> EnhancedCards { get; set; } = new List<Tile>();
 		public List<Tile> EnfeebledCards { get; set; } = new List<Tile>();
 		private int _consecutivePasses { get; set; } = 0;
+		private int _currentPlayerIndex = 0;
 
         // Events
         public event Action<Game, Tile[,], int, int> OnCardPlaced;
@@ -98,7 +99,8 @@ namespace backend.Models
 
 		private void PickStartingPlayer()
 		{
-			CurrentPlayer = Players[_random.Next(0,2)];
+			_currentPlayerIndex = _random.Next(0, 2);
+            CurrentPlayer = Players[_currentPlayerIndex];
 		}
 
 
@@ -156,7 +158,15 @@ namespace backend.Models
 
 		public void SwapPlayerTurns()
 		{
-			CurrentPlayer = Players.Find(p => p.Id != CurrentPlayer!.Id);
+            CurrentPlayer = Players[_currentPlayerIndex];
+
+            if (CurrentPlayer == null)
+            {
+                throw new InvalidOperationException($"Current player is not set. {_currentPlayerIndex}");
+            }
+
+			_currentPlayerIndex = (_currentPlayerIndex + 1) % 2;
+            CurrentPlayer = Players[_currentPlayerIndex];
 
             if (_consecutivePasses == 2)
                 EndGame();
@@ -170,8 +180,7 @@ namespace backend.Models
 
         public void ChangePower(Tile tile, int row, int col, int amount, bool isTilePowerBonus)
 		{
-            var playerIndex = Players.IndexOf(CurrentPlayer!);
-            var grid = playerIndex == 0 ? Player1Grid : Player2Grid;
+            var grid = _currentPlayerIndex == 0 ? Player1Grid : Player2Grid;
 
 			if (isTilePowerBonus)
 				tile.TileBonusPower += amount;
