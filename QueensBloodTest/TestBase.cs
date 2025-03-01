@@ -58,6 +58,7 @@ namespace QueensBloodTest
 
         public void SetPlayer1Start(Game game)
         {
+            game._currentPlayerIndex = 0;
             game.CurrentPlayer = game.Players[0];
         }
 

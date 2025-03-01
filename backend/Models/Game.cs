@@ -17,7 +17,7 @@ namespace backend.Models
 		public List<Tile> EnhancedCards { get; set; } = new List<Tile>();
 		public List<Tile> EnfeebledCards { get; set; } = new List<Tile>();
 		private int _consecutivePasses { get; set; } = 0;
-		private int _currentPlayerIndex = 0;
+		public int _currentPlayerIndex = 0;
 
         // Events
         public event Action<Game, Tile[,], int, int> OnCardPlaced;
