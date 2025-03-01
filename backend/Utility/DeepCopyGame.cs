@@ -9,7 +9,21 @@ namespace backend.Utility
         public static T DeepCopy<T>(T obj)
         {
             var json = JsonConvert.SerializeObject(obj);
-            return JsonConvert.DeserializeObject<T>(json);
+            var copy = JsonConvert.DeserializeObject<T>(json);
+
+            if (typeof(T) == typeof(Game) && copy != null)
+            {
+                var gameCopy = (Game)(object)copy;
+                gameCopy.Player2Grid = BoardUtility.MirrorBoard(gameCopy.Player1Grid);
+                return Cast<T>(gameCopy);
+            }
+
+            return copy;
         }
+
+        public static T Cast<T> (object obj)
+        {
+            return (T)obj;
+        } 
     }
 }

@@ -202,9 +202,10 @@ namespace backend.Models
 			}
 		}
 
-		public void DestroyCard(Tile[,] grid, int row, int col)
+		public void DestroyCard(Tile[,] griddy, int row, int col)
 		{
-			OnCardDestroyed?.Invoke(this, grid, row, col);
+            var grid = _currentPlayerIndex == 0 ? Player1Grid : Player2Grid;
+            OnCardDestroyed?.Invoke(this, grid, row, col);
             grid[row, col].Card = null;
 
 			if (EnhancedCards.Contains(grid[row, col]))
@@ -229,9 +230,9 @@ namespace backend.Models
 					var tile = Player1Grid[row, col];
 					int tilePower = tile.GetCumulativePower();
 
-					if (tile.Owner == Players[0])
+					if (tile.Owner?.Id == Players[0].Id)
 						player1Score += tilePower;
-					else if (tile.Owner == Players[1])
+					else if (tile.Owner?.Id == Players[1].Id)
 						player2Score += tilePower;
 				}
 

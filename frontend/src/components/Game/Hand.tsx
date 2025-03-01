@@ -19,11 +19,12 @@ const CardsInHand = ({ hand }: HandProps) => {
         <div className="relative w-full h-full">
           {hand.map((card, i) => (
             <DraggableContainer
+              key={`hand-${i}`}
               rotate={getRotation(i, hand.length)}
               offsetX={getXOffset(i)}
               offsetY={getYOffset(i, hand.length)}
             >
-              <Draggable key={`hand-${i}`} id={`hand-${i}`} card={card}>
+              <Draggable id={`hand-${i}`} card={card}>
                 <Card
                   card={card}
                   className=""

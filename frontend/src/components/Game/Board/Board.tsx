@@ -1,9 +1,14 @@
+import { useEffect } from "react";
 import { useSignalR } from "../../../SignalR/SignalRProvider";
 import Droppable from "../../dnd-kit/Droppable";
 import BoardTile from "./BoardTile";
 
 const Board = () => {
   const { gameState, gameStatePreview } = useSignalR();
+
+  useEffect(() => {
+    console.log(gameStatePreview);
+  }, [gameStatePreview]);
 
   if (!gameState) return null;
   const { board } = gameStatePreview ?? gameState;
