@@ -230,9 +230,9 @@ namespace backend.Models
 					var tile = Player1Grid[row, col];
 					int tilePower = tile.GetCumulativePower();
 
-					if (tile.Owner?.Id == Players[0].Id)
+					if (tile.Owner?.Id == Players[0].Id && tile.Card != null)
 						player1Score += tilePower;
-					else if (tile.Owner?.Id == Players[1].Id)
+					else if (tile.Owner?.Id == Players[1].Id && tile.Card != null)
 						player2Score += tilePower;
 				}
 

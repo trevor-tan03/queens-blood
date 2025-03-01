@@ -8,10 +8,14 @@ const Droppable = ({
   children,
   tile,
   id,
+  row,
+  col,
 }: {
   children: React.ReactNode;
   tile: Tile;
   id: string;
+  row: number;
+  col: number;
 }) => {
   const { setNodeRef } = useDroppable({
     id: id,
@@ -31,6 +35,7 @@ const Droppable = ({
   return (
     <div
       ref={isMine && !isOccupied ? setNodeRef : null}
+      style={{ gridColumnStart: col + 2, gridRowStart: row + 1 }}
       className={`border w-fit ${
         compatibleTiles.includes(id) ? "bg-yellow-300" : ""
       }`}
