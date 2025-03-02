@@ -589,5 +589,16 @@ namespace QueensBloodTest
             // Two Face should have enfeebled capparwire, destroying it
             Assert.Null(game.Player1Grid[1, 0].Card);
         }
+
+        [Fact]
+        public void TestCactuarEnhance()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Cactuar, 0, 0);
+            Assert.Equal(3, game.Player1Grid[2, 1].GetCumulativePower());
+        }
     }
 }

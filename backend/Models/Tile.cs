@@ -82,12 +82,11 @@ namespace backend.Models
             var target = Card!.Ability.Target;
             var condition = Card!.Ability.Condition;
 
-            return ((target == "a" && tile.Owner == Owner) ||
+            return condition == "*" || 
+                (target == "a" && tile.Owner == Owner) ||
                 (target == "e" && tile.Owner != Owner) ||
-                target == "ae")
-                &&
-                // If card doesn't have "While in play" (*) condition, don't target empty tiles
-                (tile.Card != null || Card!.Ability.Condition == "*");
+                target == "ae" 
+                && tile.Card != null;
         }
 
         private void HandleTargetingAbilties(Tile tile, Game game, int row, int col)

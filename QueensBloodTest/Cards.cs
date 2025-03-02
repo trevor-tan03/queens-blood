@@ -12,6 +12,7 @@ namespace QueensBloodTest
         SecurityOfficer=0,
         GrasslandsWolf=7,
         Elphadunk=10,
+        Cactuar=11,
         CrystallineCrab=12,
         Archdragon=19,
         Capparwire=25,
