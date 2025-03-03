@@ -70,5 +70,13 @@ namespace QueensBloodTest
             var lastCardInHandIndex = game.CurrentPlayer.Hand.Count - 1;
             game.PlaceCard(lastCardInHandIndex, row, col);
         }
+
+        // Used to place cards in "illegal" places and ignore abilities for more efficient testing
+        public void ForcePlace(Game game, Cards cardEnum, Player owner, int row, int col)
+        {
+            var card = _cards[(int)cardEnum];
+            game.Player1Grid[row, col].Owner = owner;
+            game.Player1Grid[row, col].Card = card;
+        }
     }
 }

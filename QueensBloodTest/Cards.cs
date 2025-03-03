@@ -33,6 +33,7 @@ namespace QueensBloodTest
         RedXIII=89,
         Ifrit=94,
         Shiva=95,
+        ChocoboMoogle=106,
         MoogleTrio=109,
         UltimatePartyAnimal=141,
         Sephiroth=142,

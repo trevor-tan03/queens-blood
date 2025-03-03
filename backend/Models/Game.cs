@@ -178,7 +178,7 @@ namespace backend.Models
             SwapPlayerTurns();
         }
 
-        public void ChangePower(Tile tile, int row, int col, int amount, bool isTilePowerBonus)
+        public void ChangePower(Player instigator, Tile tile, int row, int col, int amount, bool isTilePowerBonus)
 		{
             var grid = _currentPlayerIndex == 0 ? Player1Grid : Player2Grid;
 
@@ -198,11 +198,29 @@ namespace backend.Models
 				ActionQueue.Enqueue(() => OnCardEnfeebled?.Invoke(this, grid, row, col));
 
 				if (tile.Card != null && tile.GetCumulativePower() <= 0)
-					ActionQueue.Enqueue(() => DestroyCard(row, col));
+				{
+                    ActionQueue.Enqueue(() => DestroyCard(instigator, row, col));
+                }
 			}
 		}
 
-		public void DestroyCard(int row, int col)
+		public void EnqueueOnPowerChange(string type, Tile[,] grid, int row, int col)
+		{
+            /* Used to re-invoke event when it's already been considered
+             * e.g. Cactuar enhances tile while in play
+             *		Chocobo & Moogle will dismiss the enhanced empty tile
+             *		---
+             *		When you play a card, it should reinvoke the event so that 
+             *		Chocobo & Moogle updates its SelfBonusPower
+			 */
+            if (type == "enhance")
+                ActionQueue.Enqueue(() => OnCardEnhanced?.Invoke(this, grid, row, col));
+			else
+                ActionQueue.Enqueue(() => OnCardEnfeebled?.Invoke(this, grid, row, col));
+        }
+
+
+        public void DestroyCard(Player instigator, int row, int col)
 		{
             var grid = _currentPlayerIndex == 0 ? Player1Grid : Player2Grid;
             OnCardDestroyed?.Invoke(this, grid, row, col);
@@ -216,6 +234,8 @@ namespace backend.Models
             // Reset card specifc power bonus when destroyed
             grid[row, col].CardBonusPower = 0;
 			grid[row, col].SelfBonusPower = 0;
+
+			grid[row, col].Owner = instigator;
 		}
 
 		private void CalculatePlayerScores()
@@ -287,9 +307,8 @@ namespace backend.Models
 
 		public bool PlaceCard(int handIndex, int row, int col)
 		{
-			var playerIndex = Players.FindIndex(p => p.Id == CurrentPlayer!.Id);
 			var card = CurrentPlayer!.Hand[handIndex];
-			var grid = playerIndex == 0 ? Player1Grid : Player2Grid;
+			var grid = _currentPlayerIndex == 0 ? Player1Grid : Player2Grid;
 			var tile = grid[row, col];
 
 			if (CanPlaceCard(card, tile))
@@ -298,7 +317,7 @@ namespace backend.Models
 
                 // Invoke card destroyed if replace card
                 if (card.Ability.Condition == "R")
-                    DestroyCard(row, col);
+                    DestroyCard(CurrentPlayer, row, col);
 
                 tile.Card = card;
                 CurrentPlayer.Hand.RemoveAt(handIndex);
