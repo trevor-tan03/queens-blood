@@ -12,10 +12,20 @@ const BoardTile = ({ tile }: Props) => {
 
   return (
     <div
-      className={`w-[130px] h-[178px] grid place-items-center border-4 ${
+      className={`w-[130px] h-[178px] relative grid place-items-center border-4 ${
         isMine ? "border-green-300" : "border-red-300"
       }`}
     >
+      {tile.bonusPower !== 0 && (
+        <div
+          className={`absolute z-50 bg-opacity-80 bottom-0 h-16 w-full grid place-items-center font-bold ${
+            tile.bonusPower < 0 ? "bg-red-500" : "bg-green-500"
+          }`}
+        >
+          {tile.bonusPower}
+        </div>
+      )}
+
       {tile.card ? (
         <img
           className="h-full"

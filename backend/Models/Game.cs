@@ -198,11 +198,11 @@ namespace backend.Models
 				ActionQueue.Enqueue(() => OnCardEnfeebled?.Invoke(this, grid, row, col));
 
 				if (tile.Card != null && tile.GetCumulativePower() <= 0)
-					ActionQueue.Enqueue(() => DestroyCard(grid, row, col));
+					ActionQueue.Enqueue(() => DestroyCard(row, col));
 			}
 		}
 
-		public void DestroyCard(Tile[,] griddy, int row, int col)
+		public void DestroyCard(int row, int col)
 		{
             var grid = _currentPlayerIndex == 0 ? Player1Grid : Player2Grid;
             OnCardDestroyed?.Invoke(this, grid, row, col);
@@ -298,7 +298,7 @@ namespace backend.Models
 
                 // Invoke card destroyed if replace card
                 if (card.Ability.Condition == "R")
-                    DestroyCard(grid, row, col);
+                    DestroyCard(row, col);
 
                 tile.Card = card;
                 CurrentPlayer.Hand.RemoveAt(handIndex);

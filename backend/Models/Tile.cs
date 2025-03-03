@@ -114,7 +114,7 @@ namespace backend.Models
             {
                 var currPlayerIndex = game.Players.FindIndex(p => p == Owner);
                 var grid = currPlayerIndex == 0 ? game.Player1Grid : game.Player2Grid;
-                game.DestroyCard(grid, row, col);
+                game.DestroyCard(row, col);
             }
         }
 
@@ -320,8 +320,9 @@ namespace backend.Models
                 Card!.Ability.Condition == "ED" && grid[row, col].Owner != Owner ||
                 Card!.Ability.Condition == "AED")
                 SelfBonusPower += (int) Card!.Ability.Value!;
-
-            UninitAbility(game, grid, row, col);
+            
+            if (this == grid[row, col])
+                UninitAbility(game, grid, row, col);
         }
 
         private void HandleCardEnhanced(Game game, Tile[,] grid, int row, int col)

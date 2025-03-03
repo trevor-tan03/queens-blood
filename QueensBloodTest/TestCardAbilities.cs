@@ -600,5 +600,20 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(game, Cards.Cactuar, 0, 0);
             Assert.Equal(3, game.Player1Grid[2, 1].GetCumulativePower());
         }
+
+        [Fact]
+        public void TestReplaceEnhancedCard()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
+
+            Assert.Equal(0, game.Player1Grid[0, 0].GetCumulativePower());
+            AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 1, 0);
+            Assert.Equal(0, game.Player1Grid[0, 0].GetCumulativePower());
+        }
     }
 }

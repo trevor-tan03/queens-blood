@@ -21,7 +21,7 @@ const Board = () => {
   const renderBoard = () => {
     return (
       <div
-        className="grid min-w-fit"
+        className="grid min-w-fit rotate-x-20"
         style={{
           gridTemplateColumns: "repeat(7, auto)",
         }}
