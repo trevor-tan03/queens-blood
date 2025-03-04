@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using backend.Models;
+using static backend.Models.TileConstants;
 
 namespace QueensBloodTest
 {
@@ -639,6 +640,55 @@ namespace QueensBloodTest
 
             Assert.Equal(2, game.EnhancedCards.Count);
             Assert.Equal(2, game.Player1Grid[1, 1].SelfBonusPower);
+        }
+
+        [Fact]
+        public void CardOnLifeSupport()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0); // Keeping Security Officer alive
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.Capparwire, 0, 0);
+
+            Assert.Equal(2, game.Player1Grid[1, 0].GetCumulativePower());
+
+            AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 2, 0); // Replace Crystalline Crab
+            Assert.Null(game.Player1Grid[1, 0].Card);
+        }
+
+        [Fact]
+        public void CardOnLifeSupportDaisyChain()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.GrasslandsWolf, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0); // Will keep grasslands wolf alive
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0); // Will keep first crystalline crab alive => also keeps grasslands wolf alive
+
+            // Set second column to be owned by opposing player
+            for (int i = 0; i < NUM_ROWS; i++)
+                game.Player1Grid[i, 1].Owner = game.Players[1];
+
+            // Opposing player places enfeeble cards:
+            game.SwapPlayerTurns();
+            AddToHandAndPlaceCard(game, Cards.Archdragon, 0, 3); // Will enfeeble grasslands wolf
+            AddToHandAndPlaceCard(game, Cards.BlackBat, 1, 3); // Will enfeeble crystalline crab
+
+            // Ensure grasslands wolf and crystalline crabs are still alive
+            Assert.NotNull(game.Player1Grid[0, 0].Card);
+            Assert.NotNull(game.Player1Grid[1, 0].Card);
+
+            // Destroy bottom crystalline crab acting as life support
+            AddToHandAndPlaceCard(game, Cards.BlackBat, 2, 3);
+
+            // Ensure all of player 1's cards have been destroyed
+            for (int i = 0; i < NUM_ROWS; i++)
+                Assert.Null(game.Player1Grid[i, 0].Card);
         }
     }
 }

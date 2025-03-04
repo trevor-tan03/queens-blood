@@ -21,7 +21,7 @@ namespace backend.Models
 
         // Events
         public event Action<Game, Tile[,], int, int> OnCardPlaced;
-		public event Action<Game, Tile[,], int, int> OnCardDestroyed;
+		public event Action<Player, Game, Tile[,], int, int> OnCardDestroyed;
 		public event Action<Game, Tile[,], int, int> OnCardEnhanced;
 		public event Action<Game, Tile[,], int, int> OnCardEnfeebled;
 		public event Action<Game> OnGameEnd;
@@ -223,7 +223,7 @@ namespace backend.Models
         public void DestroyCard(Player instigator, int row, int col)
 		{
             var grid = _currentPlayerIndex == 0 ? Player1Grid : Player2Grid;
-            OnCardDestroyed?.Invoke(this, grid, row, col);
+            OnCardDestroyed?.Invoke(instigator, this, grid, row, col);
             grid[row, col].Card = null;
 
 			if (EnhancedCards.Contains(grid[row, col]))
@@ -325,9 +325,9 @@ namespace backend.Models
                 tile.InitAbility(this);
                 OnCardPlaced?.Invoke(this, grid, row, col);
 
-				CalculatePlayerScores();
 				ExecuteQueuedActions();
-				return true;
+                CalculatePlayerScores();
+                return true;
             }
 
 			return false;

@@ -28,6 +28,7 @@ namespace QueensBloodTest
         Reapertail=60,
         TwoFace=65,
         TwinBrain=70,
+        BlackBat=71,
         Cloud=85,
         Tifa=87,
         RedXIII=89,
