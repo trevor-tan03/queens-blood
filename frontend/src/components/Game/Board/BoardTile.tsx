@@ -1,9 +1,42 @@
-import { useBoardContext } from "./BoardContext";
+import { useSignalR } from "../../../SignalR/SignalRProvider";
+import type { Tile } from "../../../types/Tile";
+import Pawn from "./Pawn";
 
-const BoardTile = () => {
-  const { child } = useBoardContext();
+interface Props {
+  tile: Tile;
+}
 
-  return <div className="w-[170px] h-[200px]">{child}</div>;
+const BoardTile = ({ tile }: Props) => {
+  const { currPlayer } = useSignalR();
+  const isMine = currPlayer !== undefined && currPlayer.id === tile?.ownerId;
+
+  return (
+    <div
+      className={`w-[130px] h-[178px] relative grid place-items-center border-4 ${
+        isMine ? "border-green-300" : "border-red-300"
+      }`}
+    >
+      {tile.bonusPower !== 0 && (
+        <div
+          className={`absolute z-50 bg-opacity-80 bottom-0 h-16 w-full grid place-items-center font-bold ${
+            tile.bonusPower < 0 ? "bg-red-500" : "bg-green-500"
+          }`}
+        >
+          {tile.bonusPower}
+        </div>
+      )}
+
+      {tile.card ? (
+        <img
+          className="h-full"
+          alt={tile.card?.name}
+          src={`../../../../public/assets/cards/${tile.card?.image}`}
+        />
+      ) : tile.ownerId ? (
+        <Pawn rank={tile.rank} isMine={isMine} />
+      ) : null}
+    </div>
+  );
 };
 
 export default BoardTile;

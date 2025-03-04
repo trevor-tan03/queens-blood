@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 import type { Card } from "../types/Card";
+import type { Game, GameDTO } from "../types/Game";
 import type { Player } from "../types/Player";
 
 interface SignalRContextProps {
@@ -19,6 +20,20 @@ interface SignalRContextProps {
   sendMessage: (message: string) => Promise<void>;
   getHand: (gameId: string) => Promise<void>;
   mulliganCards: (gameId: string, cardsToMulligan: number[]) => Promise<void>;
+  playCard: (
+    gameId: string,
+    cardIndex: number,
+    row: number,
+    col: number
+  ) => Promise<void>;
+  previewPlay: (
+    gameId: string,
+    cardIndex: number,
+    row: number,
+    col: number
+  ) => Promise<void>;
+  cancelPreview: () => void;
+  skipTurn: (gameId: string) => Promise<void>;
   currPlayer: Player | undefined;
   gameCode: string;
   players: Player[];
@@ -27,6 +42,9 @@ interface SignalRContextProps {
   hand: Card[];
   mulliganPhaseEnded: boolean;
   playing: string;
+  gameState: Game | null;
+  isGameOver: boolean;
+  gameStatePreview: Game | null;
 }
 
 const SignalRContext = createContext<SignalRContextProps | undefined>(
@@ -47,6 +65,9 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
   const [hand, setHand] = useState<Card[]>([]);
   const [mulliganPhaseEnded, setMulliganPhaseEnded] = useState(false);
   const [playing, setPlaying] = useState(""); //
+  const [gameState, setGameState] = useState<Game | null>(null);
+  const [gameStatePreview, setGameStatePreview] = useState<Game | null>(null);
+  const [isGameOver, setIsGameOver] = useState(false);
 
   const setupSignalREvents = (conn: signalR.HubConnection) => {
     conn.on("ReceiveMessage", (message: string) => {
@@ -79,8 +100,42 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
       setMulliganPhaseEnded(hasEnded);
     });
 
-    conn.on("Playing", (playingId: string) => {
-      setPlaying(playingId);
+    conn.on("Playing", (playing: string) => {
+      setPlaying(playing);
+    });
+
+    conn.on("GameOver", () => {
+      setIsGameOver(true);
+    });
+
+    conn.on("GameCopy", (gameCopy: GameDTO) => {
+      const board = [
+        gameCopy.board.slice(0, 5),
+        gameCopy.board.slice(5, 10),
+        gameCopy.board.slice(10, 15),
+      ];
+
+      const game: Game = {
+        laneScores: gameCopy.laneScores,
+        board,
+      };
+
+      setGameStatePreview(game);
+    });
+
+    conn.on("GameState", (gameState: GameDTO) => {
+      const board = [
+        gameState.board.slice(0, 5),
+        gameState.board.slice(5, 10),
+        gameState.board.slice(10, 15),
+      ];
+
+      const game: Game = {
+        laneScores: gameState.laneScores,
+        board,
+      };
+
+      setGameState(game);
     });
   };
 
@@ -184,6 +239,34 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  const playCard = async (
+    gameId: string,
+    cardIndex: number,
+    row: number,
+    col: number
+  ) => {
+    if (connection) {
+      connection.invoke("PlaceCard", gameId, cardIndex, row, col);
+    }
+  };
+
+  const skipTurn = async (gameId: string) => {
+    if (connection) connection.invoke("SkipTurn", gameId);
+  };
+
+  const previewPlay = async (
+    gameId: string,
+    cardIndex: number,
+    row: number,
+    col: number
+  ) => {
+    if (connection) {
+      connection.invoke("PreviewMove", gameId, cardIndex, row, col);
+    }
+  };
+
+  const cancelPreview = () => setGameStatePreview(null);
+
   return (
     <SignalRContext.Provider
       value={{
@@ -196,6 +279,10 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
         sendMessage,
         getHand,
         mulliganCards,
+        playCard,
+        previewPlay,
+        cancelPreview,
+        skipTurn,
         gameCode,
         currPlayer,
         players,
@@ -204,6 +291,9 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
         hand,
         mulliganPhaseEnded,
         playing,
+        gameState,
+        gameStatePreview,
+        isGameOver,
       }}
     >
       {children}

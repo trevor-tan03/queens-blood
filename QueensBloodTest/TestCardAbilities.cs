@@ -104,14 +104,6 @@ namespace QueensBloodTest
             Assert.Equal(1, game.Player1Grid[0, 0].GetCumulativePower());
         }
 
-        // Used to place cards in "illegal" places and ignore abilities for more efficient testing
-        private void ForcePlace(Game game, Cards cardEnum, Player owner, int row, int col)
-        {
-            var card = _cards[(int)cardEnum];
-            game.Player1Grid[row, col].Owner = owner;
-            game.Player1Grid[row, col].Card = card;
-        }
-
         [Fact]
         public void PlaceCardThatEnhanceWhenFirstPlayed()
         {
@@ -588,6 +580,65 @@ namespace QueensBloodTest
 
             // Two Face should have enfeebled capparwire, destroying it
             Assert.Null(game.Player1Grid[1, 0].Card);
+        }
+
+        [Fact]
+        public void TestCactuarEnhance()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Cactuar, 0, 0);
+            Assert.Equal(3, game.Player1Grid[2, 1].GetCumulativePower());
+        }
+
+        [Fact]
+        public void TestReplaceEnhancedCard()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
+
+            Assert.Equal(0, game.Player1Grid[0, 0].GetCumulativePower());
+            AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 1, 0);
+            Assert.Equal(0, game.Player1Grid[0, 0].GetCumulativePower());
+        }
+
+        [Fact]
+        public void TrackEnhancedCardsCorrectly()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Cactuar, 0, 0); // Enhance Security Officer
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0); // Enhance Cactuar
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0); // Enhance previously placed Crystalline Crab
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 2, 1);
+            AddToHandAndPlaceCard(game, Cards.ChocoboMoogle, 1, 1);
+
+            Assert.Equal(3, game.EnhancedCards.Count);
+        }
+
+        [Fact]
+        public void ChocoboMoogleEnhancesCorrectlyWhenPlacedBeforeEnhancements()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Cactuar, 0, 0); // Enhance Grasslands Wolf
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.ChocoboMoogle, 1, 1);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0); // Enhance Security Officer
+            AddToHandAndPlaceCard(game, Cards.GrasslandsWolf, 2, 1);
+
+            Assert.Equal(2, game.EnhancedCards.Count);
+            Assert.Equal(2, game.Player1Grid[1, 1].SelfBonusPower);
         }
     }
 }

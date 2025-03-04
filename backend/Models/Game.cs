@@ -17,6 +17,7 @@ namespace backend.Models
 		public List<Tile> EnhancedCards { get; set; } = new List<Tile>();
 		public List<Tile> EnfeebledCards { get; set; } = new List<Tile>();
 		private int _consecutivePasses { get; set; } = 0;
+		public int _currentPlayerIndex = 0;
 
         // Events
         public event Action<Game, Tile[,], int, int> OnCardPlaced;
@@ -98,7 +99,8 @@ namespace backend.Models
 
 		private void PickStartingPlayer()
 		{
-			CurrentPlayer = Players[_random.Next(0,2)];
+			_currentPlayerIndex = _random.Next(0, 2);
+            CurrentPlayer = Players[_currentPlayerIndex];
 		}
 
 
@@ -142,7 +144,7 @@ namespace backend.Models
 		private bool CanPlaceCard(Card card, Tile tile)
 		{
 			var tileMeetsRankRequirement = tile.Rank >= card.Rank;
-			var playerOwnsTile = tile.Owner!.Id == CurrentPlayer!.Id;
+			var playerOwnsTile = tile.Owner?.Id == CurrentPlayer!.Id;
 			var tileOccupied = tile.Card != null;
 
             if (card.Ability.Action == "replace")
@@ -156,16 +158,29 @@ namespace backend.Models
 
 		public void SwapPlayerTurns()
 		{
-			CurrentPlayer = Players.Find(p => p.Id != CurrentPlayer!.Id);
+            CurrentPlayer = Players[_currentPlayerIndex];
 
-			if (++_consecutivePasses > 1)
-				EndGame();
-		}
+            if (CurrentPlayer == null)
+            {
+                throw new InvalidOperationException($"Current player is not set. {_currentPlayerIndex}");
+            }
 
-		public void ChangePower(Tile tile, int row, int col, int amount, bool isTilePowerBonus)
+			_currentPlayerIndex = (_currentPlayerIndex + 1) % 2;
+            CurrentPlayer = Players[_currentPlayerIndex];
+
+            if (_consecutivePasses == 2)
+                EndGame();
+        }
+
+        public void Pass()
+        {
+            _consecutivePasses++;
+            SwapPlayerTurns();
+        }
+
+        public void ChangePower(Player instigator, Tile tile, int row, int col, int amount, bool isTilePowerBonus)
 		{
-            var playerIndex = Players.IndexOf(CurrentPlayer!);
-            var grid = playerIndex == 0 ? Player1Grid : Player2Grid;
+            var grid = _currentPlayerIndex == 0 ? Player1Grid : Player2Grid;
 
 			if (isTilePowerBonus)
 				tile.TileBonusPower += amount;
@@ -183,13 +198,32 @@ namespace backend.Models
 				ActionQueue.Enqueue(() => OnCardEnfeebled?.Invoke(this, grid, row, col));
 
 				if (tile.Card != null && tile.GetCumulativePower() <= 0)
-					ActionQueue.Enqueue(() => DestroyCard(grid, row, col));
+				{
+                    ActionQueue.Enqueue(() => DestroyCard(instigator, row, col));
+                }
 			}
 		}
 
-		public void DestroyCard(Tile[,] grid, int row, int col)
+		public void EnqueueOnPowerChange(string type, Tile[,] grid, int row, int col)
 		{
-			OnCardDestroyed?.Invoke(this, grid, row, col);
+            /* Used to re-invoke event when it's already been considered
+             * e.g. Cactuar enhances tile while in play
+             *		Chocobo & Moogle will dismiss the enhanced empty tile
+             *		---
+             *		When you play a card, it should reinvoke the event so that 
+             *		Chocobo & Moogle updates its SelfBonusPower
+			 */
+            if (type == "enhance")
+                ActionQueue.Enqueue(() => OnCardEnhanced?.Invoke(this, grid, row, col));
+			else
+                ActionQueue.Enqueue(() => OnCardEnfeebled?.Invoke(this, grid, row, col));
+        }
+
+
+        public void DestroyCard(Player instigator, int row, int col)
+		{
+            var grid = _currentPlayerIndex == 0 ? Player1Grid : Player2Grid;
+            OnCardDestroyed?.Invoke(this, grid, row, col);
             grid[row, col].Card = null;
 
 			if (EnhancedCards.Contains(grid[row, col]))
@@ -200,6 +234,8 @@ namespace backend.Models
             // Reset card specifc power bonus when destroyed
             grid[row, col].CardBonusPower = 0;
 			grid[row, col].SelfBonusPower = 0;
+
+			grid[row, col].Owner = instigator;
 		}
 
 		private void CalculatePlayerScores()
@@ -214,9 +250,9 @@ namespace backend.Models
 					var tile = Player1Grid[row, col];
 					int tilePower = tile.GetCumulativePower();
 
-					if (tile.Owner == Players[0])
+					if (tile.Owner?.Id == Players[0].Id && tile.Card != null)
 						player1Score += tilePower;
-					else if (tile.Owner == Players[1])
+					else if (tile.Owner?.Id == Players[1].Id && tile.Card != null)
 						player2Score += tilePower;
 				}
 
@@ -269,11 +305,10 @@ namespace backend.Models
 			}
 		}
 
-		public void PlaceCard(int handIndex, int row, int col)
+		public bool PlaceCard(int handIndex, int row, int col)
 		{
-			var playerIndex = Players.FindIndex(p => p.Id == CurrentPlayer!.Id);
 			var card = CurrentPlayer!.Hand[handIndex];
-			var grid = playerIndex == 0 ? Player1Grid : Player2Grid;
+			var grid = _currentPlayerIndex == 0 ? Player1Grid : Player2Grid;
 			var tile = grid[row, col];
 
 			if (CanPlaceCard(card, tile))
@@ -282,7 +317,7 @@ namespace backend.Models
 
                 // Invoke card destroyed if replace card
                 if (card.Ability.Condition == "R")
-                    DestroyCard(grid, row, col);
+                    DestroyCard(CurrentPlayer, row, col);
 
                 tile.Card = card;
                 CurrentPlayer.Hand.RemoveAt(handIndex);
@@ -292,7 +327,10 @@ namespace backend.Models
 
 				CalculatePlayerScores();
 				ExecuteQueuedActions();
+				return true;
             }
+
+			return false;
 		}
 
 		public void EndGame()

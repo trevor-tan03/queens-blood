@@ -13,29 +13,33 @@ interface Props {
 
 const MulliganCard = ({
   card,
+  isSelectedToMulligan,
+  handleClick,
   offsetX,
   offsetY,
   rotate,
-  isSelectedToMulligan,
-  handleClick,
 }: Props) => {
   const { setShownAbility } = useCardAbility();
 
   return (
-    <Card
-      card={card}
-      rotate={rotate}
-      offsetX={offsetX}
-      offsetY={offsetY}
-      className="card"
-      onClick={handleClick}
-      onMouseOver={() => setShownAbility(card.ability)}
-      onMouseLeave={() => setShownAbility("")}
+    <div
+      className="origin-center absolute w-[140px]"
+      style={{
+        transform: `translate(${offsetX}px, ${offsetY}px) rotateZ(${rotate}deg)`,
+      }}
     >
-      {isSelectedToMulligan ? (
-        <div className="absolute top-0 right-0 z-[99] w-full h-full bg-black opacity-80 pointer-events-none card-overlay"></div>
-      ) : null}
-    </Card>
+      <Card
+        card={card}
+        className="card relative"
+        onClick={handleClick}
+        onMouseOver={() => setShownAbility(card.ability)}
+        onMouseLeave={() => setShownAbility("")}
+      >
+        {isSelectedToMulligan ? (
+          <div className="absolute top-0 right-0 z-[99] w-full h-full bg-black opacity-80 pointer-events-none card-overlay"></div>
+        ) : null}
+      </Card>
+    </div>
   );
 };
 

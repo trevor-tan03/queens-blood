@@ -1,41 +1,80 @@
-import { DndContext, DragEndEvent } from "@dnd-kit/core";
+import { DndContext, DragEndEvent, DragOverEvent } from "@dnd-kit/core";
+import { useEffect } from "react";
 import { useSignalR } from "../../../SignalR/SignalRProvider";
-import Droppable from "../../dnd-kit/Droppable";
 import { useCardAbility } from "../CardAbilityContext";
 import CardsInHand from "../Hand";
-import { useBoardContext } from "./BoardContext";
-import BoardTile from "./BoardTile";
+import Board from "./Board";
+import { CompatibleCardsProvider } from "./LegalTilesContext";
 
 const GameScreen = () => {
-  const { hand } = useSignalR();
+  const {
+    gameCode,
+    hand,
+    playCard,
+    playing,
+    currPlayer,
+    skipTurn,
+    previewPlay,
+    cancelPreview,
+  } = useSignalR();
+
   const { shownAbility } = useCardAbility();
-  const { setChild } = useBoardContext();
+
+  useEffect(() => {
+    document.addEventListener("mouseup", () => cancelPreview());
+    return () => document.removeEventListener("mouseup", () => cancelPreview());
+  }, [cancelPreview]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    console.log(active);
-    console.log(over);
 
     if (over) {
-      setChild(active.id);
+      const cardId = parseInt(active.id.toString().slice(5));
+      const [row, col] = over.id.toString().split(",");
+      playCard(gameCode, cardId, parseInt(row), parseInt(col));
+    }
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+
+    if (over) {
+      const cardId = parseInt(active.id.toString().slice(5));
+      const [row, col] = over.id.toString().split(",");
+      previewPlay(gameCode, cardId, parseInt(row), parseInt(col));
     }
   };
 
   return (
-    <DndContext onDragEnd={(event) => handleDragEnd(event)}>
-      <div>
-        <div className="relative">
-          <CardsInHand hand={hand} />
-        </div>
+    <DndContext
+      onDragEnd={(event) => handleDragEnd(event)}
+      onDragOver={(event) => handleDragOver(event)}
+      onDragCancel={() => {
+        cancelPreview();
+      }}
+    >
+      <CompatibleCardsProvider>
+        <div className="grid place-items-center">
+          <div className="relative">
+            <CardsInHand hand={hand} />
+          </div>
 
-        <Droppable id="droppable">
-          <BoardTile />
-        </Droppable>
+          <Board />
 
-        <div className="absolute bottom-[1rem] left-[1rem] text-2xl">
-          {shownAbility}
+          {currPlayer?.id === playing && (
+            <button
+              className="z-50 cursor-pointer absolute right-0 bottom-[6rem]"
+              onClick={() => skipTurn(gameCode)}
+            >
+              Pass
+            </button>
+          )}
+
+          <div className="absolute bottom-[1rem] left-[1rem] text-2xl pointer-events-none">
+            {shownAbility}
+          </div>
         </div>
-      </div>
+      </CompatibleCardsProvider>
     </DndContext>
   );
 };

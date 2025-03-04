@@ -3,6 +3,7 @@ using backend;
 using backend.Models;
 using backend.Repositories;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Logging;
 
 namespace QueensBloodTest
 {
@@ -62,21 +63,21 @@ namespace QueensBloodTest
         [Fact]
         public void InitializeCardRangeCorrectly()
         {
-            var redXIII = _cards[(int) Cards.RedXIII];
+            var redXIII = _cards[(int)Cards.RedXIII];
             Assert.Equal(10, redXIII.Range.Count);
             var expectedRedXIIIRanges = new List<RangeCell>()
-            {
-                new RangeCell() { Colour = "R", Offset = (-2,-2) },
-                new RangeCell() { Colour = "R", Offset = (-2,0) },
-                new RangeCell() { Colour = "R", Offset = (-2,2) },
-                new RangeCell() { Colour = "O", Offset = (0,-1) },
-                new RangeCell() { Colour = "R", Offset = (0,-2) },
-                new RangeCell() { Colour = "R", Offset = (0,2) },
-                new RangeCell() { Colour = "O", Offset = (1,0) },
-                new RangeCell() { Colour = "R", Offset = (2,-2) },
-                new RangeCell() { Colour = "R", Offset = (2,0) },
-                new RangeCell() { Colour = "R", Offset = (2,2) },
-            };
+                {
+                    new RangeCell() { Colour = "R", Offset = (-2,-2) },
+                    new RangeCell() { Colour = "R", Offset = (-2,0) },
+                    new RangeCell() { Colour = "R", Offset = (-2,2) },
+                    new RangeCell() { Colour = "O", Offset = (0,-1) },
+                    new RangeCell() { Colour = "R", Offset = (0,-2) },
+                    new RangeCell() { Colour = "R", Offset = (0,2) },
+                    new RangeCell() { Colour = "O", Offset = (1,0) },
+                    new RangeCell() { Colour = "R", Offset = (2,-2) },
+                    new RangeCell() { Colour = "R", Offset = (2,0) },
+                    new RangeCell() { Colour = "R", Offset = (2,2) },
+                };
 
             for (int i = 0; i < 10; i++)
             {
@@ -115,7 +116,7 @@ namespace QueensBloodTest
 
             AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0);
             AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0);
-            
+
             Assert.Equal(3, game.Players[0].Scores[0].score);
             Assert.Equal(1, game.Players[0].Scores[1].score);
         }
@@ -154,8 +155,15 @@ namespace QueensBloodTest
             game.Start();
             Assert.False(game.GameOver);
 
+            // Non-consecutive pass
+            game.Pass(); // P1 - pass
+            game.PlaceCard(0, 0, 0); // P2 - play
             game.SwapPlayerTurns();
-            game.SwapPlayerTurns();
+            Assert.False(game.GameOver);
+
+            // Consecutive passes
+            game.Pass();
+            game.Pass();
             Assert.True(game.GameOver);
         }
 
@@ -170,6 +178,21 @@ namespace QueensBloodTest
             game.CurrentPlayer.PickUp(1);
             Assert.Equal(6, game.CurrentPlayer!.Hand.Count);
             Assert.Equal(9, game.CurrentPlayer!.Deck.Count);
+        }
+
+        [Fact]
+        public void GiveTileOwnershipToDestroyerOfCard()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            ForcePlace(game, Cards.SecurityOfficer, game.Players[1], 0, 0);
+            Assert.Equal(game.Players[1], game.Player1Grid[0, 0].Owner);
+
+            AddToHandAndPlaceCard(game, Cards.Capparwire, 1, 0);
+            Assert.Null(game.Player1Grid[0, 0].Card);
+            Assert.Equal(game.Players[0], game.Player1Grid[0, 0].Owner);
         }
     }
 }

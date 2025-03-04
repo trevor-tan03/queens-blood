@@ -19,3 +19,9 @@ export enum Action {
   Spawn = "spawn",
   ScoreBonus = "+Score",
 }
+
+export type CardDTO = {
+  name: string;
+  image: string;
+  ability: string;
+};

@@ -3,10 +3,11 @@ using backend.Repositories;
 using Microsoft.AspNetCore.SignalR;
 using HashidsNet;
 using backend.Utility;
+using backend.DTO;
 
 namespace backend.Hubs
 {
-	public class GameHub : Hub
+    public class GameHub : Hub
 	{
 		private IGameRepository _gameRepository;
 		private ICardRepository _cardRepository;
@@ -111,6 +112,12 @@ namespace backend.Hubs
 			}
 		}
 
+		private void ShowGameBoard(Game game)
+		{
+            Clients.Client(game.Players[0].Id).SendAsync("gameState", DTOConverter.GetGameDTO(game, 0));
+            Clients.Client(game.Players[1].Id).SendAsync("gameState", DTOConverter.GetGameDTO(game, 1));
+        }
+
 		public async Task ToggleReady(string gameId, bool isReadyUp, List<int> cardIds)
 		{
 			var (game, player) = await FetchGameAndPlayer(gameId);
@@ -137,6 +144,7 @@ namespace backend.Hubs
 						// Update the player's screens
 						await Clients.Group(gameId).SendAsync("GameStart", true);
 						await Clients.Group(gameId).SendAsync("Playing", game.CurrentPlayer!.Id);
+						ShowGameBoard(game);
 					}
                 }
 				else if (!isReadyUp)
@@ -197,10 +205,48 @@ namespace backend.Hubs
 			if (game.CurrentPlayer != player) return; // Check if player can move or not
 
 			var gameCopy = Copy.DeepCopy(game);
-			game.PlaceCard(cardIndex, row, col);
+            gameCopy.PlaceCard(cardIndex, row, col);
+			var playerIndex = game.Players.IndexOf(player);
 
-            await Clients.Client(Context.ConnectionId).SendAsync($"gameCopy", gameCopy);
+            await Clients.Client(Context.ConnectionId).SendAsync("GameCopy", DTOConverter.GetGameDTO(gameCopy, playerIndex));
         }
 
+		public async Task PlaceCard(string gameId, int cardIndex, int row, int col)
+		{
+            var (game, player) = await FetchGameAndPlayer(gameId);
+
+            if (game == null || player == null) return;
+            if (game.CurrentPlayer != player) return; // Check if player can move or not
+
+            var success = game.PlaceCard(cardIndex, row, col);
+			if (success)
+			{
+                player.PickUp(1);
+				game.SwapPlayerTurns();
+            }
+
+			ShowGameBoard(game);
+
+            await Clients.Client(Context.ConnectionId).SendAsync("CardsInHand", DTOConverter.GetCardDTOList(player.Hand));
+            await Clients.Group(gameId).SendAsync("Playing", game.CurrentPlayer.Id);
+        }
+
+		public async Task SkipTurn(string gameId)
+		{
+            var (game, player) = await FetchGameAndPlayer(gameId);
+
+            if (game == null || player == null) return;
+            if (game.CurrentPlayer != player) return; // Check if player can move or not
+
+            player.PickUp(1);
+            game.Pass();
+			var currPlayer = game.CurrentPlayer;
+
+            if (game.GameOver)
+				await Clients.Group(gameId).SendAsync("GameOver");
+
+            await Clients.Client(Context.ConnectionId).SendAsync("CardsInHand", DTOConverter.GetCardDTOList(player.Hand));
+            await Clients.Group(gameId).SendAsync("Playing", currPlayer != null ? currPlayer.Id : null);
+        }
 	}
 }

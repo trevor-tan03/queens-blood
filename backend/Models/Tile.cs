@@ -82,12 +82,11 @@ namespace backend.Models
             var target = Card!.Ability.Target;
             var condition = Card!.Ability.Condition;
 
-            return ((target == "a" && tile.Owner == Owner) ||
+            return condition == "*" || 
+                (target == "a" && tile.Owner == Owner) ||
                 (target == "e" && tile.Owner != Owner) ||
-                target == "ae")
-                &&
-                // If card doesn't have "While in play" (*) condition, don't target empty tiles
-                (tile.Card != null || Card!.Ability.Condition == "*");
+                target == "ae" 
+                && tile.Card != null;
         }
 
         private void HandleTargetingAbilties(Tile tile, Game game, int row, int col)
@@ -109,13 +108,13 @@ namespace backend.Models
 
             if (abilityValue != null)
             {
-                game.ChangePower(tile, row, col, (int) abilityValue * operation, isTilePowerBonus);
+                game.ChangePower(Owner, tile, row, col, (int) abilityValue * operation, isTilePowerBonus);
             }
             else if (abilityAction == "destroy")
             {
                 var currPlayerIndex = game.Players.FindIndex(p => p == Owner);
                 var grid = currPlayerIndex == 0 ? game.Player1Grid : game.Player2Grid;
-                game.DestroyCard(grid, row, col);
+                game.DestroyCard(Owner, row, col);
             }
         }
 
@@ -294,6 +293,12 @@ namespace backend.Models
 
             if (action == "add" || action == "spawn" || action == "+Score")
                 ExecuteAbility(game, grid, row, col);
+
+            //
+            if (game.EnhancedCards.Contains(this))
+                game.EnqueueOnPowerChange("enhance", grid, row, col);
+            else if (game.EnfeebledCards.Contains(this))
+                game.EnqueueOnPowerChange("enfeeble", grid, row, col);
         }
 
         private void HandleCardDestroyed(Game game, Tile[,] grid, int row, int col)
@@ -321,12 +326,16 @@ namespace backend.Models
                 Card!.Ability.Condition == "ED" && grid[row, col].Owner != Owner ||
                 Card!.Ability.Condition == "AED")
                 SelfBonusPower += (int) Card!.Ability.Value!;
-
-            UninitAbility(game, grid, row, col);
+            
+            if (this == grid[row, col])
+                UninitAbility(game, grid, row, col);
         }
 
         private void HandleCardEnhanced(Game game, Tile[,] grid, int row, int col)
         {
+            var triggerCondition = Card!.Ability.Condition;
+            var target = Card!.Ability.Target;
+
             // Handle self-enhancing ability
             if (Card!.Ability.Target == "s")
             {
@@ -339,12 +348,16 @@ namespace backend.Models
 
             // Unsubscribe so that the ability doesn't trigger again
             if (
-                Card!.Ability.Condition.Contains("1") || 
-                (Card!.Ability.Condition == "P1R" && GetCumulativePower() >= 7) ||
-                Card!.Ability.Condition == "EE")
+                triggerCondition.Contains("1") || 
+                (triggerCondition == "P1R" && GetCumulativePower() >= 7) ||
+                triggerCondition == "EE")
                 game.OnCardEnhanced -= HandleCardEnhanced;
-            if (Card!.Ability.Condition == "EE")
+            if (triggerCondition == "EE")
                 game.OnCardEnfeebled -= HandleCardEnfeebled;
+
+            // Cards that boost their own power when other cards are enhanced/enfeebled need to look at the board's status and update
+            if ((target == "s") && (triggerCondition.Contains("A") || triggerCondition.Contains("E")))
+                CalculateSelfBoostFromPowerModifiedCards(game, grid, row, col);
 
             // Handle targetting ability
             foreach (RangeCell rangeCell in Card!.Range)
