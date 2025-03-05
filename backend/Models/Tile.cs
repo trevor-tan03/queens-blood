@@ -144,7 +144,7 @@ namespace backend.Models
                 for (int j = 0; j < NUM_COLS; j++)
                 {
                     var tile = grid[i, j];
-                    if (tile.Card == null && tile.Owner == Owner)
+                    if (tile.Card == null && tile.Owner != null && tile.Owner?.Id == Owner?.Id)
                     {
                         var childIndex = tile.Rank - 1;
                         var childCard = Card!.Children[childIndex];

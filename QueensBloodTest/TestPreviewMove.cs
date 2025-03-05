@@ -42,5 +42,23 @@ namespace QueensBloodTest
             var tupleCopy = Copy.DeepCopy(tuple);
             Assert.Equal(tuple, tupleCopy);
         }
+
+        [Fact]
+        public void PreviewShowsCardsSpawned()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            // Ensure modifying the copy won't alter the original
+            var gameCopy = Copy.DeepCopy(game);
+            Assert.NotSame(game, gameCopy);
+
+            gameCopy.Player1Grid[0, 0].RankUp(2);
+            AddToHandAndPlaceCard(gameCopy, Cards.Shiva, 0, 0);
+
+            Assert.NotNull(gameCopy.Player1Grid[1, 0].Card);
+            Assert.NotNull(gameCopy.Player1Grid[2, 0].Card);
+        }
     }
 }
