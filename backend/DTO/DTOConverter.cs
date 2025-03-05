@@ -27,7 +27,7 @@ namespace backend.DTO
         public static TileDTO GetTileDTO(Tile tile)
         {
             var ownerId = tile.Owner?.Id;
-            var bonusPower = tile.TileBonusPower + tile.SelfBonusPower + tile.CardBonusPower;
+            var bonusPower = tile.GetCumulativePower() - (tile.Card != null ? tile.Card.Power : 0);
             var card = tile.Card != null ? GetSmallCardDTO(tile.Card) : null;
             return new TileDTO(ownerId, bonusPower, card, tile.Rank);
         }

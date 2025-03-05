@@ -15,6 +15,7 @@
 		public Boolean HasMulliganed { get; set; } = false;
 		public List<Card> Deck { get; set; } = new List<Card>();
 		public List<Card> Hand { get; set; } = new List<Card>();
+		public int playerIndex = -1;
 
 		public LaneScore[] Scores =
 		{

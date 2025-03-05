@@ -94,7 +94,7 @@ namespace QueensBloodTest
             game.PlaceCard(0, 1, 0);
 
             // Tile above should have its power enhanced by 2
-            Assert.Equal(2, game.Player1Grid[0, 0].TileBonusPower);
+            Assert.Equal(2, game.Player1Grid[0, 0].PlayerTileBonusPower[game.Players[0].playerIndex]);
 
             // When an allied security officer is placed, its cumulative power should be 3 (1+2)
             AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0);
@@ -265,7 +265,7 @@ namespace QueensBloodTest
             // Enhance player 2's (enemy) security officer using a Crystalline Crab
             game.SwapPlayerTurns();
             AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0);
-            Assert.Equal(2, game.Player2Grid[0, 0].TileBonusPower);
+            Assert.Equal(2, game.Player2Grid[0, 0].PlayerTileBonusPower[game.Players[1].playerIndex]);
 
             // Dio should've received its own power by 1
             Assert.Equal(1, game.Player1Grid[0, 0].SelfBonusPower);
@@ -273,7 +273,7 @@ namespace QueensBloodTest
             // Enhancing Player 1's (ally) security officer using a Crystalline Crab
             game.SwapPlayerTurns();
             AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
-            Assert.Equal(2, game.Player1Grid[1, 0].TileBonusPower);
+            Assert.Equal(2, game.Player1Grid[1, 0].PlayerTileBonusPower[game.Players[0].playerIndex]);
 
             // Dio should have raise its own power by 1 again
             Assert.Equal(2, game.Player1Grid[0, 0].SelfBonusPower);
@@ -590,8 +590,9 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
+            var p1 = game.Players[0].playerIndex;
             AddToHandAndPlaceCard(game, Cards.Cactuar, 0, 0);
-            Assert.Equal(3, game.Player1Grid[2, 1].GetCumulativePower());
+            Assert.Equal(3, game.Player1Grid[2, 1].PlayerTileBonusPower[p1]);
         }
 
         [Fact]
@@ -689,6 +690,27 @@ namespace QueensBloodTest
             // Ensure all of player 1's cards have been destroyed
             for (int i = 0; i < NUM_ROWS; i++)
                 Assert.Null(game.Player1Grid[i, 0].Card);
+        }
+
+        [Fact]
+        public void DontEnhanceOvertakenTilesIfOnlyEnhancesAlly()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0); // To be destroyed
+
+            game.SwapPlayerTurns();
+            game.Player1Grid[0, 1].Owner = game.Players[1];
+            AddToHandAndPlaceCard(game, Cards.Archdragon, 0, 3); // Destroy security officer
+
+            Assert.Equal(2, game.Player1Grid[0, 0].PlayerTileBonusPower[0]);
+            Assert.Equal(0, game.Player1Grid[0, 0].PlayerTileBonusPower[1]);
+
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 4);
+            Assert.Equal(1, game.Player1Grid[0, 0].GetCumulativePower());
         }
     }
 }

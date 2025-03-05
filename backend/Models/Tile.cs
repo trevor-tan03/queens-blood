@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Reflection;
+using System.Text.Json.Serialization;
 using Newtonsoft.Json.Bson;
 using static backend.Models.TileConstants;
 
@@ -9,7 +10,8 @@ namespace backend.Models
         public Player? Owner { get; set; }
         public int Rank { get; set; }
         public Card? Card { get; set; }
-        public int TileBonusPower { get; set; } = 0; // Bonus Power from other cards with the "While in play" (*) condition
+        // Bonus Power from other cards with the "While in play" (*) condition. Different for each player due to cards having different target for their abilities
+        public int[] PlayerTileBonusPower { get; set; } = new int[2];
         public int CardBonusPower {  get; set; } = 0; // Bonus Power that only affects the card on the tile, not the tile itself
         public int SelfBonusPower { get; set; } = 0; // Bonus Power from this card's ability
 
@@ -54,8 +56,9 @@ namespace backend.Models
 			 */
             var abilityCondition = Card!.Ability.Condition;
             var abilityAction = Card!.Ability.Action;
+            var target = Card!.Ability.Target;
 
-            if (abilityCondition == "*" && abilityAction != "L+V")
+            if (abilityCondition == "*" && abilityAction != "L+V" && target != null && Owner != null)
             {
                 var operation = Card!.Ability.Action!.Contains("+") ? 1 : -1;
 
@@ -68,7 +71,12 @@ namespace backend.Models
                     if (rangeCell.Colour.Contains("R") && isIndexInBounds && Card!.Ability.Value != null)
                     {
                         var tile = grid[dy, dx];
-                        tile.TileBonusPower -= (int)Card!.Ability.Value * operation;
+                        
+                        if (target.Contains("a"))
+                            tile.PlayerTileBonusPower[Owner.playerIndex] -= (int)Card!.Ability.Value * operation;
+                        if (target.Contains("e"))
+                            tile.PlayerTileBonusPower[(Owner.playerIndex + 1) % 2] -= (int)Card!.Ability.Value * operation;
+
                         if (tile.GetCumulativePower() <= 0)
                             game.DestroyCard(instigator, dy, dx);
                     }
@@ -115,7 +123,7 @@ namespace backend.Models
             {
                 game.ChangePower(Owner, tile, row, col, (int) abilityValue * operation, isTilePowerBonus);
             }
-            else if (abilityAction == "destroy")
+            else if (abilityAction == "destroy" && Owner != null)
             {
                 var currPlayerIndex = game.Players.FindIndex(p => p == Owner);
                 var grid = currPlayerIndex == 0 ? game.Player1Grid : game.Player2Grid;
@@ -422,7 +430,8 @@ namespace backend.Models
 
         public int GetCumulativePower()
         {
-            return (Card?.Power ?? 0) + TileBonusPower + CardBonusPower + SelfBonusPower;
+            var tileBonusPower = Owner != null ? PlayerTileBonusPower[Owner.playerIndex] : 0;
+            return (Card?.Power ?? 0) + tileBonusPower + CardBonusPower + SelfBonusPower;
         }
     }
 }
