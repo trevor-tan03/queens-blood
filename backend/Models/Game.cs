@@ -13,7 +13,8 @@ namespace backend.Models
         public Player? CurrentPlayer { get; set; }
         public Random _random { get; set; }
         public bool GameOver { get; set; }
-        private Queue<Action> ActionQueue { get; set; } = new Queue<Action>();
+        private Queue<Tile> TileActionQueue { get; set; } = new Queue<Tile>();
+        public Queue<Action> ActionQueue { get; set; } = new Queue<Action>();
         public List<Tile> EnhancedCards { get; set; } = new List<Tile>();
         public List<Tile> EnfeebledCards { get; set; } = new List<Tile>();
         private int _consecutivePasses { get; set; } = 0;
@@ -181,17 +182,35 @@ namespace backend.Models
             SwapPlayerTurns();
         }
 
-        public void ChangePower(Player? instigator, Tile tile, int row, int col, int amount, bool isTilePowerBonus)
+        public void ChangePower(Player instigator, Tile tile, int row, int col, int amount, bool isTilePowerBonus, string target)
         {
             var grid = _currentPlayerIndex == 0 ? Player1Grid : Player2Grid;
 
             if (isTilePowerBonus)
             {
+                var enemyIndex = (instigator.playerIndex + 1) % 2;
+
                 // Decide which player to give the bonus power to
-                var player = tile.Owner ?? instigator!;
-                tile.PlayerTileBonusPower[player.playerIndex] += amount;
+                switch (target)
+                {
+                    // Target the instigator's allies (a), enemies (e), or both (ae)
+                    case "a":
+                        tile.PlayerTileBonusPower[instigator.playerIndex] += amount;
+                        break;
+                    case "e":
+                        tile.PlayerTileBonusPower[enemyIndex] += amount;
+                        break;
+                    case "ae":
+                        tile.PlayerTileBonusPower[instigator.playerIndex] += amount;
+                        tile.PlayerTileBonusPower[enemyIndex] += amount;
+                        break;
+                    default:
+                        throw new Exception($"An error occurred when changing the power of tile ({row}, {col})");
+                }
+                
+                
             }
-            else
+            else if (tile.Card != null)
                 tile.CardBonusPower += amount;
 
             if (amount > 0)

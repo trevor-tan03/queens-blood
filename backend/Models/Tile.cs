@@ -96,8 +96,8 @@ namespace backend.Models
             var condition = Card!.Ability.Condition;
 
             return condition == "*" || 
-                (target == "a" && tile.Owner == Owner) ||
-                (target == "e" && tile.Owner != Owner) ||
+                (target == "a" && tile.Owner?.Id == Owner?.Id) ||
+                (target == "e" && tile.Owner?.Id != Owner?.Id) ||
                 target == "ae" 
                 && tile.Card != null;
         }
@@ -119,9 +119,9 @@ namespace backend.Models
 
             bool isTilePowerBonus = Card.Ability.Condition == "*";
 
-            if (abilityValue != null)
+            if (abilityValue != null && Owner != null)
             {
-                game.ChangePower(Owner, tile, row, col, (int) abilityValue * operation, isTilePowerBonus);
+                game.ChangePower(Owner, tile, row, col, (int) abilityValue * operation, isTilePowerBonus, Card.Ability.Target!);
             }
             else if (abilityAction == "destroy" && Owner != null)
             {
@@ -247,7 +247,7 @@ namespace backend.Models
             {
                 if (enhancedTile.Card == null) 
                     continue;
-                if (enhancedTile.Owner == Owner && triggerCondition!.Contains(modifier) && enhancedTile != this)
+                if (Owner != null && enhancedTile.Owner!.Id == Owner.Id && triggerCondition!.Contains(modifier) && enhancedTile != this)
                     alliesModified++;
                 if (enhancedTile.Owner != Owner && triggerCondition!.Contains(modifier) && enhancedTile != this)
                     enemiesModified++;
@@ -259,6 +259,16 @@ namespace backend.Models
                 SelfBonusPower = (int)Card!.Ability.Value! * enemiesModified;
             else if (triggerCondition == "+AE" || triggerCondition == "-AE")
                 SelfBonusPower = (int)Card!.Ability.Value! * (alliesModified + enemiesModified);
+        }
+
+        private bool AbilityExecutionThresholdMet(Game game)
+        {
+            if (Card!.Ability.Condition == "P1R" && GetCumulativePower() >= 7)
+            {
+                game.OnCardEnhanced -= HandleCardEnhanced;
+                return true;
+            }
+            return false;
         }
 
         private void HandleCardPlaced(Game game, Tile[,] grid, int row, int col)
@@ -286,10 +296,12 @@ namespace backend.Models
                     offsetTile.RankUp(rankUpAmount);
                 }
 
-                if (rangeCell.Colour.Contains("R") && isIndexInBounds && executeAbilityImmediately)
+                if (rangeCell.Colour.Contains("R") && isIndexInBounds && (executeAbilityImmediately || AbilityExecutionThresholdMet(game)))
                 {
                     ExecuteAbility(game, grid, dy, dx);
                 }
+
+
             }
 
             var target = Card!.Ability.Target;

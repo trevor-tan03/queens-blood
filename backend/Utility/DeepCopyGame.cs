@@ -11,10 +11,11 @@ namespace backend.Utility
             var json = JsonConvert.SerializeObject(obj);
             var copy = JsonConvert.DeserializeObject<T>(json);
 
-            if (typeof(T) == typeof(Game) && copy != null)
+            if (typeof(T) == typeof(Game) && copy != null && obj != null)
             {
                 var gameCopy = (Game)(object)copy;
                 gameCopy.Player2Grid = BoardUtility.MirrorBoard(gameCopy.Player1Grid);
+
                 return Cast<T>(gameCopy);
             }
 

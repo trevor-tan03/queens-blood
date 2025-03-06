@@ -194,5 +194,16 @@ namespace QueensBloodTest
             Assert.Null(game.Player1Grid[0, 0].Card);
             Assert.Equal(game.Players[0], game.Player1Grid[0, 0].Owner);
         }
+
+        [Fact]
+        public void DontIncludePointsInEmptyTile()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Cactuar, 0, 0);
+            Assert.Equal(0, game.GetPlayerLaneScore(0, 2));
+        }
     }
 }

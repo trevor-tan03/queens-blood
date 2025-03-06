@@ -526,7 +526,7 @@ namespace QueensBloodTest
         }
 
         [Fact]
-        public void TestAbilityTriggerOnceCardReachesPowerThreshold()
+        public void CloudAbilityTriggerOnceCardReachesPowerThreshold()
         {
             var game = CreateGameWithPlayers();
             game.Start();
@@ -547,6 +547,27 @@ namespace QueensBloodTest
             Assert.Equal(7, game.Player1Grid[1, 0].GetCumulativePower());
             Assert.Equal(3, game.Player1Grid[0, 0].GetCumulativePower());
             Assert.Equal(3, game.Player1Grid[2, 0].GetCumulativePower());
+        }
+
+        [Fact]
+        public void CloudAbilityTriggerWhenThresholdIsAlreadyMet()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            game.Player1Grid[1, 0].RankUp(1);
+            AddToHandAndPlaceCard(game, Cards.Aerith, 1, 0);
+
+            game.Player1Grid[2, 1].Owner = game.Players[0];
+            game.Player1Grid[2, 1].RankUp(2);
+            AddToHandAndPlaceCard(game, Cards.Shoalapod, 2, 1);
+
+            Assert.Equal(7, game.Player1Grid[1, 1].GetCumulativePower());
+            AddToHandAndPlaceCard(game, Cards.Cloud, 1, 1);
+
+            Assert.Equal(2, game.Player1Grid[1, 0].CardBonusPower);
+            Assert.Equal(2, game.Player1Grid[2, 1].CardBonusPower);
         }
 
         [Fact]
@@ -593,6 +614,21 @@ namespace QueensBloodTest
             var p1 = game.Players[0].playerIndex;
             AddToHandAndPlaceCard(game, Cards.Cactuar, 0, 0);
             Assert.Equal(3, game.Player1Grid[2, 1].PlayerTileBonusPower[p1]);
+        }
+
+        [Fact]
+        public void TestCactuarDontEnhanceEnemy()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            ForcePlace(game, Cards.SecurityOfficer, game.Players[1], 2, 1);
+
+            var p1 = game.Players[0].playerIndex;
+            AddToHandAndPlaceCard(game, Cards.Cactuar, 0, 0);
+            Assert.Equal(3, game.Player1Grid[2, 1].PlayerTileBonusPower[p1]);
+            Assert.Equal(0, game.Player1Grid[2, 1].PlayerTileBonusPower[game.Players[1].playerIndex]);
         }
 
         [Fact]
