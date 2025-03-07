@@ -175,7 +175,7 @@ namespace backend.Models
 
             bool isTilePowerBonus = Card.Ability.Condition == "*";
 
-            if (abilityAction!.Contains("P") && Owner != null)
+            if ((abilityAction == null || abilityAction!.Contains("P")) && Owner != null)
             {
                 abilityValue = Card!.Ability.Value == null ? game.PowerTransferQueue.Dequeue() : Card!.Ability.Value;
                 game.ChangePower(Owner, this, tile, row, col, (int) abilityValue * operation, isTilePowerBonus, Card.Ability.Target!);
@@ -433,9 +433,10 @@ namespace backend.Models
                 triggerCondition.Contains("1") || 
                 (triggerCondition == "P1R" && GetCumulativePower() >= 7) ||
                 triggerCondition == "EE")
+            {
                 game.OnCardEnhanced -= HandleCardEnhanced;
-            if (triggerCondition == "EE")
                 game.OnCardEnfeebled -= HandleCardEnfeebled;
+            }
 
             // Cards that boost their own power when other cards are enhanced/enfeebled need to look at the board's status and update
             if ((target == "s") && (triggerCondition.Contains("A") || triggerCondition.Contains("E")))
@@ -471,9 +472,10 @@ namespace backend.Models
 
             if (triggerCondition.Contains("1") ||
                 triggerCondition == "EE")
+            {
                 game.OnCardEnfeebled -= HandleCardEnfeebled;
-            if (triggerCondition == "EE")
                 game.OnCardEnhanced -= HandleCardEnhanced;
+            }
 
             // Cards that boost their own power when other cards are enhanced/enfeebled need to look at the board's status and update
             if ((target == "s") && (triggerCondition.Contains("A") || triggerCondition.Contains("E")))
