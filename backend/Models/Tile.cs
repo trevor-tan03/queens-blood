@@ -87,16 +87,13 @@ namespace backend.Models
             }
         }
 
-        private void Game_OnCardEnhanced(Game arg1, Tile[,] arg2, int arg3, int arg4)
-        {
-            throw new NotImplementedException();
-        }
-
         private void UninitAbility(Player instigator, Game game, Tile[,] grid, int row, int col)
         {
             // Unsubscribe the destroyed card from all events
             if (this == grid[row, col])
             {
+                _subscribedEvents.Clear();
+
                 game.OnCardPlaced -= HandleCardPlaced;
                 game.OnCardDestroyed -= HandleCardDestroyed;
                 game.OnCardEnhanced -= HandleCardEnhanced;
@@ -322,6 +319,7 @@ namespace backend.Models
         {
             if (Card!.Ability.Condition == "P1R" && GetCumulativePower() >= 7)
             {
+                _subscribedEvents.Remove("+P");
                 game.OnCardEnhanced -= HandleCardEnhanced;
                 return true;
             }
@@ -367,7 +365,10 @@ namespace backend.Models
 
             // If the card doesn't need to listen for other cards being placed, unsubscribe
             if (!OnPlaceConditions.Contains(triggerCondition))
+            {
+                _subscribedEvents.Remove("P");
                 game.OnCardPlaced -= HandleCardPlaced;
+            }
 
             // Cards that boost their own power when other cards are enhanced/enfeebled need to look at the board's status and update
             if ((target == "s") && (triggerCondition.Contains("A") || triggerCondition.Contains("E")))
@@ -434,6 +435,8 @@ namespace backend.Models
                 (triggerCondition == "P1R" && GetCumulativePower() >= 7) ||
                 triggerCondition == "EE")
             {
+                _subscribedEvents.Remove("+P");
+                _subscribedEvents.Remove("-P");
                 game.OnCardEnhanced -= HandleCardEnhanced;
                 game.OnCardEnfeebled -= HandleCardEnfeebled;
             }
@@ -473,6 +476,8 @@ namespace backend.Models
             if (triggerCondition.Contains("1") ||
                 triggerCondition == "EE")
             {
+                _subscribedEvents.Remove("+P");
+                _subscribedEvents.Remove("-P");
                 game.OnCardEnfeebled -= HandleCardEnfeebled;
                 game.OnCardEnhanced -= HandleCardEnhanced;
             }
