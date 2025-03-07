@@ -120,6 +120,23 @@ namespace QueensBloodTest
         }
 
         [Fact]
+        public void PreviewEnhancingCardTriggerSandhogPieAbility()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.SandhogPie, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 1);
+
+            var gameCopy = Copy.DeepCopy(game);
+            AddToHandAndPlaceCard(gameCopy, Cards.InsectoidChimera, 1, 0);
+            Assert.Equal(3, gameCopy.Player1Grid[0, 0].CardBonusPower);
+            Assert.Equal(3, gameCopy.Player1Grid[1, 1].CardBonusPower);
+        }
+
+        [Fact]
         public void PreviewEnhancingCardTriggerCloudsAbility()
         {
             var game = CreateGameWithPlayers();

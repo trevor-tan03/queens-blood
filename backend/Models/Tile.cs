@@ -14,6 +14,7 @@ namespace backend.Models
         public int[] PlayerTileBonusPower { get; set; } = new int[2];
         public int CardBonusPower {  get; set; } = 0; // Bonus Power that only affects the card on the tile, not the tile itself
         public int SelfBonusPower { get; set; } = 0; // Bonus Power from this card's ability
+        public List<string> _subscribedEvents = new List<string>();
 
         public void RankUp(int amount)
         {
@@ -25,17 +26,70 @@ namespace backend.Models
             game.OnCardPlaced += HandleCardPlaced;
 
             if (OnPlaceConditions.Contains(Card!.Ability.Condition))
+            {
+                _subscribedEvents.Add("P");
                 game.OnCardPlaced += HandleAnotherCardPlaced;
+            }
             else if (OnDestroyConditions.Contains(Card!.Ability.Condition))
+            {
+                _subscribedEvents.Add("D");
                 game.OnCardDestroyed += HandleCardDestroyed;
+            }
             else if (OnEnhanceConditions.Contains(Card!.Ability.Condition))
+            {
+                _subscribedEvents.Add("+P");
                 game.OnCardEnhanced += HandleCardEnhanced;
+            }
 
             if (OnEnfeebleConditions.Contains(Card!.Ability.Condition))
+            {
+                _subscribedEvents.Add("-P");
                 game.OnCardEnfeebled += HandleCardEnfeebled;
+            }
 
             if (OnGameEndCondition == Card!.Ability.Action)
+            {
+                _subscribedEvents.Add("L+V");
                 game.OnGameEnd += HandleAddLaneLoserScoreToVictor;
+            }
+        }
+
+        public void ReInitAbilities(Game game)
+        {
+            game.OnCardPlaced -= HandleCardPlaced;
+            game.OnCardDestroyed -= HandleCardDestroyed;
+            game.OnCardEnhanced -= HandleCardEnhanced;
+            game.OnCardEnfeebled -= HandleCardEnfeebled;
+            game.OnGameEnd -= HandleAddLaneLoserScoreToVictor;
+
+            foreach (var subscribedEvent in _subscribedEvents)
+            {
+                switch (subscribedEvent)
+                {
+                    case "P":
+                        game.OnCardPlaced += HandleAnotherCardPlaced;
+                        break;
+                    case "D":
+                        game.OnCardDestroyed += HandleCardDestroyed;
+                        break;
+                    case "+P":
+                        game.OnCardEnhanced += HandleCardEnhanced;
+                        break;
+                    case "-P":
+                        game.OnCardEnfeebled += HandleCardEnfeebled;
+                        break;
+                    case "L+V":
+                        game.OnGameEnd += HandleAddLaneLoserScoreToVictor;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        private void Game_OnCardEnhanced(Game arg1, Tile[,] arg2, int arg3, int arg4)
+        {
+            throw new NotImplementedException();
         }
 
         private void UninitAbility(Player instigator, Game game, Tile[,] grid, int row, int col)
@@ -48,6 +102,8 @@ namespace backend.Models
                 game.OnCardEnhanced -= HandleCardEnhanced;
                 game.OnCardEnfeebled -= HandleCardEnfeebled;
                 game.OnGameEnd -= HandleAddLaneLoserScoreToVictor;
+
+                _subscribedEvents.Clear();
             }
 
             /*

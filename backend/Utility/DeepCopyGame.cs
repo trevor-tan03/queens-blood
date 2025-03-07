@@ -15,6 +15,7 @@ namespace backend.Utility
             {
                 var gameCopy = (Game)(object)copy;
                 gameCopy.Player2Grid = BoardUtility.MirrorBoard(gameCopy.Player1Grid);
+                BoardUtility.ReInitTiles(gameCopy);
 
                 return Cast<T>(gameCopy);
             }

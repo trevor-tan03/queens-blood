@@ -21,5 +21,17 @@ namespace backend.Utility
 
             return mirroredBoard;
         }
+
+        public static void ReInitTiles(Game game)
+        {
+            for (int i = 0; i < NUM_ROWS; i++)
+            {
+                for (int j = 0; j < NUM_COLS; j++)
+                {
+                    if (game.Player1Grid[i, j].Card != null)
+                        game.Player1Grid[i, j].ReInitAbilities(game);
+                }
+            }
+        }
     }
 }
