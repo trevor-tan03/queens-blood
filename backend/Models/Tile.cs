@@ -78,7 +78,7 @@ namespace backend.Models
                             tile.PlayerTileBonusPower[(Owner.playerIndex + 1) % 2] -= (int)Card!.Ability.Value * operation;
 
                         if (tile.GetCumulativePower() <= 0)
-                            game.DestroyCard(instigator, dy, dx);
+                            game.DestroyCard(instigator, dy, dx, false);
                     }
                 }
             }
@@ -119,15 +119,16 @@ namespace backend.Models
 
             bool isTilePowerBonus = Card.Ability.Condition == "*";
 
-            if (abilityValue != null && Owner != null)
+            if (abilityAction!.Contains("P") && Owner != null)
             {
-                game.ChangePower(Owner, tile, row, col, (int) abilityValue * operation, isTilePowerBonus, Card.Ability.Target!);
+                abilityValue = Card!.Ability.Value == null ? game.PowerTransferQueue.Dequeue() : Card!.Ability.Value;
+                game.ChangePower(Owner, this, tile, row, col, (int) abilityValue * operation, isTilePowerBonus, Card.Ability.Target!);
             }
             else if (abilityAction == "destroy" && Owner != null)
             {
                 var currPlayerIndex = game.Players.FindIndex(p => p == Owner);
                 var grid = currPlayerIndex == 0 ? game.Player1Grid : game.Player2Grid;
-                game.DestroyCard(Owner, row, col);
+                game.DestroyCard(Owner, row, col, false);
             }
         }
 
@@ -278,7 +279,7 @@ namespace backend.Models
              * - Rank up
              * - Change owner
              */
-            var executeAbilityImmediately = Card!.Ability.Condition == "P" || Card!.Ability.Condition == "*";
+            var executeAbilityImmediately = Card!.Ability.Condition == "P" || Card!.Ability.Condition == "*" || Card!.Ability.Condition == "R";
             var rankUpAmount = Card!.RankUpAmount;
 
             foreach (RangeCell rangeCell in Card!.Range)

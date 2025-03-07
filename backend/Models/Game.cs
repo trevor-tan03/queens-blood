@@ -19,6 +19,7 @@ namespace backend.Models
         public List<Tile> EnfeebledCards { get; set; } = new List<Tile>();
         private int _consecutivePasses { get; set; } = 0;
         public int _currentPlayerIndex = 0;
+        public Queue<int> PowerTransferQueue { get; set; } = new Queue<int>();
 
         // Events
         public event Action<Game, Tile[,], int, int> OnCardPlaced;
@@ -151,7 +152,7 @@ namespace backend.Models
             var playerOwnsTile = tile.Owner?.Id == CurrentPlayer!.Id;
             var tileOccupied = tile.Card != null;
 
-            if (card.Ability.Action == "replace")
+            if (card.Ability.Condition == "R")
             {
                 // Replace cards can only be placed on occupied tiles, regardless of rank
                 return playerOwnsTile && tileOccupied;
@@ -182,7 +183,7 @@ namespace backend.Models
             SwapPlayerTurns();
         }
 
-        public void ChangePower(Player instigator, Tile tile, int row, int col, int amount, bool isTilePowerBonus, string target)
+        public void ChangePower(Player instigator, Tile instigatorTile, Tile tile, int row, int col, int amount, bool isTilePowerBonus, string target)
         {
             var grid = _currentPlayerIndex == 0 ? Player1Grid : Player2Grid;
 
@@ -225,7 +226,7 @@ namespace backend.Models
 
                 if (tile.Card != null && instigator != null && tile.GetCumulativePower() <= 0)
                 {
-                    ActionQueue.Enqueue(() => DestroyCard(instigator, row, col));
+                    ActionQueue.Enqueue(() => DestroyCard(instigator, row, col, false));
                 }
             }
         }
@@ -246,10 +247,12 @@ namespace backend.Models
         }
 
 
-        public void DestroyCard(Player instigator, int row, int col)
+        public void DestroyCard(Player instigator, int row, int col, bool isTransferPower)
         {
             var grid = _currentPlayerIndex == 0 ? Player1Grid : Player2Grid;
             OnCardDestroyed?.Invoke(instigator, this, grid, row, col);
+
+            int cumulativePower = grid[row, col].GetCumulativePower();
             grid[row, col].Card = null;
 
             if (EnhancedCards.Contains(grid[row, col]))
@@ -258,8 +261,13 @@ namespace backend.Models
                 EnfeebledCards.Remove(grid[row, col]);
 
             // Reset card specifc power bonus when destroyed
-            grid[row, col].CardBonusPower = 0;
-            grid[row, col].SelfBonusPower = 0;
+            if (!isTransferPower)
+            {
+                grid[row, col].CardBonusPower = 0;
+                grid[row, col].SelfBonusPower = 0;
+            } else
+                // For cards that transfer power (e.g. Griffon, Gi Specter, etc.)
+                PowerTransferQueue.Enqueue(cumulativePower);
 
             grid[row, col].Owner = instigator;
         }
@@ -343,7 +351,10 @@ namespace backend.Models
 
                 // Invoke card destroyed if replace card
                 if (card.Ability.Condition == "R")
-                    DestroyCard(CurrentPlayer, row, col);
+                {
+                    var isTransferPower = card.Ability.Value == null && card.Ability.Action != "replace";
+                    DestroyCard(CurrentPlayer, row, col, isTransferPower);
+                }
 
                 tile.Card = card;
                 CurrentPlayer.Hand.RemoveAt(handIndex);

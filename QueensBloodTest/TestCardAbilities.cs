@@ -748,5 +748,51 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 4);
             Assert.Equal(1, game.Player1Grid[0, 0].GetCumulativePower());
         }
+
+        [Fact]
+        public void GriffonReplaceAndEnhanceByReplacedCardsPower()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            ForcePlace(game, Cards.SecurityOfficer, game.Players[0], 0, 1);
+            Assert.Equal(1, game.Player1Grid[0, 1].GetCumulativePower());
+
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
+            Assert.Equal(3, game.Player1Grid[1, 0].GetCumulativePower());
+
+            AddToHandAndPlaceCard(game, Cards.Griffon, 1, 0);
+            Assert.Equal(4, game.Player1Grid[0, 1].GetCumulativePower());
+        }
+
+        [Fact]
+        public void GiSpecterReplaceAndEnfeebleByReplacedCardPower()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.Archdragon, 2, 1);
+            
+            // Replace Security Officer and enfeeble by the Security Officer's power (3)
+            AddToHandAndPlaceCard(game, Cards.GiSpecter, 1, 0);
+            Assert.Null(game.Player1Grid[2, 1].Card);
+        }
+
+        [Fact]
+        public void OnlyAddToPowerTransferQueueForReplaceTargettingCardsWithNoValue()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 1, 0);
+            Assert.Empty(game.PowerTransferQueue);
+        }
     }
 }
