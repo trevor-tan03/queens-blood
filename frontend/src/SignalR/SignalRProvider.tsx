@@ -117,6 +117,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
 
       const game: Game = {
         laneScores: gameCopy.laneScores,
+        laneBonuses: gameCopy.laneBonuses,
         board,
       };
 
@@ -132,6 +133,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
 
       const game: Game = {
         laneScores: gameState.laneScores,
+        laneBonuses: gameState.laneBonuses,
         board,
       };
 

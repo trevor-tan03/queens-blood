@@ -38,6 +38,7 @@ namespace backend.DTO
             var grid = playerIndex == 0 ? game.Player1Grid : game.Player2Grid;
 
             var laneScores = new int[6];
+            var laneBonuses = new int[6];
             var board = new TileDTO[15];
 
             var count = 0;
@@ -47,7 +48,10 @@ namespace backend.DTO
                 for (int j = 0; j < NUM_ROWS; j++)
                 {
                     var laneScore = game.GetPlayerLaneScore(index, j); // (playerIndex, row)
-                    laneScores[count++] = laneScore;
+                    laneScores[count] = laneScore;
+
+                    var laneBonus = game.GetPlayerLaneBonus(index, j);
+                    laneBonuses[count++] = laneBonus;
                 }
             }
 
@@ -56,7 +60,7 @@ namespace backend.DTO
                 for (int j = 0; j < NUM_COLS; j++)
                     board[count++] = GetTileDTO(grid[i, j]);
 
-            return new GameDTO(laneScores, board);
+            return new GameDTO(laneScores, laneBonuses, board);
         }
     }
 }

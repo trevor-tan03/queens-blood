@@ -330,6 +330,11 @@ namespace backend.Models
             return Players[playerIndex].Scores[row].score;
         }
 
+        public int GetPlayerLaneBonus(int playerIndex, int row)
+        {
+            return Players[playerIndex].Scores[row].winBonus;
+        }
+
         private void ExecuteQueuedActions()
         {
             while (ActionQueue.Count > 0)

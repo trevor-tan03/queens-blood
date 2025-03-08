@@ -1,22 +1,14 @@
-import { useEffect } from "react";
 import { useSignalR } from "../../../SignalR/SignalRProvider";
 import Droppable from "../../dnd-kit/Droppable";
 import BoardTile from "./BoardTile";
 
 const Board = () => {
   const { gameState, gameStatePreview } = useSignalR();
-
-  useEffect(() => {
-    console.log(gameStatePreview);
-  }, [gameStatePreview]);
-
-  // REMOVE WHEN DONE!!!
-  useEffect(() => {
-    console.log(gameState?.laneScores);
-  }, [gameState?.laneScores]);
+  const NUM_ROWS = 3;
 
   if (!gameState) return null;
-  const { board, laneScores } = gameStatePreview ?? gameState;
+  const { board, laneScores, laneBonuses } = gameStatePreview ?? gameState;
+  console.log(laneBonuses);
 
   const renderBoard = () => {
     return (
@@ -41,7 +33,9 @@ const Board = () => {
         })}
 
         {laneScores.map((score, index) => {
-          const row = index % 3;
+          const row = index % NUM_ROWS;
+          const enemyRow = (index + 3) % laneScores.length;
+
           return (
             <div
               key={`score-${index}`}
@@ -52,6 +46,17 @@ const Board = () => {
               }}
             >
               {score}
+              {laneBonuses[index] > 0 && (
+                <span
+                  className={`${
+                    laneScores[index] > laneScores[enemyRow]
+                      ? ""
+                      : "text-gray-300"
+                  }`}
+                >
+                  (+{laneBonuses[index]})
+                </span>
+              )}
             </div>
           );
         })}
