@@ -8,7 +8,6 @@ const Board = () => {
 
   if (!gameState) return null;
   const { board, laneScores, laneBonuses } = gameStatePreview ?? gameState;
-  console.log(laneBonuses);
 
   const renderBoard = () => {
     return (

@@ -176,5 +176,17 @@ namespace QueensBloodTest
             foreach (var tile in surroundingTiles)
                 Assert.Equal(2, tile.CardBonusPower);
         }
+
+        [Fact]
+        public void PreviewWinLaneBonus()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            var gameCopy = Copy.DeepCopy(game);
+            AddToHandAndPlaceCard(gameCopy, Cards.Tifa, 0, 0);
+            Assert.Equal(5, gameCopy.GetPlayerLaneBonus(0, 0));
+        }
     }
 }
