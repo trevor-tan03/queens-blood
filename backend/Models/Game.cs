@@ -214,20 +214,38 @@ namespace backend.Models
             else if (tile.Card != null)
                 tile.CardBonusPower += amount;
 
-            if (amount > 0)
+            var tileBonus = tile.PlayerTileBonusPower[0] + tile.PlayerTileBonusPower[1];
+            var bonusPower = tileBonus + tile.SelfBonusPower + tile.CardBonusPower;
+
+            // Classify as Enhanced
+            if (!EnhancedCards.Contains(tile) && bonusPower > 0)
             {
-                if (!EnhancedCards.Contains(tile)) EnhancedCards.Add(tile);
+                EnhancedCards.Add(tile);
+                EnfeebledCards.Remove(tile);
                 ActionQueue.Enqueue(() => OnCardEnhanced?.Invoke(this, grid, row, col));
             }
-            else
+            // Special case for Cloud's (first to reach 7 power) ability
+            else if (tile.Card != null && tile.Card.Ability.Condition == "P1R" && tile.GetCumulativePower() >= 7)
             {
-                if (!EnfeebledCards.Contains(tile)) EnfeebledCards.Add(tile);
+                // Won't retrigger ability once it's been executed
+                ActionQueue.Enqueue(() => OnCardEnhanced?.Invoke(this, grid, row, col));
+            }
+            // Classify as Enfeebled
+            else if (!EnfeebledCards.Contains(tile) && bonusPower < 0)
+            {
+                EnfeebledCards.Add(tile);
+                EnhancedCards.Remove(tile);
                 ActionQueue.Enqueue(() => OnCardEnfeebled?.Invoke(this, grid, row, col));
 
                 if (tile.Card != null && instigator != null && tile.GetCumulativePower() <= 0)
                 {
                     ActionQueue.Enqueue(() => DestroyCard(instigator, row, col, false));
                 }
+            } 
+            else
+            {
+                EnhancedCards.Remove(tile);
+                EnfeebledCards.Remove(tile);
             }
         }
 

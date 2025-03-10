@@ -653,10 +653,12 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
-            AddToHandAndPlaceCard(game, Cards.Cactuar, 0, 0); // Enhance Security Officer
-            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0); // Enhance Cactuar
-            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0); // Enhance previously placed Crystalline Crab
-            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 2, 1);
+            AddToHandAndPlaceCard(game, Cards.Cactuar, 0, 0); // Enhanced by Crystalline Crab at 1,0
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0); // Enhanced by Crystalline Crab at 2,0
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 2, 1); // Enhanced by Cactuar at 0,0
+            Assert.Equal(3, game.EnhancedCards.Count);
+
             AddToHandAndPlaceCard(game, Cards.ChocoboMoogle, 1, 1); // Self-enhanced
 
             Assert.Equal(4, game.EnhancedCards.Count);
@@ -832,6 +834,21 @@ namespace QueensBloodTest
 
             Assert.Equal(1, game.Player1Grid[2, 0].SelfBonusPower);
             Assert.Equal(0, game.Player2Grid[0, 0].SelfBonusPower);
+        }
+
+        [Fact]
+        public void CardShouldNotBeInBothEnhancedAndEnfeebledList()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Archdragon, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.Capparwire, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
+
+            Assert.DoesNotContain<Tile>(game.Player1Grid[1, 0], game.EnfeebledCards);
+            Assert.Contains<Tile>(game.Player1Grid[1, 0], game.EnhancedCards);
         }
     }
 }
