@@ -40,6 +40,7 @@ namespace QueensBloodTest
         Shiva=95,
         ChocoboMoogle=106,
         MoogleTrio=109,
+        SpaceRanger=135,
         UltimatePartyAnimal=141,
         Sephiroth=142,
         MoogleMage=147,

@@ -423,8 +423,8 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(game, Cards.MoogleTrio, 0, 0);
 
             // Confirm Player 1 has Moogle Mage & Moogle Bard added to hand
-            var moogleMage = _cards[(int) Cards.MoogleMage];
-            var moogleBard = _cards[(int) Cards.MoogleBard];
+            var moogleMage = _cards[(int)Cards.MoogleMage];
+            var moogleBard = _cards[(int)Cards.MoogleBard];
 
             Assert.Contains<Card>(moogleMage, game.Players[0].Hand);
             Assert.Contains<Card>(moogleBard, game.Players[0].Hand);
@@ -657,9 +657,9 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0); // Enhance Cactuar
             AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0); // Enhance previously placed Crystalline Crab
             AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 2, 1);
-            AddToHandAndPlaceCard(game, Cards.ChocoboMoogle, 1, 1);
+            AddToHandAndPlaceCard(game, Cards.ChocoboMoogle, 1, 1); // Self-enhanced
 
-            Assert.Equal(3, game.EnhancedCards.Count);
+            Assert.Equal(4, game.EnhancedCards.Count);
         }
 
         [Fact]
@@ -671,11 +671,11 @@ namespace QueensBloodTest
 
             AddToHandAndPlaceCard(game, Cards.Cactuar, 0, 0); // Enhance Grasslands Wolf
             AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
-            AddToHandAndPlaceCard(game, Cards.ChocoboMoogle, 1, 1);
+            AddToHandAndPlaceCard(game, Cards.ChocoboMoogle, 1, 1); // Self-enhance
             AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0); // Enhance Security Officer
             AddToHandAndPlaceCard(game, Cards.GrasslandsWolf, 2, 1);
 
-            Assert.Equal(2, game.EnhancedCards.Count);
+            Assert.Equal(3, game.EnhancedCards.Count);
             Assert.Equal(2, game.Player1Grid[1, 1].SelfBonusPower);
         }
 
@@ -777,7 +777,7 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
             AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
             AddToHandAndPlaceCard(game, Cards.Archdragon, 2, 1);
-            
+
             // Replace Security Officer and enfeeble by the Security Officer's power (3)
             AddToHandAndPlaceCard(game, Cards.GiSpecter, 1, 0);
             Assert.Null(game.Player1Grid[2, 1].Card);
@@ -793,6 +793,45 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
             AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 1, 0);
             Assert.Empty(game.PowerTransferQueue);
+        }
+
+        [Fact]
+        public void RaisePowerBy1ForEachEnemyCardEnhanced()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 0); // Self-enhances from enemy Security Officer
+            game.SwapPlayerTurns();
+
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 0, 0); // Self-enhance from enemy Space Ranger
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0); // Enhanced by Crystalline Crab
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
+
+            Assert.Equal(2, game.Player1Grid[2, 0].SelfBonusPower);
+            Assert.Equal(1, game.Player2Grid[0, 0].SelfBonusPower);
+        }
+
+        [Fact]
+        public void AdjustSelfBousPowerWhenDependencyChanges()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 0); // Self-enhances from enemy Security Officer
+            game.SwapPlayerTurns();
+
+            // These two cards from P2 are enhanced
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
+
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 0, 0); // Replace P2's Space Ranger
+
+            Assert.Equal(1, game.Player1Grid[2, 0].SelfBonusPower);
+            Assert.Equal(0, game.Player2Grid[0, 0].SelfBonusPower);
         }
     }
 }
