@@ -26,6 +26,7 @@ namespace QueensBloodTest
         Joker=46,
         InsectoidChimera =50,
         Gigantoad=51,
+        Amalgam=56,
         Griffon=58,
         Reapertail=60,
         TwoFace=65,
@@ -49,6 +50,6 @@ namespace QueensBloodTest
         Loveless=138,
         Dio=140,
         ShadowBloodQueen=144,
-        ResurrectedAmalgram=155,
+        ResurrectedAmalgam=155,
     }
 }

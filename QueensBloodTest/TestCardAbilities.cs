@@ -136,11 +136,11 @@ namespace QueensBloodTest
             ForcePlace(game, Cards.Elphadunk, game.Players[0], 0, 0);
             Assert.Equal(4, game.Player1Grid[0, 0].GetCumulativePower());
 
-            AddToHandAndPlaceCard(game, Cards.ResurrectedAmalgram, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.ResurrectedAmalgam, 1, 0);
             // Elphadunk's cumulative power should be reduced to 2
             Assert.Equal(2, game.Player1Grid[0, 0].GetCumulativePower());
 
-            // Replace the Resurrect Amalgram card
+            // Replace the Resurrect Amalgam card
             AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 1, 0);
 
             // Elphadunk's power should be back to 4
@@ -849,6 +849,21 @@ namespace QueensBloodTest
 
             Assert.DoesNotContain<Tile>(game.Player1Grid[1, 0], game.EnfeebledCards);
             Assert.Contains<Tile>(game.Player1Grid[1, 0], game.EnhancedCards);
+        }
+
+        [Fact]
+        public void AmalgamShouldAddResurrectedAmalgamToHandOnlyWhenDestroyed()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Amalgam, 0, 0);
+            Assert.NotEqual("Resurrected Amalgam", game.Players[0].Hand.Last().Name);
+
+            AddToHandAndPlaceCard(game, Cards.Capparwire, 1, 0);
+            var secondToLast = game.Players[0].Hand.Count - 2;
+            Assert.Equal("Resurrected Amalgam", game.Players[0].Hand.Last().Name);
         }
     }
 }

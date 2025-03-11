@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Text.Json.Serialization;
 using Newtonsoft.Json.Bson;
 using static backend.Models.TileConstants;
@@ -391,7 +392,8 @@ namespace backend.Models
             if ((target == "s") && (triggerCondition.Contains("A") || triggerCondition.Contains("E")))
                 CalculateSelfBoostFromPowerModifiedCards(game, grid, row, col);
 
-            if (action == "add" || action == "spawn" || action == "+Score")
+            // Only execute the ability if it has conditions
+            if ((action == "add" || action == "spawn" || action == "+Score") && Card!.Ability.Condition != "D")
                 ExecuteAbility(game, grid, row, col);
 
             // If this tile is enhanced or enfeebled prior to this card's placement, invoke the card enhanced/enfeebled event
@@ -403,27 +405,33 @@ namespace backend.Models
 
         private void HandleCardDestroyed(Player instigator, Game game, Tile[,] grid, int row, int col)
         {
+            var action = Card!.Ability.Action;
             // Execute post-mortem ability
             if (Card!.Ability!.Condition == "D")
             {
-                foreach (RangeCell rangeCell in Card!.Range)
-                {
-                    var dx = col + rangeCell.Offset.x;
-                    var dy = row + rangeCell.Offset.y;
-                    var isIndexInBounds = dy >= 0 && dy <= 2 && dx >= 0 && dx <= 4;
 
-                    if (!isIndexInBounds) continue;
-                    var offsetTile = grid[dy, dx];
-
-                    if (rangeCell.Colour.Contains("R") && isIndexInBounds)
+                if (Card!.Ability.Target != null)
+                    foreach (RangeCell rangeCell in Card!.Range)
                     {
-                        ExecuteAbility(game, grid, dy, dx);
+                        var dx = col + rangeCell.Offset.x;
+                        var dy = row + rangeCell.Offset.y;
+                        var isIndexInBounds = dy >= 0 && dy <= 2 && dx >= 0 && dx <= 4;
+
+                        if (!isIndexInBounds) continue;
+                        var offsetTile = grid[dy, dx];
+
+                        if (rangeCell.Colour.Contains("R") && isIndexInBounds)
+                        {
+                            ExecuteAbility(game, grid, dy, dx);
+                        }
                     }
-                }
+
+                else if (action == "add")
+                    ExecuteAbility(game, grid, row, col);
             }
 
             if (Card!.Ability.Condition == "AD" && grid[row, col].Owner == Owner ||
-                Card!.Ability.Condition == "ED" && grid[row, col].Owner != Owner ||
+            Card!.Ability.Condition == "ED" && grid[row, col].Owner != Owner ||
                 Card!.Ability.Condition == "AED")
                 SelfBonusPower += (int)Card!.Ability.Value!;
 
