@@ -10,6 +10,6 @@
         public static readonly List<string> OnDestroyConditions = new List<string> { "D", "AD", "ED", "AED", "*", "W" };
         public static readonly List<string> OnEnhanceConditions = new List<string> { "P1R", "1+", "+A", "+E", "+AE", "EE" };
         public static readonly List<string> OnEnfeebleConditions = new List<string> { "1-", "-A", "-E", "-AE", "EE" };
-        public static readonly string OnGameEndCondition = "L+V";
+        public static readonly string OnRoundEndCondition = "L+V";
     }
 }

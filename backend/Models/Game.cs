@@ -26,7 +26,7 @@ namespace backend.Models
         public event Action<Player, Game, Tile[,], int, int> OnCardDestroyed;
         public event Action<Game, Tile[,], int, int> OnCardEnhanced;
         public event Action<Game, Tile[,], int, int> OnCardEnfeebled;
-        public event Action<Game> OnGameEnd;
+        public event Action<Game> OnRoundEnd;
 
         public Game(string id, int? seed = null)
         {
@@ -324,10 +324,12 @@ namespace backend.Models
                 player2Total += Players[1].Scores[row].score;
 
                 var winner = GetLaneWinner(row);
+                var winBonus = winner != null ? winner.Scores[row].winBonus + winner.Scores[row].loserBonus : 0;
+
                 if (winner == Players[0])
-                    player1Total += winner.Scores[row].winBonus;
+                    player1Total += winBonus;
                 else if (winner == Players[1])
-                    player2Total += winner.Scores[row].winBonus;
+                    player2Total += winBonus;
             }
 
             return (player1Total, player2Total);
@@ -350,7 +352,9 @@ namespace backend.Models
 
         public int GetPlayerLaneBonus(int playerIndex, int row)
         {
-            return Players[playerIndex].Scores[row].winBonus;
+            var winBonus = Players[playerIndex].Scores[row].winBonus;
+            var loserBonus = Players[playerIndex].Scores[row].loserBonus;
+            return  winBonus + loserBonus;
         }
 
         private void ExecuteQueuedActions()
@@ -387,6 +391,7 @@ namespace backend.Models
 
                 ExecuteQueuedActions();
                 CalculatePlayerScores();
+                OnRoundEnd?.Invoke(this);
                 return true;
             }
 
@@ -397,7 +402,6 @@ namespace backend.Models
         {
             CurrentPlayer = null;
             GameOver = true;
-            OnGameEnd?.Invoke(this);
         }
     }
 }

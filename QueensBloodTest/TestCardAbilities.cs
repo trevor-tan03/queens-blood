@@ -491,18 +491,23 @@ namespace QueensBloodTest
             game.Start();
             SetPlayer1Start(game);
 
+            // These two cards have a combined power of 2
             AddToHandAndPlaceCard(game, Cards.UltimatePartyAnimal, 0, 0);
             AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 1);
-            Assert.Equal(2, game.GetPlayerLaneScore(0, 0));
 
             game.SwapPlayerTurns();
+
+            // Enemy card has a power of 1
             AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0);
 
-            game.EndGame();
-            var finalScores = game.GetFinalScores();
+            // Since (P1) 2 > 1 (P2), P2's points for the first row is given to P1
+            Assert.Equal(1, game.Players[0].Scores[0].loserBonus);
+            Assert.Equal(0, game.Players[1].Scores[0].loserBonus);
 
-            Assert.Equal(3, finalScores.player1Score);
-            Assert.Equal(1, finalScores.player2Score);
+            // If P2 is winning the lane, the ability will also work for them
+            AddToHandAndPlaceCard(game, Cards.GrasslandsWolf, 0, 1);
+            Assert.Equal(2, game.Players[1].Scores[0].loserBonus);
+            Assert.Equal(0, game.Players[0].Scores[0].loserBonus);
         }
 
         [Fact]
@@ -864,6 +869,22 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(game, Cards.Capparwire, 1, 0);
             var secondToLast = game.Players[0].Hand.Count - 2;
             Assert.Equal("Resurrected Amalgam", game.Players[0].Hand.Last().Name);
+        }
+
+        [Fact]
+        public void TwoSpaceRangers()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 0);
+
+            game.SwapPlayerTurns();
+
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 0);
+            Assert.Equal(0, game.Player1Grid[2, 0].SelfBonusPower);
+            Assert.Equal(0, game.Player2Grid[2, 0].SelfBonusPower);
         }
     }
 }

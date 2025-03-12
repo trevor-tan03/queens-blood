@@ -48,10 +48,10 @@ namespace backend.Models
                 game.OnCardEnfeebled += HandleCardEnfeebled;
             }
 
-            if (OnGameEndCondition == Card!.Ability.Action)
+            if (OnRoundEndCondition == Card!.Ability.Action)
             {
                 _subscribedEvents.Add("L+V");
-                game.OnGameEnd += HandleAddLaneLoserScoreToVictor;
+                game.OnRoundEnd += HandleAddLaneLoserScoreToVictor;
             }
         }
 
@@ -61,7 +61,7 @@ namespace backend.Models
             game.OnCardDestroyed -= HandleCardDestroyed;
             game.OnCardEnhanced -= HandleCardEnhanced;
             game.OnCardEnfeebled -= HandleCardEnfeebled;
-            game.OnGameEnd -= HandleAddLaneLoserScoreToVictor;
+            game.OnRoundEnd -= HandleAddLaneLoserScoreToVictor;
 
             foreach (var subscribedEvent in _subscribedEvents)
             {
@@ -80,7 +80,7 @@ namespace backend.Models
                         game.OnCardEnfeebled += HandleCardEnfeebled;
                         break;
                     case "L+V":
-                        game.OnGameEnd += HandleAddLaneLoserScoreToVictor;
+                        game.OnRoundEnd += HandleAddLaneLoserScoreToVictor;
                         break;
                     default:
                         break;
@@ -99,7 +99,7 @@ namespace backend.Models
                 game.OnCardDestroyed -= HandleCardDestroyed;
                 game.OnCardEnhanced -= HandleCardEnhanced;
                 game.OnCardEnfeebled -= HandleCardEnfeebled;
-                game.OnGameEnd -= HandleAddLaneLoserScoreToVictor;
+                game.OnRoundEnd -= HandleAddLaneLoserScoreToVictor;
 
                 _subscribedEvents.Clear();
             }
@@ -226,13 +226,20 @@ namespace backend.Models
             {
                 var enemy = game.Players.Find(p => p != Owner);
                 var laneWinner = game.GetLaneWinner(i);
+                if (laneWinner == null) continue;
 
                 // Owner is the victor. Add enemy's score to owner's
-                if (laneWinner == Owner)
-                    Owner!.Scores[i].winBonus = Owner.Scores[i].winBonus + enemy!.Scores[i].score;
+                if (laneWinner!.Id == Owner!.Id)
+                {
+                    Owner!.Scores[i].loserBonus = enemy!.Scores[i].score;
+                    enemy!.Scores[i].loserBonus = 0;
+                }
                 // Enemy is the victor. Add owner's score to enemy's
-                else if (laneWinner == enemy)
-                    enemy!.Scores[i].winBonus = enemy.Scores[i].winBonus + Owner!.Scores[i].score;
+                else if (laneWinner!.Id == enemy!.Id)
+                {
+                    enemy!.Scores[i].loserBonus = Owner!.Scores[i].score;
+                    Owner!.Scores[i].loserBonus = 0;
+                }
             }
         }
 
@@ -289,13 +296,13 @@ namespace backend.Models
         private void CalculateSelfBoostFromPowerModifiedCards(Game game, Tile[,] grid, int row, int col)
         {
             // Prevent out of index error for retrieving the modifier
-            string modifier = Card!.Ability.Condition != null ? Card!.Ability.Condition[0].ToString() : "0";
+            string modifier = Card!.Ability.Condition != null ? Card!.Ability.Condition[0].ToString() : "";
             var modifiers = new string[] { "+", "-" };
             if (!modifiers.Contains(modifier)) return;
 
             var alliesModified = 0;
             var enemiesModified = 0;
-            var triggerCondition = Card!.Ability.Condition;
+            string triggerCondition = Card!.Ability.Condition!;
             var cards = modifier == "+" ? game.EnhancedCards : game.EnfeebledCards;
 
             foreach (Tile enhancedTile in cards)
@@ -308,25 +315,23 @@ namespace backend.Models
                     enemiesModified++;
             }
 
-            var enhanced = false;
+            if (alliesModified == 0 && enemiesModified == 0)
+                return;
 
-            if (triggerCondition == "+A" || triggerCondition == "-A")
-            {
-                SelfBonusPower = (int)Card!.Ability.Value! * alliesModified;
-                enhanced = true;
-            }
-            else if (triggerCondition == "+E" || triggerCondition == "-E")
-            {
-                SelfBonusPower = (int)Card!.Ability.Value! * enemiesModified;
-                enhanced = true;
-            }
-            else if (triggerCondition == "+AE" || triggerCondition == "-AE")
+            if (triggerCondition.Contains("AE"))
             {
                 SelfBonusPower = (int)Card!.Ability.Value! * (alliesModified + enemiesModified);
-                enhanced = true;
+            }
+            else if (triggerCondition.Contains("A"))
+            {
+                SelfBonusPower = (int)Card!.Ability.Value! * alliesModified;
+            }
+            else if (triggerCondition.Contains("E"))
+            {
+                SelfBonusPower = (int)Card!.Ability.Value! * enemiesModified;
             }
 
-            if (!game.EnhancedCards.Contains(this) && enhanced)
+            if (!game.EnhancedCards.Contains(this))
             {
                 game.EnqueueOnPowerChange("enhance", grid, row, col);
                 game.EnhancedCards.Add(this);
@@ -430,9 +435,9 @@ namespace backend.Models
                     ExecuteAbility(game, grid, row, col);
             }
 
-            if (Card!.Ability.Condition == "AD" && grid[row, col].Owner == Owner ||
-            Card!.Ability.Condition == "ED" && grid[row, col].Owner != Owner ||
-                Card!.Ability.Condition == "AED")
+            if (Card!.Ability.Condition == "AD" && grid[row, col].Owner == Owner || // Ally destroyed
+            Card!.Ability.Condition == "ED" && grid[row, col].Owner != Owner || // Enemy destroyed
+                Card!.Ability.Condition == "AED") // Either destroyed
                 SelfBonusPower += (int)Card!.Ability.Value!;
 
             if (this == grid[row, col])

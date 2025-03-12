@@ -4,6 +4,8 @@
 	{
 		public int score;
 		public int winBonus;
+		// Player who loses the lane gives their points in the lane to the victor
+		public int loserBonus;
 	}
 
 	public class Player
@@ -19,9 +21,9 @@
 
 		public LaneScore[] Scores =
 		{
-			new LaneScore() { score = 0, winBonus = 0 },
-			new LaneScore() { score = 0, winBonus = 0 },
-			new LaneScore() { score = 0, winBonus = 0 }
+			new LaneScore() { score = 0, winBonus = 0, loserBonus = 0 },
+			new LaneScore() { score = 0, winBonus = 0, loserBonus = 0 },
+			new LaneScore() { score = 0, winBonus = 0, loserBonus = 0 }
 		};
 
 		public Player(string Id, string Name)
