@@ -13,8 +13,8 @@ namespace backend.Models
         public Player? CurrentPlayer { get; set; }
         public Random _random { get; set; }
         public bool GameOver { get; set; }
-        private Queue<Tile> TileActionQueue { get; set; } = new Queue<Tile>();
         public Queue<Action> ActionQueue { get; set; } = new Queue<Action>();
+        public Queue<Action> SelfEnhanceQueue { get; set; } = new Queue<Action>();
         public List<Tile> EnhancedCards { get; set; } = new List<Tile>();
         public List<Tile> EnfeebledCards { get; set; } = new List<Tile>();
         private int _consecutivePasses { get; set; } = 0;
@@ -27,6 +27,12 @@ namespace backend.Models
         public event Action<Game, Tile[,], int, int> OnCardEnhanced;
         public event Action<Game, Tile[,], int, int> OnCardEnfeebled;
         public event Action<Game> OnRoundEnd;
+        /*
+         * Cards which self-enhance need to know when cards are added or removed
+         * from the EnhancedCards/EnfeebledCards list
+         */
+        public event Action<Game> OnEnhancedCardsChanged;
+        public event Action<Game> OnEnfeebledCardsChanged;
 
         public Game(string id, int? seed = null)
         {
@@ -220,8 +226,8 @@ namespace backend.Models
             // Classify as Enhanced
             if (!EnhancedCards.Contains(tile) && bonusPower > 0)
             {
-                EnhancedCards.Add(tile);
-                EnfeebledCards.Remove(tile);
+                AddToEnhancedCards(tile);
+                RemoveFromEnfeebledCards(tile);
                 ActionQueue.Enqueue(() => OnCardEnhanced?.Invoke(this, grid, row, col));
             }
             // Special case for Cloud's (first to reach 7 power) ability
@@ -233,8 +239,8 @@ namespace backend.Models
             // Classify as Enfeebled
             else if (!EnfeebledCards.Contains(tile) && bonusPower < 0)
             {
-                EnfeebledCards.Add(tile);
-                EnhancedCards.Remove(tile);
+                AddToEnfeebledCards(tile);
+                RemoveFromEnhancedCards(tile);
                 ActionQueue.Enqueue(() => OnCardEnfeebled?.Invoke(this, grid, row, col));
 
                 if (tile.Card != null && instigator != null && tile.GetCumulativePower() <= 0)
@@ -244,8 +250,8 @@ namespace backend.Models
             } 
             else
             {
-                EnhancedCards.Remove(tile);
-                EnfeebledCards.Remove(tile);
+                RemoveFromEnhancedCards(tile);
+                RemoveFromEnfeebledCards(tile);
             }
         }
 
@@ -264,6 +270,41 @@ namespace backend.Models
                 ActionQueue.Enqueue(() => OnCardEnfeebled?.Invoke(this, grid, row, col));
         }
 
+        public void RemoveFromEnhancedCards(Tile tile)
+        {
+            if (EnhancedCards.Contains(tile))
+            {
+                EnhancedCards.Remove(tile);
+                ActionQueue.Enqueue(() => OnEnhancedCardsChanged?.Invoke(this));
+            }
+        }
+
+        public void AddToEnhancedCards(Tile tile)
+        {
+            if (!EnhancedCards.Contains(tile))
+            {
+                EnhancedCards.Add(tile);
+                ActionQueue.Enqueue(() => OnEnhancedCardsChanged?.Invoke(this));
+            }
+        }
+
+        private void RemoveFromEnfeebledCards(Tile tile)
+        {
+            if (EnfeebledCards.Contains(tile))
+            {
+                EnfeebledCards.Remove(tile);
+                OnEnhancedCardsChanged?.Invoke(this);
+            }
+        }
+
+        private void AddToEnfeebledCards(Tile tile)
+        {
+            if (!EnfeebledCards.Contains(tile))
+            {
+                EnfeebledCards.Add(tile);
+                OnEnhancedCardsChanged?.Invoke(this);
+            }
+        }
 
         public void DestroyCard(Player instigator, int row, int col, bool isTransferPower)
         {
@@ -272,11 +313,12 @@ namespace backend.Models
 
             int cumulativePower = grid[row, col].GetCumulativePower();
             grid[row, col].Card = null;
+            var tileBonusPower = grid[row, col].PlayerTileBonusPower[instigator.playerIndex];
 
-            if (EnhancedCards.Contains(grid[row, col]))
-                EnhancedCards.Remove(grid[row, col]);
-            if (EnfeebledCards.Contains(grid[row, col]))
-                EnfeebledCards.Remove(grid[row, col]);
+            if (EnhancedCards.Contains(grid[row, col]) && tileBonusPower <= 0)
+                RemoveFromEnhancedCards(grid[row, col]);
+            if (EnfeebledCards.Contains(grid[row, col]) && tileBonusPower >= 0)
+                RemoveFromEnfeebledCards(grid[row, col]);
 
             // Reset card specifc power bonus when destroyed
             if (!isTransferPower)
@@ -362,6 +404,12 @@ namespace backend.Models
             while (ActionQueue.Count > 0)
             {
                 Action action = ActionQueue.Dequeue();
+                action();
+            }
+
+            while (SelfEnhanceQueue.Count > 0)
+            {
+                var action = SelfEnhanceQueue.Dequeue();
                 action();
             }
         }
