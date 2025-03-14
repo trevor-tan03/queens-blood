@@ -8,7 +8,7 @@ namespace backend.Models
 {
     public class Tile
     {
-        public int Id {  get; set; }
+        public string Id {  get; set; }
         public Player? Owner { get; set; }
         public int Rank { get; set; }
         public Card? Card { get; set; }
@@ -18,7 +18,7 @@ namespace backend.Models
         public int SelfBonusPower { get; set; } = 0; // Bonus Power from this card's ability
         public List<string> _subscribedEvents = new List<string>();
 
-        public Tile(int id)
+        public Tile(string id)
         {
             Id = id;
         }
@@ -378,7 +378,7 @@ namespace backend.Models
 
             foreach (Tile enhancedTile in cards)
             {
-                if (enhancedTile.Card == null || Owner == null || !triggerCondition!.Contains(modifier) || enhancedTile == this)
+                if (enhancedTile.Card == null || Owner == null || !triggerCondition!.Contains(modifier) || enhancedTile.Id == this.Id)
                     continue;
                 if (enhancedTile.Owner!.Id == Owner!.Id)
                     alliesModified++;

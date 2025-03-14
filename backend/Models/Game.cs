@@ -76,12 +76,11 @@ namespace backend.Models
         private void InitializeBoard()
         {
             // Populate player 1 board and set initial owner
-            var id = 1;
             for (int i = 0; i < NUM_ROWS; i++)
             {
                 for (int j = 0; j < NUM_COLS; j++)
                 {
-                    Player1Grid[i, j] = new Tile(id++);
+                    Player1Grid[i, j] = new Tile($"{i}{j}");
                 }
                 Player1Grid[i, 0].Owner = Players[0];
                 Player1Grid[i, 4].Owner = Players[1]; // Setting owner for player 2's view

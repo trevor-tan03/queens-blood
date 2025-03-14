@@ -188,5 +188,26 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(gameCopy, Cards.Tifa, 0, 0);
             Assert.Equal(5, gameCopy.GetPlayerLaneBonus(0, 0));
         }
+
+        [Fact]
+        public void PreviewSelfEnhance()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0); // Enhances Security Officer
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0); // Enhances Space Ranger (P2)
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 1);
+
+            game.SwapPlayerTurns();
+
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0); // Enhances Security Officer
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0); // Enhances Space Ranger (P1)
+
+            var gameCopy = Copy.DeepCopy(game);
+            AddToHandAndPlaceCard(gameCopy, Cards.SpaceRanger, 2, 1);
+            Assert.Equal(2, gameCopy.Player2Grid[2, 1].SelfBonusPower);
+        }
     }
 }

@@ -33,5 +33,24 @@ namespace backend.Utility
                 }
             }
         }
+
+        public static void RemapEnhancedAndEnfeebledCards(Game game)
+        {
+            for (int i = 0; i < game.EnhancedCards.Count; i++)
+            {
+                var row = (int)char.GetNumericValue(game.EnhancedCards[i].Id[0]);
+                var col = (int)char.GetNumericValue(game.EnhancedCards[i].Id[1]);
+
+                game.EnhancedCards[i] = game.Player1Grid[row, col];
+            }
+
+            for (int i = 0; i < game.EnfeebledCards.Count; i++)
+            {
+                var row = (int)game.EnfeebledCards[i].Id[0];
+                var col = (int)game.EnfeebledCards[i].Id[1];
+
+                game.EnfeebledCards[i] = game.Player1Grid[row, col];
+            }
+        }
     }
 }
