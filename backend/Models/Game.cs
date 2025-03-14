@@ -265,9 +265,9 @@ namespace backend.Models
              *		Chocobo & Moogle updates its SelfBonusPower
 			 */
             if (type == "enhance")
-                ActionQueue.Enqueue(() => OnCardEnhanced?.Invoke(this, grid, row, col));
+                ActionQueue.Enqueue(() => OnEnhancedCardsChanged?.Invoke(this));
             else
-                ActionQueue.Enqueue(() => OnCardEnfeebled?.Invoke(this, grid, row, col));
+                ActionQueue.Enqueue(() => OnEnhancedCardsChanged?.Invoke(this));
         }
 
         public void RemoveFromEnhancedCards(Tile tile)

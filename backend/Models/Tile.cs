@@ -84,6 +84,8 @@ namespace backend.Models
             {
                 game.RemoveFromEnhancedCards(this);
             }
+
+            RecalculateSelfBonusPower(game);
         }
         
         private void HandleEnfeebledCardsChanged(Game game)
@@ -103,6 +105,8 @@ namespace backend.Models
             {
                 game.EnhancedCards.Remove(this);
             }
+
+            RecalculateSelfBonusPower(game);
         }
 
         private void RecalculateSelfBonusPower(Game game)
@@ -375,6 +379,8 @@ namespace backend.Models
                 if (enhancedTile.Owner!.Id != Owner.Id)
                     enemiesModified++;
             }
+
+            if (alliesModified == 0 && enemiesModified == 0) return;
                     
             if (triggerCondition.Contains("AE"))
             {
@@ -388,6 +394,9 @@ namespace backend.Models
             {
                 SelfBonusPower = (int)Card!.Ability.Value! * enemiesModified;
             }
+
+            if (!game.EnhancedCards.Contains(this))
+                game.AddToEnhancedCards(this);
         }
 
         private bool AbilityExecutionThresholdMet(Game game)
