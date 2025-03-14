@@ -1002,5 +1002,21 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(game, Cards.Ignilisk, 0, 1);
             Assert.Equal(2, game.Player2Grid[2, 0].SelfBonusPower);
         }
+
+        [Fact]
+        public void SandSpitterShouldEnfeebleWhenPlaced()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.Archdragon, 2, 1);
+
+            game.Player1Grid[0, 0].RankUp(1);
+            AddToHandAndPlaceCard(game, Cards.Sandspitter, 0, 0);
+            Assert.Equal(-1, game.Player1Grid[2, 1].CardBonusPower);
+        }
     }
 }

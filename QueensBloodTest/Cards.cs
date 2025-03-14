@@ -25,6 +25,7 @@ namespace QueensBloodTest
         Bagnadrana = 37,
         Cockatrice=38,
         DeathClaw=42,
+        Sandspitter=44,
         Joker=46,
         InsectoidChimera =50,
         Gigantoad=51,
