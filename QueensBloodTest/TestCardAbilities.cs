@@ -922,5 +922,21 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0);
             Assert.Null(game.Player1Grid[0, 0].Card);
         }
+
+        [Fact]
+        public void SelfEnhanceCardsShouldNotRespondToEnhanceOnEmptyTile()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 0);
+            game.SwapPlayerTurns();
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0);
+
+            Assert.Equal(0, game.Player1Grid[2, 0].SelfBonusPower);
+            Assert.Equal(0, game.Player2Grid[2, 0].SelfBonusPower);
+        }
     }
 }

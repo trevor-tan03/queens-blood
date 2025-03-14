@@ -284,7 +284,9 @@ namespace backend.Models
             if (!EnhancedCards.Contains(tile))
             {
                 EnhancedCards.Add(tile);
-                ActionQueue.Enqueue(() => OnEnhancedCardsChanged?.Invoke(this));
+
+                if (tile.Card != null)
+                    ActionQueue.Enqueue(() => OnEnhancedCardsChanged?.Invoke(this));
             }
         }
 
@@ -293,7 +295,9 @@ namespace backend.Models
             if (EnfeebledCards.Contains(tile))
             {
                 EnfeebledCards.Remove(tile);
-                OnEnhancedCardsChanged?.Invoke(this);
+
+                if (tile.Card != null)
+                    ActionQueue.Enqueue(() => OnEnfeebledCardsChanged?.Invoke(this));
             }
         }
 
@@ -302,7 +306,9 @@ namespace backend.Models
             if (!EnfeebledCards.Contains(tile))
             {
                 EnfeebledCards.Add(tile);
-                OnEnhancedCardsChanged?.Invoke(this);
+
+                if (tile.Card != null)
+                    ActionQueue.Enqueue(() => OnEnfeebledCardsChanged?.Invoke(this));
             }
         }
 
