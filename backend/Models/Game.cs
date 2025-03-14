@@ -248,11 +248,6 @@ namespace backend.Models
                     ActionQueue.Enqueue(() => DestroyCard(instigator, row, col, false));
                 }
             } 
-            else
-            {
-                RemoveFromEnhancedCards(tile);
-                RemoveFromEnfeebledCards(tile);
-            }
         }
 
         public void EnqueueOnPowerChange(string type, Tile[,] grid, int row, int col)

@@ -981,5 +981,26 @@ namespace QueensBloodTest
             Assert.Null(game.Player1Grid[0, 1].Card);
             Assert.Equal(0, game.Player1Grid[0, 0].GetBonusPower());
         }
+
+        [Fact]
+        public void ReenhancingAnEnhancedCardShouldNotRemoveItFromEnhancedCardsList()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Cactuar, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.Capparwire, 1, 1);
+            AddToHandAndPlaceCard(game, Cards.UltimatePartyAnimal, 2, 1);
+
+            game.SwapPlayerTurns();
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 0);
+            Assert.Equal(2, game.Player2Grid[2, 0].SelfBonusPower);
+
+            game.SwapPlayerTurns();
+            AddToHandAndPlaceCard(game, Cards.Ignilisk, 0, 1);
+            Assert.Equal(2, game.Player2Grid[2, 0].SelfBonusPower);
+        }
     }
 }
