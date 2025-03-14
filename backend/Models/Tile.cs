@@ -8,6 +8,7 @@ namespace backend.Models
 {
     public class Tile
     {
+        public int Id {  get; set; }
         public Player? Owner { get; set; }
         public int Rank { get; set; }
         public Card? Card { get; set; }
@@ -16,6 +17,11 @@ namespace backend.Models
         public int CardBonusPower { get; set; } = 0; // Bonus Power that only affects the card on the tile, not the tile itself
         public int SelfBonusPower { get; set; } = 0; // Bonus Power from this card's ability
         public List<string> _subscribedEvents = new List<string>();
+
+        public Tile(int id)
+        {
+            Id = id;
+        }
 
         public void RankUp(int amount)
         {
@@ -472,8 +478,8 @@ namespace backend.Models
         private void HandleCardDestroyed(Player instigator, Game game, Tile[,] grid, int row, int col)
         {
             var action = Card!.Ability.Action;
-            // Execute post-mortem ability
-            if (Card!.Ability!.Condition == "D")
+            // Execute post-mortem ability IFF it is the card being destroyed
+            if (Card!.Ability!.Condition == "D" && grid[row, col].Id == this.Id)
             {
 
                 if (Card!.Ability.Target != null)

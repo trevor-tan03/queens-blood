@@ -886,5 +886,27 @@ namespace QueensBloodTest
             Assert.Equal(0, game.Player1Grid[2, 0].SelfBonusPower);
             Assert.Equal(0, game.Player2Grid[2, 0].SelfBonusPower);
         }
+
+        [Fact]
+        public void AmalgamShouldNotGiveTwoCards()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Amalgam, 1, 0);
+
+            game.SwapPlayerTurns();
+
+            AddToHandAndPlaceCard(game, Cards.Amalgam, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.Gigantoad, 1, 0);
+
+            var countResurrectedAmalgams = 0;
+            foreach(Card card in game.Players[1].Hand)
+                if (card.Name == "Resurrected Amalgam")
+                    countResurrectedAmalgams++;
+
+            Assert.Equal(1, countResurrectedAmalgams);
+        }
     }
 }
