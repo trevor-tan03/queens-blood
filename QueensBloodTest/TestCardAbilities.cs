@@ -908,5 +908,19 @@ namespace QueensBloodTest
 
             Assert.Equal(1, countResurrectedAmalgams);
         }
+
+        [Fact]
+        public void PlacingCardWithLessPowerThanEnfeebledTileShouldDestroyIt()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.ResurrectedAmalgam, 1, 0);
+            Assert.Equal(-2, game.Player1Grid[0, 0].PlayerTileBonusPower[0]);
+
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0);
+            Assert.Null(game.Player1Grid[0, 0].Card);
+        }
     }
 }

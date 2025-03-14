@@ -464,6 +464,9 @@ namespace backend.Models
             if ((target == "s") && (triggerCondition.Contains("A") || triggerCondition.Contains("E")))
                 CalculateSelfBoostFromPowerModifiedCards(game);
 
+            if (GetCumulativePower() < 0)
+                game.DestroyCard(Owner!, row, col, false);
+
             // Only execute the ability if it has conditions
             if ((action == "add" || action == "spawn" || action == "+Score") && Card!.Ability.Condition != "D")
                 ExecuteAbility(game, grid, row, col);
