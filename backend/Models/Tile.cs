@@ -69,7 +69,7 @@ namespace backend.Models
             if (OnEnfeebledCardsChangedConditions.Contains(Card!.Ability.Condition))
             {
                 _subscribedEvents.Add("-C");
-                game.OnEnhancedCardsChanged += HandleEnfeebledCardsChanged;
+                game.OnEnfeebledCardsChanged += HandleEnfeebledCardsChanged;
             }
         }
 
