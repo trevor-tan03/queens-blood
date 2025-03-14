@@ -46,8 +46,8 @@ namespace backend.Utility
 
             for (int i = 0; i < game.EnfeebledCards.Count; i++)
             {
-                var row = (int)game.EnfeebledCards[i].Id[0];
-                var col = (int)game.EnfeebledCards[i].Id[1];
+                var row = (int)char.GetNumericValue(game.EnfeebledCards[i].Id[0]);
+                var col = (int)char.GetNumericValue(game.EnfeebledCards[i].Id[1]);
 
                 game.EnfeebledCards[i] = game.Player1Grid[row, col];
             }

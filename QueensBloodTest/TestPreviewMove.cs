@@ -209,5 +209,21 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(gameCopy, Cards.SpaceRanger, 2, 1);
             Assert.Equal(2, gameCopy.Player2Grid[2, 1].SelfBonusPower);
         }
+
+        [Fact]
+        public void AfterPlacingResurrectedAmalgamDontBreak()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.ResurrectedAmalgam, 1, 0);
+
+            game.SwapPlayerTurns();
+
+            var gameCopy = Copy.DeepCopy(game);
+            AddToHandAndPlaceCard(gameCopy, Cards.Capparwire, 0, 0);
+            Assert.NotNull(gameCopy.Player2Grid[0, 0].Card);
+        }
     }
 }
