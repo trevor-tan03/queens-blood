@@ -164,8 +164,6 @@ namespace backend.Models
             // Unsubscribe the destroyed card from all events
             if (this == grid[row, col])
             {
-                _subscribedEvents.Clear();
-
                 game.OnCardPlaced -= HandleCardPlaced;
                 game.OnCardDestroyed -= HandleCardDestroyed;
                 game.OnCardEnhanced -= HandleCardEnhanced;
@@ -195,7 +193,8 @@ namespace backend.Models
 
                     if (rangeCell.Colour.Contains("R") && isIndexInBounds && Card!.Ability.Value != null)
                     {
-                        var tile = grid[dy, dx];
+                        var ownerGrid = Owner.playerIndex == 0 ? game.Player1Grid : game.Player2Grid;
+                        var tile = ownerGrid[dy, dx];
 
                         if (target.Contains("a"))
                             tile.PlayerTileBonusPower[Owner.playerIndex] -= (int)Card!.Ability.Value * operation;
@@ -405,7 +404,7 @@ namespace backend.Models
             }
         }
 
-        private int GetBonusPower()
+        public int GetBonusPower()
         {
             var tileBonusPower = Owner != null ? PlayerTileBonusPower[Owner.playerIndex] : 0;
             return tileBonusPower + CardBonusPower + SelfBonusPower;
@@ -536,13 +535,6 @@ namespace backend.Models
             var triggerCondition = Card!.Ability.Condition;
             var target = Card!.Ability.Target;
 
-            // Handle self-enhancing ability
-            // if (Card!.Ability.Target == "s")
-            // {
-            //     ExecuteAbility(game, grid, row, col);
-            //     return;
-            // }
-
             // Cloud's ability should only execute once it reaches >= 7 power
             if (Card!.Ability.Condition == "P1R" && GetCumulativePower() < 7) return;
 
@@ -583,12 +575,6 @@ namespace backend.Models
         {
             var triggerCondition = Card!.Ability.Condition;
             var target = Card!.Ability.Target;
-
-            // if (target == "s")
-            // {
-            //     ExecuteAbility(game, grid, row, col);
-            //     return;
-            // }
 
             if (triggerCondition.Contains("1") ||
                 triggerCondition == "EE")

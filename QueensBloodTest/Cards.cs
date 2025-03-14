@@ -23,6 +23,7 @@ namespace QueensBloodTest
         TonberryKing =34,
         SandhogPie=35,
         Bagnadrana = 37,
+        Cockatrice=38,
         DeathClaw=42,
         Joker=46,
         InsectoidChimera =50,

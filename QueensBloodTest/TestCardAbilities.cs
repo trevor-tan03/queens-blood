@@ -961,5 +961,25 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(game, Cards.Ignilisk, 0, 2);
             Assert.Equal(4, game.Player1Grid[1, 1].SelfBonusPower);
         }
+
+        [Fact]
+        public void WhenACardIsDestroyedUninitWithRespectToOriginalOwnersBoard()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Capparwire, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.Ignilisk, 0, 1);
+
+            game.SwapPlayerTurns();
+
+            game.Player1Grid[0, 2].Owner = game.Players[1];
+            game.Player1Grid[0, 2].RankUp(1);
+            AddToHandAndPlaceCard(game, Cards.Cockatrice, 0, 2);
+
+            Assert.Null(game.Player1Grid[0, 1].Card);
+            Assert.Equal(0, game.Player1Grid[0, 0].GetBonusPower());
+        }
     }
 }
