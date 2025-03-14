@@ -267,7 +267,7 @@ namespace backend.Models
             if (type == "enhance")
                 ActionQueue.Enqueue(() => OnEnhancedCardsChanged?.Invoke(this));
             else
-                ActionQueue.Enqueue(() => OnEnhancedCardsChanged?.Invoke(this));
+                ActionQueue.Enqueue(() => OnEnfeebledCardsChanged?.Invoke(this));
         }
 
         public void RemoveFromEnhancedCards(Tile tile)

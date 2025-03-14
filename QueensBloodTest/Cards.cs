@@ -15,6 +15,7 @@ namespace QueensBloodTest
         Cactuar=11,
         CrystallineCrab=12,
         Archdragon=19,
+        Ignilisk=24,
         Capparwire=25,
         Spearhawk=30,
         SeaDevil = 31,

@@ -938,5 +938,28 @@ namespace QueensBloodTest
             Assert.Equal(0, game.Player1Grid[2, 0].SelfBonusPower);
             Assert.Equal(0, game.Player2Grid[2, 0].SelfBonusPower);
         }
+
+        [Fact]
+        public void IfritShouldNotFactorEnemyCards()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Cactuar, 0, 0); // Enhances UPA
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0); // Enhances Cactuar
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.UltimatePartyAnimal, 2, 1);
+            AddToHandAndPlaceCard(game, Cards.Capparwire, 0, 1);
+            AddToHandAndPlaceCard(game, Cards.Ifrit, 1, 1);
+            Assert.Equal(4, game.Player1Grid[1, 1].SelfBonusPower);
+
+            game.SwapPlayerTurns();
+
+            game.Player2Grid[0, 2].Owner = game.Players[1];
+            game.Player2Grid[0, 2].RankUp(1);
+            AddToHandAndPlaceCard(game, Cards.Ignilisk, 0, 2);
+            Assert.Equal(4, game.Player1Grid[1, 1].SelfBonusPower);
+        }
     }
 }

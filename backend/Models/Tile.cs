@@ -378,7 +378,7 @@ namespace backend.Models
 
             foreach (Tile enhancedTile in cards)
             {
-                if (enhancedTile.Card == null || Owner == null || !triggerCondition!.Contains(modifier) || enhancedTile.Id == this.Id)
+                if (enhancedTile.Card == null || Owner == null || !triggerCondition!.Contains(modifier) || enhancedTile.Id == this.Id || enhancedTile.GetBonusPower() == 0)
                     continue;
                 if (enhancedTile.Owner!.Id == Owner!.Id)
                     alliesModified++;
@@ -391,17 +391,29 @@ namespace backend.Models
             if (triggerCondition.Contains("AE"))
             {
                 SelfBonusPower = (int)Card!.Ability.Value! * (alliesModified + enemiesModified);
+                SelfEnhanceCleanup(game);
             }
             else if (triggerCondition.Contains("A"))
             {
                 SelfBonusPower = (int)Card!.Ability.Value! * alliesModified;
+                SelfEnhanceCleanup(game);
             }
             else if (triggerCondition.Contains("E"))
             {
                 SelfBonusPower = (int)Card!.Ability.Value! * enemiesModified;
+                SelfEnhanceCleanup(game);
             }
+        }
 
-            if (!game.EnhancedCards.Contains(this))
+        private int GetBonusPower()
+        {
+            var tileBonusPower = Owner != null ? PlayerTileBonusPower[Owner.playerIndex] : 0;
+            return tileBonusPower + CardBonusPower + SelfBonusPower;
+        }
+
+        private void SelfEnhanceCleanup(Game game)
+        {
+            if (!game.EnhancedCards.Contains(this) && SelfBonusPower > 0)
                 game.AddToEnhancedCards(this);
         }
 
