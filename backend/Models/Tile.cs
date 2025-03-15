@@ -127,6 +127,8 @@ namespace backend.Models
             game.OnCardEnhanced -= HandleCardEnhanced;
             game.OnCardEnfeebled -= HandleCardEnfeebled;
             game.OnRoundEnd -= HandleAddLaneLoserScoreToVictor;
+            game.OnEnfeebledCardsChanged -= HandleEnfeebledCardsChanged;
+            game.OnEnhancedCardsChanged -= HandleEnhancedCardsChanged;
 
             foreach (var subscribedEvent in _subscribedEvents)
             {
@@ -168,6 +170,8 @@ namespace backend.Models
                 game.OnCardDestroyed -= HandleCardDestroyed;
                 game.OnCardEnhanced -= HandleCardEnhanced;
                 game.OnCardEnfeebled -= HandleCardEnfeebled;
+                game.OnEnfeebledCardsChanged -= HandleEnfeebledCardsChanged;
+                game.OnEnhancedCardsChanged -= HandleEnhancedCardsChanged;
                 game.OnRoundEnd -= HandleAddLaneLoserScoreToVictor;
 
                 _subscribedEvents.Clear();
@@ -390,17 +394,6 @@ namespace backend.Models
                 if (enhancedTile.Owner!.Id != Owner.Id)
                     enemiesModified++;
             }
-
-            // This card no longer has any dependencies
-            if (alliesModified == 0 && enemiesModified == 0)
-            {
-                if (game.EnhancedCards.Contains(this))
-                {
-                    SelfBonusPower = 0;
-                    game.RemoveFromEnhancedCards(this);
-                }
-                return;
-            }
                     
             if (triggerCondition.Contains("AE"))
             {
@@ -429,6 +422,10 @@ namespace backend.Models
         {
             if (!game.EnhancedCards.Contains(this) && SelfBonusPower > 0)
                 game.AddToEnhancedCards(this);
+
+            // This card no longer has any dependencies AND is not being enhanced by other cards
+            else if (game.EnhancedCards.Contains(this) && GetBonusPower() == 0)
+                game.RemoveFromEnhancedCards(this);
         }
 
         private bool AbilityExecutionThresholdMet(Game game)

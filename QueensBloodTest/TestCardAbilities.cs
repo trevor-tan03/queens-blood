@@ -1034,5 +1034,24 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 1, 0);
             Assert.Equal(0, game.Player1Grid[2, 0].SelfBonusPower);
         }
+
+        [Fact]
+        public void SpaceRangerNotRegisteringPlacingCardOnEhancedTile()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Cactuar, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 2, 0);
+
+            game.SwapPlayerTurns();
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 0);
+
+            game.SwapPlayerTurns();
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 1);
+
+            Assert.Equal(1, game.Player2Grid[2, 0].SelfBonusPower);
+        }
     }
 }
