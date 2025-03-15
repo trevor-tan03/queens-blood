@@ -1018,5 +1018,21 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(game, Cards.Sandspitter, 0, 0);
             Assert.Equal(-1, game.Player1Grid[2, 1].CardBonusPower);
         }
+
+        [Fact]
+        public void DestroyingBonusPowerProviderShouldAffectSelfEnhanceCards()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.ChocoboMoogle, 2, 0);
+            Assert.Equal(1, game.Player1Grid[2, 0].SelfBonusPower);
+
+            AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 1, 0);
+            Assert.Equal(0, game.Player1Grid[2, 0].SelfBonusPower);
+        }
     }
 }

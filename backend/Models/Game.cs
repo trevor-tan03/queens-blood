@@ -247,7 +247,13 @@ namespace backend.Models
                 {
                     ActionQueue.Enqueue(() => DestroyCard(instigator, row, col, false));
                 }
-            } 
+            }
+            else if ((EnhancedCards.Contains(tile) && bonusPower <= 0) ||
+                (EnfeebledCards.Contains(tile) && bonusPower >= 0))
+            {
+                RemoveFromEnhancedCards(tile);
+                RemoveFromEnfeebledCards(tile);
+            }
         }
 
         public void EnqueueOnPowerChange(string type, Tile[,] grid, int row, int col)

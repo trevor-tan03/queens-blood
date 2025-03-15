@@ -197,9 +197,15 @@ namespace backend.Models
                         var tile = ownerGrid[dy, dx];
 
                         if (target.Contains("a"))
-                            tile.PlayerTileBonusPower[Owner.playerIndex] -= (int)Card!.Ability.Value * operation;
+                        {
+                            var amount = -(int)Card!.Ability.Value * operation;
+                            game.ChangePower(instigator, this, tile, dy, dx, amount, true, "a");
+                        }
                         if (target.Contains("e"))
-                            tile.PlayerTileBonusPower[(Owner.playerIndex + 1) % 2] -= (int)Card!.Ability.Value * operation;
+                        {
+                            var amount = -(int)Card!.Ability.Value * operation;
+                            game.ChangePower(instigator, this, tile, dy, dx, amount, true, "e");
+                        }
 
                         if (tile.GetCumulativePower() <= 0)
                             game.DestroyCard(instigator, dy, dx, false);
@@ -385,7 +391,16 @@ namespace backend.Models
                     enemiesModified++;
             }
 
-            if (alliesModified == 0 && enemiesModified == 0) return;
+            // This card no longer has any dependencies
+            if (alliesModified == 0 && enemiesModified == 0)
+            {
+                if (game.EnhancedCards.Contains(this))
+                {
+                    SelfBonusPower = 0;
+                    game.RemoveFromEnhancedCards(this);
+                }
+                return;
+            }
                     
             if (triggerCondition.Contains("AE"))
             {
@@ -523,7 +538,7 @@ namespace backend.Models
                 SelfBonusPower += (int)Card!.Ability.Value!;
 
                 if (!game.EnhancedCards.Contains(this))
-                    game.EnhancedCards.Add(this);
+                    game.AddToEnhancedCards(this);
             }
 
             if (this == grid[row, col])
