@@ -30,6 +30,7 @@ namespace QueensBloodTest
         InsectoidChimera =50,
         Gigantoad=51,
         Amalgam=56,
+        Skeeskee=57,
         Griffon=58,
         Reapertail=60,
         TwoFace=65,

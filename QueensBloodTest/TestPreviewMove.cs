@@ -225,5 +225,20 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(gameCopy, Cards.Capparwire, 0, 0);
             Assert.NotNull(gameCopy.Player2Grid[0, 0].Card);
         }
+
+        [Fact]
+        public void SkeeskeeShouldShowEnhanceWhenAllyCardIsDestroyed()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Skeeskee, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
+
+            var gameCopy = Copy.DeepCopy(game);
+            AddToHandAndPlaceCard(gameCopy, Cards.InsectoidChimera, 1, 0);
+            Assert.Equal(1, gameCopy.Player1Grid[0, 0].SelfBonusPower);
+        }
     }
 }

@@ -528,8 +528,8 @@ namespace backend.Models
                     ExecuteAbility(game, grid, row, col);
             }
 
-            if (Card!.Ability.Condition == "AD" && grid[row, col].Owner == Owner || // Ally destroyed
-                Card!.Ability.Condition == "ED" && grid[row, col].Owner != Owner || // Enemy destroyed
+            if (Card!.Ability.Condition == "AD" && grid[row, col].Owner!.Id == Owner!.Id || // Ally destroyed
+                Card!.Ability.Condition == "ED" && grid[row, col].Owner!.Id != Owner!.Id || // Enemy destroyed
                 Card!.Ability.Condition == "AED") // Either destroyed
             {
                 SelfBonusPower += (int)Card!.Ability.Value!;
