@@ -37,6 +37,7 @@ namespace QueensBloodTest
         GiSpecter=66,
         TwinBrain=70,
         BlackBat=71,
+        DiabolicVariant=76,
         Cloud=85,
         Tifa=87,
         Aerith=88,

@@ -687,7 +687,7 @@ namespace QueensBloodTest
         }
 
         [Fact]
-        public void CardOnLifeSupport()
+        public void PullingLifeSupportFromCardShouldDestroyIt()
         {
             var game = CreateGameWithPlayers();
             game.Start();
@@ -701,6 +701,23 @@ namespace QueensBloodTest
 
             AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 2, 0); // Replace Crystalline Crab
             Assert.Null(game.Player1Grid[1, 0].Card);
+        }
+
+        [Fact]
+        public void PullingIndirectLifeSupport()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
+            game.Player1Grid[0, 0].RankUp(1);
+            AddToHandAndPlaceCard(game, Cards.Ifrit, 0, 0);
+            Assert.Equal(2, game.Player1Grid[0, 0].SelfBonusPower);
+
+            AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 1, 0); // Replace allied card, but still enhanced
+            Assert.Equal(2, game.Player1Grid[0, 0].SelfBonusPower);
         }
 
         [Fact]
@@ -720,8 +737,8 @@ namespace QueensBloodTest
 
             // Opposing player places enfeeble cards:
             game.SwapPlayerTurns();
-            AddToHandAndPlaceCard(game, Cards.Archdragon, 0, 3); // Will enfeeble grasslands wolf
-            AddToHandAndPlaceCard(game, Cards.BlackBat, 1, 3); // Will enfeeble crystalline crab
+            AddToHandAndPlaceCard(game, Cards.Archdragon, 0, 3); // Will enfeeble grasslands wolf, threatening its life
+            AddToHandAndPlaceCard(game, Cards.BlackBat, 1, 3); // Will enfeeble crystalline crab, threatening its life
 
             // Ensure grasslands wolf and crystalline crabs are still alive
             Assert.NotNull(game.Player1Grid[0, 0].Card);
@@ -799,7 +816,7 @@ namespace QueensBloodTest
 
             AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
             AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 1, 0);
-            Assert.Empty(game.PowerTransferQueue);
+            Assert.Equal(0, game.PowerTransferAmount);
         }
 
         [Fact]
@@ -1052,6 +1069,21 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 1);
 
             Assert.Equal(1, game.Player2Grid[2, 0].SelfBonusPower);
+        }
+
+        [Fact]
+        public void ReplaceCardAndEnfeebleByReplacedCardsPower()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            game.Player1Grid[1, 0].RankUp(2);
+            AddToHandAndPlaceCard(game, Cards.Ifrit, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 1);
+            AddToHandAndPlaceCard(game, Cards.GiSpecter, 1, 0);
+            Assert.Null(game.Player1Grid[2,1].Card);
         }
     }
 }

@@ -7,7 +7,7 @@
 
         // Private variables
         public static readonly List<string> OnPlaceConditions = ["AP", "EP"];
-        public static readonly List<string> OnDestroyConditions = ["D", "AD", "ED", "AED", "*", "W"];
+        public static readonly List<string> OnDestroyConditions = ["AD", "ED", "AED"];
         public static readonly List<string> OnEnhanceConditions = ["P1R", "1+", "EE"];
         public static readonly List<string> OnEnfeebleConditions = ["1-", "EE"];
         public static readonly string OnRoundEndCondition = "L+V";

@@ -19,11 +19,11 @@ namespace backend.Models
         public List<Tile> EnfeebledCards { get; set; } = new List<Tile>();
         private int _consecutivePasses { get; set; } = 0;
         public int _currentPlayerIndex = 0;
-        public Queue<int> PowerTransferQueue { get; set; } = new Queue<int>();
+        public int PowerTransferAmount { get; set; } = 0;
 
         // Events
         public event Action<Game, Tile[,], int, int> OnCardPlaced;
-        public event Action<Player, Game, Tile[,], int, int> OnCardDestroyed;
+        public event Action<Game, Tile[,], int, int> OnCardDestroyed;
         public event Action<Game, Tile[,], int, int> OnCardEnhanced;
         public event Action<Game, Tile[,], int, int> OnCardEnfeebled;
         public event Action<Game> OnRoundEnd;
@@ -316,25 +316,30 @@ namespace backend.Models
         public void DestroyCard(Player instigator, int row, int col, bool isTransferPower)
         {
             var grid = _currentPlayerIndex == 0 ? Player1Grid : Player2Grid;
-            OnCardDestroyed?.Invoke(instigator, this, grid, row, col);
+            var tile = grid[row, col];
 
-            int cumulativePower = grid[row, col].GetCumulativePower();
-            grid[row, col].Card = null;
+            if (tile == null) return;
+
+            OnCardDestroyed?.Invoke(this, grid, row, col);
+
+            int cumulativePower = tile.GetCumulativePower();
             var tileBonusPower = grid[row, col].PlayerTileBonusPower[instigator.playerIndex];
 
-            if (EnhancedCards.Contains(grid[row, col]) && tileBonusPower <= 0)
-                RemoveFromEnhancedCards(grid[row, col]);
-            if (EnfeebledCards.Contains(grid[row, col]) && tileBonusPower >= 0)
-                RemoveFromEnfeebledCards(grid[row, col]);
+            tile.RemoveCard(instigator, this, grid, row, col);
 
-            // Reset card specifc power bonus when destroyed
-            if (!isTransferPower)
-            {
-                grid[row, col].CardBonusPower = 0;
-                grid[row, col].SelfBonusPower = 0;
-            } else
-                // For cards that transfer power (e.g. Griffon, Gi Specter, etc.)
-                PowerTransferQueue.Enqueue(cumulativePower);
+            // Remove card-specific bonuses (not tile bonus)
+            grid[row, col].CardBonusPower = 0;
+            grid[row, col].SelfBonusPower = 0;
+
+            // Remove from EnhancedCards if the tile is not enhanced
+            if (grid[row, col].PlayerTileBonusPower[0] <= 0 && grid[row, col].PlayerTileBonusPower[1] <= 0)
+                RemoveFromEnhancedCards(grid[row, col]);
+
+            // Remove from EnfeebledCards if the tile is not enfeebled
+            if (grid[row, col].PlayerTileBonusPower[0] >= 0 && grid[row, col].PlayerTileBonusPower[1] >= 0)
+                RemoveFromEnfeebledCards(grid[row, col]);
+            if (isTransferPower)
+                PowerTransferAmount = cumulativePower;
 
             grid[row, col].Owner = instigator;
         }
@@ -443,6 +448,8 @@ namespace backend.Models
 
                 tile.InitAbility(this);
                 OnCardPlaced?.Invoke(this, grid, row, col);
+
+                PowerTransferAmount = 0;
 
                 ExecuteQueuedActions();
                 CalculatePlayerScores();
