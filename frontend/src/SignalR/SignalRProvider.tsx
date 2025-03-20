@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import type { Card } from "../types/Card";
 import type { Game, GameDTO } from "../types/Game";
+import type { Message } from "../types/Message";
 import type { Player } from "../types/Player";
 
 interface SignalRContextProps {
@@ -37,7 +38,7 @@ interface SignalRContextProps {
   currPlayer: Player | undefined;
   gameCode: string;
   players: Player[];
-  messageLog: string[];
+  messageLog: Message[];
   gameStart: boolean;
   hand: Card[];
   mulliganPhaseEnded: boolean;
@@ -60,7 +61,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
   const [gameCode, setGameCode] = useState("");
   const [currPlayer, setCurrPlayer] = useState<Player | undefined>();
   const [players, setPlayers] = useState<Player[]>([]);
-  const [messageLog, setMessageLog] = useState<string[]>([]);
+  const [messageLog, setMessageLog] = useState<Message[]>([]);
   const [gameStart, setGameStart] = useState(false);
   const [hand, setHand] = useState<Card[]>([]);
   const [mulliganPhaseEnded, setMulliganPhaseEnded] = useState(false);
@@ -71,7 +72,10 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
 
   const setupSignalREvents = (conn: signalR.HubConnection) => {
     conn.on("ReceiveMessage", (message: string) => {
-      setMessageLog((prevLog) => [...prevLog, message]);
+      console.log(message);
+
+      const messageDTO = JSON.parse(message);
+      setMessageLog((prevLog) => [...prevLog, messageDTO]);
     });
 
     conn.on("ErrorMessage", (message: string) => {

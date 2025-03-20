@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.SignalR;
 using HashidsNet;
 using backend.Utility;
 using backend.DTO;
+using Newtonsoft.Json;
+using System.Numerics;
 
 namespace backend.Hubs
 {
@@ -60,11 +62,12 @@ namespace backend.Hubs
 			var game = _gameRepository.GetGameById(gameId);
 			game!.AddPlayer(Context.ConnectionId, playerName);
 
-			// Send message saying the host has connected
-			await Clients.Group(gameId).SendAsync("ReceiveMessage", $"{playerName} connected.");
+            // Send message saying the host has connected
+            var messageDTO = JsonConvert.SerializeObject(new MessageDTO("Server", $"{playerName} connected."));
+            await Clients.Group(gameId).SendAsync("ReceiveMessage", messageDTO);
 
-			// Send out the list of players in the game
-			await Clients.Group(gameId).SendAsync("ReceivePlayerList", game.Players);
+            // Send out the list of players in the game
+            await Clients.Group(gameId).SendAsync("ReceivePlayerList", game.Players);
 
 			// Send the game code to the host
 			await Clients.Client(Context.ConnectionId).SendAsync("GameCode", gameId);
@@ -78,8 +81,9 @@ namespace backend.Hubs
 			{
 				await Groups.AddToGroupAsync(Context.ConnectionId, gameId);
 				_gameRepository!.GetGameById(gameId)!.AddPlayer(Context.ConnectionId, playerName);
-				await Clients.Group(gameId).SendAsync("ReceiveMessage", $"{playerName} connected.");
-				await Clients.Group(gameId).SendAsync("ReceivePlayerList", game.Players);
+                var messageDTO = JsonConvert.SerializeObject(new MessageDTO("Server", $"{playerName} connected."));
+                await Clients.Group(gameId).SendAsync("ReceiveMessage", messageDTO);
+                await Clients.Group(gameId).SendAsync("ReceivePlayerList", game.Players);
 			} 
 			else if (game != null) {
 				await SendErrorMessage("Game is full.");
@@ -103,7 +107,8 @@ namespace backend.Hubs
 				}
 
 				await Groups.RemoveFromGroupAsync(Context.ConnectionId, gameId);
-				await Clients.Group(gameId).SendAsync("ReceiveMessage", $"{player.Name} disconnected.");
+				var messageDTO = JsonConvert.SerializeObject(new MessageDTO("Server", $"{player.Name} disconnected."));
+				await Clients.Group(gameId).SendAsync("ReceiveMessage", messageDTO);
 				await Clients.Group(gameId).SendAsync("ReceivePlayerList", game.Players);
 			} else
 			{
@@ -165,7 +170,8 @@ namespace backend.Hubs
 
 			if (game != null && player != null)
 			{
-				await Clients.Group(gameId).SendAsync("ReceiveMessage", $"{player.Name}: {message}");
+				var messageDTO = JsonConvert.SerializeObject(new MessageDTO(Context.ConnectionId, message));
+                await Clients.Group(gameId).SendAsync("ReceiveMessage", messageDTO);
 			}
 		}
 
