@@ -188,5 +188,77 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(gameCopy, Cards.Tifa, 0, 0);
             Assert.Equal(5, gameCopy.GetPlayerLaneBonus(0, 0));
         }
+
+        [Fact]
+        public void PreviewSelfEnhance()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0); // Enhances Security Officer
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0); // Enhances Space Ranger (P2)
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 1);
+
+            game.SwapPlayerTurns();
+
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0); // Enhances Security Officer
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0); // Enhances Space Ranger (P1)
+
+            var gameCopy = Copy.DeepCopy(game);
+            AddToHandAndPlaceCard(gameCopy, Cards.SpaceRanger, 2, 1);
+            Assert.Equal(2, gameCopy.Player2Grid[2, 1].SelfBonusPower);
+        }
+
+        [Fact]
+        public void AfterPlacingResurrectedAmalgamDontBreak()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.ResurrectedAmalgam, 1, 0);
+
+            game.SwapPlayerTurns();
+
+            var gameCopy = Copy.DeepCopy(game);
+            AddToHandAndPlaceCard(gameCopy, Cards.Capparwire, 0, 0);
+            Assert.NotNull(gameCopy.Player2Grid[0, 0].Card);
+        }
+
+        [Fact]
+        public void SkeeskeeShouldShowEnhanceWhenAllyCardIsDestroyed()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Skeeskee, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
+
+            var gameCopy = Copy.DeepCopy(game);
+            AddToHandAndPlaceCard(gameCopy, Cards.InsectoidChimera, 1, 0);
+            Assert.Equal(1, gameCopy.Player1Grid[0, 0].SelfBonusPower);
+        }
+
+        [Fact]
+        public void ReplaceCardAndEnfeebleByReplacedCardsPowerShowsDestroyedCards()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0);
+            game.Player1Grid[1, 0].RankUp(2);
+            AddToHandAndPlaceCard(game, Cards.Ifrit, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 1);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 1);
+
+            var gameCopy = Copy.DeepCopy(game);
+            AddToHandAndPlaceCard(gameCopy, Cards.DiabolicVariant, 1, 0);
+            Assert.Null(gameCopy.Player1Grid[0, 0].Card);
+            Assert.Null(gameCopy.Player1Grid[2, 0].Card);
+        }
     }
 }

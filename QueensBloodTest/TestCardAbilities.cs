@@ -687,7 +687,7 @@ namespace QueensBloodTest
         }
 
         [Fact]
-        public void CardOnLifeSupport()
+        public void PullingLifeSupportFromCardShouldDestroyIt()
         {
             var game = CreateGameWithPlayers();
             game.Start();
@@ -701,6 +701,23 @@ namespace QueensBloodTest
 
             AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 2, 0); // Replace Crystalline Crab
             Assert.Null(game.Player1Grid[1, 0].Card);
+        }
+
+        [Fact]
+        public void PullingIndirectLifeSupport()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
+            game.Player1Grid[0, 0].RankUp(1);
+            AddToHandAndPlaceCard(game, Cards.Ifrit, 0, 0);
+            Assert.Equal(2, game.Player1Grid[0, 0].SelfBonusPower);
+
+            AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 1, 0); // Replace allied card, but still enhanced
+            Assert.Equal(2, game.Player1Grid[0, 0].SelfBonusPower);
         }
 
         [Fact]
@@ -720,8 +737,8 @@ namespace QueensBloodTest
 
             // Opposing player places enfeeble cards:
             game.SwapPlayerTurns();
-            AddToHandAndPlaceCard(game, Cards.Archdragon, 0, 3); // Will enfeeble grasslands wolf
-            AddToHandAndPlaceCard(game, Cards.BlackBat, 1, 3); // Will enfeeble crystalline crab
+            AddToHandAndPlaceCard(game, Cards.Archdragon, 0, 3); // Will enfeeble grasslands wolf, threatening its life
+            AddToHandAndPlaceCard(game, Cards.BlackBat, 1, 3); // Will enfeeble crystalline crab, threatening its life
 
             // Ensure grasslands wolf and crystalline crabs are still alive
             Assert.NotNull(game.Player1Grid[0, 0].Card);
@@ -799,7 +816,7 @@ namespace QueensBloodTest
 
             AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
             AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 1, 0);
-            Assert.Empty(game.PowerTransferQueue);
+            Assert.Equal(0, game.PowerTransferAmount);
         }
 
         [Fact]
@@ -885,6 +902,188 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 0);
             Assert.Equal(0, game.Player1Grid[2, 0].SelfBonusPower);
             Assert.Equal(0, game.Player2Grid[2, 0].SelfBonusPower);
+        }
+
+        [Fact]
+        public void AmalgamShouldNotGiveTwoCards()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Amalgam, 1, 0);
+
+            game.SwapPlayerTurns();
+
+            AddToHandAndPlaceCard(game, Cards.Amalgam, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.Gigantoad, 1, 0);
+
+            var countResurrectedAmalgams = 0;
+            foreach(Card card in game.Players[1].Hand)
+                if (card.Name == "Resurrected Amalgam")
+                    countResurrectedAmalgams++;
+
+            Assert.Equal(1, countResurrectedAmalgams);
+        }
+
+        [Fact]
+        public void PlacingCardWithLessPowerThanEnfeebledTileShouldDestroyIt()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.ResurrectedAmalgam, 1, 0);
+            Assert.Equal(-2, game.Player1Grid[0, 0].PlayerTileBonusPower[0]);
+
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0);
+            Assert.Null(game.Player1Grid[0, 0].Card);
+        }
+
+        [Fact]
+        public void SelfEnhanceCardsShouldNotRespondToEnhanceOnEmptyTile()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 0);
+            game.SwapPlayerTurns();
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0);
+
+            Assert.Equal(0, game.Player1Grid[2, 0].SelfBonusPower);
+            Assert.Equal(0, game.Player2Grid[2, 0].SelfBonusPower);
+        }
+
+        [Fact]
+        public void IfritShouldNotFactorEnemyCards()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Cactuar, 0, 0); // Enhances UPA
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0); // Enhances Cactuar
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.UltimatePartyAnimal, 2, 1);
+            AddToHandAndPlaceCard(game, Cards.Capparwire, 0, 1);
+            AddToHandAndPlaceCard(game, Cards.Ifrit, 1, 1);
+            Assert.Equal(4, game.Player1Grid[1, 1].SelfBonusPower);
+
+            game.SwapPlayerTurns();
+
+            game.Player2Grid[0, 2].Owner = game.Players[1];
+            game.Player2Grid[0, 2].RankUp(1);
+            AddToHandAndPlaceCard(game, Cards.Ignilisk, 0, 2);
+            Assert.Equal(4, game.Player1Grid[1, 1].SelfBonusPower);
+        }
+
+        [Fact]
+        public void WhenACardIsDestroyedUninitWithRespectToOriginalOwnersBoard()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Capparwire, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.Ignilisk, 0, 1);
+
+            game.SwapPlayerTurns();
+
+            game.Player1Grid[0, 2].Owner = game.Players[1];
+            game.Player1Grid[0, 2].RankUp(1);
+            AddToHandAndPlaceCard(game, Cards.Cockatrice, 0, 2);
+
+            Assert.Null(game.Player1Grid[0, 1].Card);
+            Assert.Equal(0, game.Player1Grid[0, 0].GetBonusPower());
+        }
+
+        [Fact]
+        public void ReenhancingAnEnhancedCardShouldNotRemoveItFromEnhancedCardsList()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Cactuar, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.Capparwire, 1, 1);
+            AddToHandAndPlaceCard(game, Cards.UltimatePartyAnimal, 2, 1);
+
+            game.SwapPlayerTurns();
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 0);
+            Assert.Equal(2, game.Player2Grid[2, 0].SelfBonusPower);
+
+            game.SwapPlayerTurns();
+            AddToHandAndPlaceCard(game, Cards.Ignilisk, 0, 1);
+            Assert.Equal(2, game.Player2Grid[2, 0].SelfBonusPower);
+        }
+
+        [Fact]
+        public void SandSpitterShouldEnfeebleWhenPlaced()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.Archdragon, 2, 1);
+
+            game.Player1Grid[0, 0].RankUp(1);
+            AddToHandAndPlaceCard(game, Cards.Sandspitter, 0, 0);
+            Assert.Equal(-1, game.Player1Grid[2, 1].CardBonusPower);
+        }
+
+        [Fact]
+        public void DestroyingBonusPowerProviderShouldAffectSelfEnhanceCards()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.ChocoboMoogle, 2, 0);
+            Assert.Equal(1, game.Player1Grid[2, 0].SelfBonusPower);
+
+            AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 1, 0);
+            Assert.Equal(0, game.Player1Grid[2, 0].SelfBonusPower);
+        }
+
+        [Fact]
+        public void SpaceRangerNotRegisteringPlacingCardOnEhancedTile()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Cactuar, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 2, 0);
+
+            game.SwapPlayerTurns();
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 0);
+
+            game.SwapPlayerTurns();
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 1);
+
+            Assert.Equal(1, game.Player2Grid[2, 0].SelfBonusPower);
+        }
+
+        [Fact]
+        public void ReplaceCardAndEnfeebleByReplacedCardsPower()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            game.Player1Grid[1, 0].RankUp(2);
+            AddToHandAndPlaceCard(game, Cards.Ifrit, 1, 0);
+            AddToHandAndPlaceCard(game, Cards.CrystallineCrab, 2, 0);
+            AddToHandAndPlaceCard(game, Cards.SpaceRanger, 2, 1);
+            AddToHandAndPlaceCard(game, Cards.GiSpecter, 1, 0);
+            Assert.Null(game.Player1Grid[2,1].Card);
         }
     }
 }

@@ -8,6 +8,7 @@ namespace backend.Models
 {
     public class Tile
     {
+        public string Id { get; set; }
         public Player? Owner { get; set; }
         public int Rank { get; set; }
         public Card? Card { get; set; }
@@ -16,6 +17,11 @@ namespace backend.Models
         public int CardBonusPower { get; set; } = 0; // Bonus Power that only affects the card on the tile, not the tile itself
         public int SelfBonusPower { get; set; } = 0; // Bonus Power from this card's ability
         public List<string> _subscribedEvents = new List<string>();
+
+        public Tile(string id)
+        {
+            Id = id;
+        }
 
         public void RankUp(int amount)
         {
@@ -53,15 +59,70 @@ namespace backend.Models
                 _subscribedEvents.Add("L+V");
                 game.OnRoundEnd += HandleAddLaneLoserScoreToVictor;
             }
+
+            if (OnEnhancedCardsChangedConditions.Contains(Card!.Ability.Condition))
+            {
+                _subscribedEvents.Add("+C");
+                game.OnEnhancedCardsChanged += HandleEnhancedCardsChanged;
+            }
+
+            if (OnEnfeebledCardsChangedConditions.Contains(Card!.Ability.Condition))
+            {
+                _subscribedEvents.Add("-C");
+                game.OnEnfeebledCardsChanged += HandleEnfeebledCardsChanged;
+            }
+        }
+
+        private void HandleEnhancedCardsChanged(Game game)
+        {
+            var triggerCondition = Card!.Ability.Condition;
+            var alliesEnhanced = game.EnhancedCards.Exists(c => c.Owner != null && c.Owner.Id == Owner!.Id);
+            var enemiesEnhanced = game.EnhancedCards.Exists(c => c.Owner != null && c.Owner.Id != Owner!.Id);
+
+            if ((triggerCondition.Contains("AE") && (alliesEnhanced || enemiesEnhanced)) ||
+                (triggerCondition.Contains("A") && alliesEnhanced) ||
+                (triggerCondition.Contains("E") && enemiesEnhanced))
+            {
+                if (!game.EnhancedCards.Contains(this))
+                    game.AddToEnhancedCards(this);
+            }
+            else
+            {
+                game.RemoveFromEnhancedCards(this);
+            }
+
+            RecalculateSelfBonusPower(game);
+        }
+
+        private void HandleEnfeebledCardsChanged(Game game)
+        {
+            var triggerCondition = Card!.Ability.Condition;
+            var alliesEnfeebled = game.EnfeebledCards.Exists(c => c.Owner != null && c.Owner.Id == Owner!.Id);
+            var enemiesEnfeebled = game.EnfeebledCards.Exists(c => c.Owner != null && c.Owner.Id != Owner!.Id);
+
+            if ((triggerCondition.Contains("AE") && (alliesEnfeebled || enemiesEnfeebled)) ||
+                (triggerCondition.Contains("A") && alliesEnfeebled) ||
+                (triggerCondition.Contains("E") && enemiesEnfeebled))
+            {
+                if (!game.EnhancedCards.Contains(this))
+                    game.EnhancedCards.Add(this);
+            }
+            else
+            {
+                game.EnhancedCards.Remove(this);
+            }
+
+            RecalculateSelfBonusPower(game);
+        }
+
+        private void RecalculateSelfBonusPower(Game game)
+        {
+            game.SelfEnhanceQueue.Enqueue(() => CalculateSelfBoostFromPowerModifiedCards(game));
         }
 
         public void ReInitAbilities(Game game)
         {
-            game.OnCardPlaced -= HandleCardPlaced;
-            game.OnCardDestroyed -= HandleCardDestroyed;
-            game.OnCardEnhanced -= HandleCardEnhanced;
-            game.OnCardEnfeebled -= HandleCardEnfeebled;
-            game.OnRoundEnd -= HandleAddLaneLoserScoreToVictor;
+            UnsubscribeEvents(game);
 
             foreach (var subscribedEvent in _subscribedEvents)
             {
@@ -82,25 +143,35 @@ namespace backend.Models
                     case "L+V":
                         game.OnRoundEnd += HandleAddLaneLoserScoreToVictor;
                         break;
+                    case "+C":
+                        game.OnEnhancedCardsChanged += HandleEnhancedCardsChanged;
+                        break;
+                    case "-C":
+                        game.OnEnfeebledCardsChanged += HandleEnfeebledCardsChanged;
+                        break;
                     default:
                         break;
                 }
             }
         }
 
+        public void UnsubscribeEvents(Game game)
+        {
+            game.OnCardPlaced -= HandleAnotherCardPlaced;
+            game.OnCardDestroyed -= HandleCardDestroyed;
+            game.OnCardEnhanced -= HandleCardEnhanced;
+            game.OnCardEnfeebled -= HandleCardEnfeebled;
+            game.OnRoundEnd -= HandleAddLaneLoserScoreToVictor;
+            game.OnEnfeebledCardsChanged -= HandleEnfeebledCardsChanged;
+            game.OnEnhancedCardsChanged -= HandleEnhancedCardsChanged;
+        }
+
         private void UninitAbility(Player instigator, Game game, Tile[,] grid, int row, int col)
         {
             // Unsubscribe the destroyed card from all events
-            if (this == grid[row, col])
+            if (this.Id == grid[row, col].Id)
             {
-                _subscribedEvents.Clear();
-
-                game.OnCardPlaced -= HandleCardPlaced;
-                game.OnCardDestroyed -= HandleCardDestroyed;
-                game.OnCardEnhanced -= HandleCardEnhanced;
-                game.OnCardEnfeebled -= HandleCardEnfeebled;
-                game.OnRoundEnd -= HandleAddLaneLoserScoreToVictor;
-
+                UnsubscribeEvents(game);
                 _subscribedEvents.Clear();
             }
 
@@ -124,12 +195,19 @@ namespace backend.Models
 
                     if (rangeCell.Colour.Contains("R") && isIndexInBounds && Card!.Ability.Value != null)
                     {
-                        var tile = grid[dy, dx];
+                        var ownerGrid = Owner.playerIndex == 0 ? game.Player1Grid : game.Player2Grid;
+                        var tile = ownerGrid[dy, dx];
 
                         if (target.Contains("a"))
-                            tile.PlayerTileBonusPower[Owner.playerIndex] -= (int)Card!.Ability.Value * operation;
+                        {
+                            var amount = -(int)Card!.Ability.Value * operation;
+                            game.ChangePower(instigator, this, tile, dy, dx, amount, true, "a");
+                        }
                         if (target.Contains("e"))
-                            tile.PlayerTileBonusPower[(Owner.playerIndex + 1) % 2] -= (int)Card!.Ability.Value * operation;
+                        {
+                            var amount = -(int)Card!.Ability.Value * operation;
+                            game.ChangePower(instigator, this, tile, dy, dx, amount, true, "e");
+                        }
 
                         if (tile.GetCumulativePower() <= 0)
                             game.DestroyCard(instigator, dy, dx, false);
@@ -175,7 +253,7 @@ namespace backend.Models
 
             if ((abilityAction == null || abilityAction!.Contains("P")) && Owner != null)
             {
-                abilityValue = Card!.Ability.Value == null ? game.PowerTransferQueue.Dequeue() : Card!.Ability.Value;
+                abilityValue = Card!.Ability.Value == null ? game.PowerTransferAmount : Card!.Ability.Value;
                 game.ChangePower(Owner, this, tile, row, col, (int)abilityValue * operation, isTilePowerBonus, Card.Ability.Target!);
             }
             else if (abilityAction == "destroy" && Owner != null)
@@ -256,7 +334,7 @@ namespace backend.Models
                 // Raise this card's power by one
                 else if (Card!.Ability.Target == "s")
                 {
-                    CalculateSelfBoostFromPowerModifiedCards(game, grid, row, col);
+                    CalculateSelfBoostFromPowerModifiedCards(game);
                 }
             }
             else
@@ -293,10 +371,12 @@ namespace backend.Models
             }
         }
 
-        private void CalculateSelfBoostFromPowerModifiedCards(Game game, Tile[,] grid, int row, int col)
+        private void CalculateSelfBoostFromPowerModifiedCards(Game game)
         {
+            if (Card == null) return;
+
             // Prevent out of index error for retrieving the modifier
-            string modifier = Card!.Ability.Condition != null ? Card!.Ability.Condition[0].ToString() : "";
+            string modifier = Card!.Ability.Condition.FirstOrDefault().ToString() ?? "";
             var modifiers = new string[] { "+", "-" };
             if (!modifiers.Contains(modifier)) return;
 
@@ -307,7 +387,7 @@ namespace backend.Models
 
             foreach (Tile enhancedTile in cards)
             {
-                if (enhancedTile.Card == null || Owner == null || !triggerCondition!.Contains(modifier) || enhancedTile == this)
+                if (enhancedTile.Card == null || Owner == null || !triggerCondition!.Contains(modifier) || enhancedTile.Id == this.Id || enhancedTile.GetBonusPower() == 0)
                     continue;
                 if (enhancedTile.Owner!.Id == Owner!.Id)
                     alliesModified++;
@@ -315,27 +395,37 @@ namespace backend.Models
                     enemiesModified++;
             }
 
-            if (alliesModified == 0 && enemiesModified == 0)
-                return;
-
             if (triggerCondition.Contains("AE"))
             {
                 SelfBonusPower = (int)Card!.Ability.Value! * (alliesModified + enemiesModified);
+                SelfEnhanceCleanup(game);
             }
             else if (triggerCondition.Contains("A"))
             {
                 SelfBonusPower = (int)Card!.Ability.Value! * alliesModified;
+                SelfEnhanceCleanup(game);
             }
             else if (triggerCondition.Contains("E"))
             {
                 SelfBonusPower = (int)Card!.Ability.Value! * enemiesModified;
+                SelfEnhanceCleanup(game);
             }
+        }
 
-            if (!game.EnhancedCards.Contains(this))
-            {
-                game.EnqueueOnPowerChange("enhance", grid, row, col);
-                game.EnhancedCards.Add(this);
-            }
+        public int GetBonusPower()
+        {
+            var tileBonusPower = Owner != null ? PlayerTileBonusPower[Owner.playerIndex] : 0;
+            return tileBonusPower + CardBonusPower + SelfBonusPower;
+        }
+
+        private void SelfEnhanceCleanup(Game game)
+        {
+            if (!game.EnhancedCards.Contains(this) && SelfBonusPower > 0)
+                game.AddToEnhancedCards(this);
+
+            // This card no longer has any dependencies AND is not being enhanced by other cards
+            else if (game.EnhancedCards.Contains(this) && GetBonusPower() == 0)
+                game.RemoveFromEnhancedCards(this);
         }
 
         private bool AbilityExecutionThresholdMet(Game game)
@@ -375,27 +465,21 @@ namespace backend.Models
                 }
 
                 if (rangeCell.Colour.Contains("R") && isIndexInBounds && (executeAbilityImmediately || AbilityExecutionThresholdMet(game)))
-                {
                     ExecuteAbility(game, grid, dy, dx);
-                }
-
-
             }
 
             var target = Card!.Ability.Target;
             var action = Card!.Ability.Action;
             var triggerCondition = Card!.Ability.Condition;
 
-            // If the card doesn't need to listen for other cards being placed, unsubscribe
-            if (!OnPlaceConditions.Contains(triggerCondition))
-            {
-                _subscribedEvents.Remove("P");
-                game.OnCardPlaced -= HandleCardPlaced;
-            }
+            game.OnCardPlaced -= HandleCardPlaced;
 
             // Cards that boost their own power when other cards are enhanced/enfeebled need to look at the board's status and update
             if ((target == "s") && (triggerCondition.Contains("A") || triggerCondition.Contains("E")))
-                CalculateSelfBoostFromPowerModifiedCards(game, grid, row, col);
+                CalculateSelfBoostFromPowerModifiedCards(game);
+
+            if (GetCumulativePower() < 0)
+                game.DestroyCard(Owner!, row, col, false);
 
             // Only execute the ability if it has conditions
             if ((action == "add" || action == "spawn" || action == "+Score") && Card!.Ability.Condition != "D")
@@ -408,11 +492,29 @@ namespace backend.Models
                 game.EnqueueOnPowerChange("enfeeble", grid, row, col);
         }
 
-        private void HandleCardDestroyed(Player instigator, Game game, Tile[,] grid, int row, int col)
+        private void HandleCardDestroyed(Game game, Tile[,] grid, int row, int col)
         {
+            if (Card!.Ability.Condition == "AD" && grid[row, col].Owner!.Id == Owner!.Id || // Ally destroyed
+                Card!.Ability.Condition == "ED" && grid[row, col].Owner!.Id != Owner!.Id || // Enemy destroyed
+                Card!.Ability.Condition == "AED") // Either destroyed
+            {
+                SelfBonusPower += (int)Card!.Ability.Value!;
+
+                if (!game.EnhancedCards.Contains(this))
+                    game.AddToEnhancedCards(this);
+                return;
+            }
+        }
+
+        public void RemoveCard(Player instigator, Game game, Tile[,] grid, int row, int col)
+        {
+            if (Card == null) return;
+
+            UninitAbility(instigator, game, grid, row, col);
+
             var action = Card!.Ability.Action;
-            // Execute post-mortem ability
-            if (Card!.Ability!.Condition == "D")
+            // Execute post-mortem ability IFF it is the card being destroyed
+            if (Card!.Ability!.Condition == "D" && grid[row, col].Id == Id)
             {
 
                 if (Card!.Ability.Target != null)
@@ -426,35 +528,19 @@ namespace backend.Models
                         var offsetTile = grid[dy, dx];
 
                         if (rangeCell.Colour.Contains("R") && isIndexInBounds)
-                        {
                             ExecuteAbility(game, grid, dy, dx);
-                        }
                     }
-
                 else if (action == "add")
                     ExecuteAbility(game, grid, row, col);
             }
 
-            if (Card!.Ability.Condition == "AD" && grid[row, col].Owner == Owner || // Ally destroyed
-            Card!.Ability.Condition == "ED" && grid[row, col].Owner != Owner || // Enemy destroyed
-                Card!.Ability.Condition == "AED") // Either destroyed
-                SelfBonusPower += (int)Card!.Ability.Value!;
-
-            if (this == grid[row, col])
-                UninitAbility(instigator, game, grid, row, col);
+            Card = null;
         }
 
         private void HandleCardEnhanced(Game game, Tile[,] grid, int row, int col)
         {
             var triggerCondition = Card!.Ability.Condition;
             var target = Card!.Ability.Target;
-
-            // Handle self-enhancing ability
-            if (Card!.Ability.Target == "s")
-            {
-                ExecuteAbility(game, grid, row, col);
-                return;
-            }
 
             // Cloud's ability should only execute once it reaches >= 7 power
             if (Card!.Ability.Condition == "P1R" && GetCumulativePower() < 7) return;
@@ -473,7 +559,7 @@ namespace backend.Models
 
             // Cards that boost their own power when other cards are enhanced/enfeebled need to look at the board's status and update
             if ((target == "s") && (triggerCondition.Contains("A") || triggerCondition.Contains("E")))
-                CalculateSelfBoostFromPowerModifiedCards(game, grid, row, col);
+                CalculateSelfBoostFromPowerModifiedCards(game);
 
             // Handle targetting ability
             foreach (RangeCell rangeCell in Card!.Range)
@@ -497,12 +583,6 @@ namespace backend.Models
             var triggerCondition = Card!.Ability.Condition;
             var target = Card!.Ability.Target;
 
-            if (target == "s")
-            {
-                ExecuteAbility(game, grid, row, col);
-                return;
-            }
-
             if (triggerCondition.Contains("1") ||
                 triggerCondition == "EE")
             {
@@ -514,7 +594,7 @@ namespace backend.Models
 
             // Cards that boost their own power when other cards are enhanced/enfeebled need to look at the board's status and update
             if ((target == "s") && (triggerCondition.Contains("A") || triggerCondition.Contains("E")))
-                CalculateSelfBoostFromPowerModifiedCards(game, grid, row, col);
+                CalculateSelfBoostFromPowerModifiedCards(game);
 
 
             // Handle ability trigger when first enfeebled

@@ -13,20 +13,26 @@ namespace backend.Models
         public Player? CurrentPlayer { get; set; }
         public Random _random { get; set; }
         public bool GameOver { get; set; }
-        private Queue<Tile> TileActionQueue { get; set; } = new Queue<Tile>();
         public Queue<Action> ActionQueue { get; set; } = new Queue<Action>();
+        public Queue<Action> SelfEnhanceQueue { get; set; } = new Queue<Action>();
         public List<Tile> EnhancedCards { get; set; } = new List<Tile>();
         public List<Tile> EnfeebledCards { get; set; } = new List<Tile>();
         private int _consecutivePasses { get; set; } = 0;
         public int _currentPlayerIndex = 0;
-        public Queue<int> PowerTransferQueue { get; set; } = new Queue<int>();
+        public int PowerTransferAmount { get; set; } = 0;
 
         // Events
         public event Action<Game, Tile[,], int, int> OnCardPlaced;
-        public event Action<Player, Game, Tile[,], int, int> OnCardDestroyed;
+        public event Action<Game, Tile[,], int, int> OnCardDestroyed;
         public event Action<Game, Tile[,], int, int> OnCardEnhanced;
         public event Action<Game, Tile[,], int, int> OnCardEnfeebled;
         public event Action<Game> OnRoundEnd;
+        /*
+         * Cards which self-enhance need to know when cards are added or removed
+         * from the EnhancedCards/EnfeebledCards list
+         */
+        public event Action<Game> OnEnhancedCardsChanged;
+        public event Action<Game> OnEnfeebledCardsChanged;
 
         public Game(string id, int? seed = null)
         {
@@ -74,7 +80,7 @@ namespace backend.Models
             {
                 for (int j = 0; j < NUM_COLS; j++)
                 {
-                    Player1Grid[i, j] = new Tile();
+                    Player1Grid[i, j] = new Tile($"{i}{j}");
                 }
                 Player1Grid[i, 0].Owner = Players[0];
                 Player1Grid[i, 4].Owner = Players[1]; // Setting owner for player 2's view
@@ -220,8 +226,8 @@ namespace backend.Models
             // Classify as Enhanced
             if (!EnhancedCards.Contains(tile) && bonusPower > 0)
             {
-                EnhancedCards.Add(tile);
-                EnfeebledCards.Remove(tile);
+                AddToEnhancedCards(tile);
+                RemoveFromEnfeebledCards(tile);
                 ActionQueue.Enqueue(() => OnCardEnhanced?.Invoke(this, grid, row, col));
             }
             // Special case for Cloud's (first to reach 7 power) ability
@@ -233,19 +239,20 @@ namespace backend.Models
             // Classify as Enfeebled
             else if (!EnfeebledCards.Contains(tile) && bonusPower < 0)
             {
-                EnfeebledCards.Add(tile);
-                EnhancedCards.Remove(tile);
+                AddToEnfeebledCards(tile);
+                RemoveFromEnhancedCards(tile);
                 ActionQueue.Enqueue(() => OnCardEnfeebled?.Invoke(this, grid, row, col));
 
                 if (tile.Card != null && instigator != null && tile.GetCumulativePower() <= 0)
                 {
                     ActionQueue.Enqueue(() => DestroyCard(instigator, row, col, false));
                 }
-            } 
-            else
+            }
+            else if ((EnhancedCards.Contains(tile) && bonusPower <= 0) ||
+                (EnfeebledCards.Contains(tile) && bonusPower >= 0))
             {
-                EnhancedCards.Remove(tile);
-                EnfeebledCards.Remove(tile);
+                RemoveFromEnhancedCards(tile);
+                RemoveFromEnfeebledCards(tile);
             }
         }
 
@@ -259,33 +266,80 @@ namespace backend.Models
              *		Chocobo & Moogle updates its SelfBonusPower
 			 */
             if (type == "enhance")
-                ActionQueue.Enqueue(() => OnCardEnhanced?.Invoke(this, grid, row, col));
+                ActionQueue.Enqueue(() => OnEnhancedCardsChanged?.Invoke(this));
             else
-                ActionQueue.Enqueue(() => OnCardEnfeebled?.Invoke(this, grid, row, col));
+                ActionQueue.Enqueue(() => OnEnfeebledCardsChanged?.Invoke(this));
         }
 
+        public void RemoveFromEnhancedCards(Tile tile)
+        {
+            if (EnhancedCards.Contains(tile))
+            {
+                EnhancedCards.Remove(tile);
+                ActionQueue.Enqueue(() => OnEnhancedCardsChanged?.Invoke(this));
+            }
+        }
+
+        public void AddToEnhancedCards(Tile tile)
+        {
+            if (!EnhancedCards.Contains(tile))
+            {
+                EnhancedCards.Add(tile);
+
+                if (tile.Card != null)
+                    ActionQueue.Enqueue(() => OnEnhancedCardsChanged?.Invoke(this));
+            }
+        }
+
+        private void RemoveFromEnfeebledCards(Tile tile)
+        {
+            if (EnfeebledCards.Contains(tile))
+            {
+                EnfeebledCards.Remove(tile);
+
+                if (tile.Card != null)
+                    ActionQueue.Enqueue(() => OnEnfeebledCardsChanged?.Invoke(this));
+            }
+        }
+
+        private void AddToEnfeebledCards(Tile tile)
+        {
+            if (!EnfeebledCards.Contains(tile))
+            {
+                EnfeebledCards.Add(tile);
+
+                if (tile.Card != null)
+                    ActionQueue.Enqueue(() => OnEnfeebledCardsChanged?.Invoke(this));
+            }
+        }
 
         public void DestroyCard(Player instigator, int row, int col, bool isTransferPower)
         {
             var grid = _currentPlayerIndex == 0 ? Player1Grid : Player2Grid;
-            OnCardDestroyed?.Invoke(instigator, this, grid, row, col);
+            var tile = grid[row, col];
 
-            int cumulativePower = grid[row, col].GetCumulativePower();
-            grid[row, col].Card = null;
+            if (tile == null) return;
 
-            if (EnhancedCards.Contains(grid[row, col]))
-                EnhancedCards.Remove(grid[row, col]);
-            if (EnfeebledCards.Contains(grid[row, col]))
-                EnfeebledCards.Remove(grid[row, col]);
+            OnCardDestroyed?.Invoke(this, grid, row, col);
 
-            // Reset card specifc power bonus when destroyed
-            if (!isTransferPower)
-            {
-                grid[row, col].CardBonusPower = 0;
-                grid[row, col].SelfBonusPower = 0;
-            } else
-                // For cards that transfer power (e.g. Griffon, Gi Specter, etc.)
-                PowerTransferQueue.Enqueue(cumulativePower);
+            int cumulativePower = tile.GetCumulativePower();
+            var tileBonusPower = grid[row, col].PlayerTileBonusPower[instigator.playerIndex];
+
+            tile.RemoveCard(instigator, this, grid, row, col);
+
+            // Remove card-specific bonuses (not tile bonus)
+            grid[row, col].CardBonusPower = 0;
+            grid[row, col].SelfBonusPower = 0;
+
+            // Remove from EnhancedCards if the tile is not enhanced
+            if (grid[row, col].PlayerTileBonusPower[0] <= 0 && grid[row, col].PlayerTileBonusPower[1] <= 0)
+                RemoveFromEnhancedCards(grid[row, col]);
+
+            // Remove from EnfeebledCards if the tile is not enfeebled
+            if (grid[row, col].PlayerTileBonusPower[0] >= 0 && grid[row, col].PlayerTileBonusPower[1] >= 0)
+                RemoveFromEnfeebledCards(grid[row, col]);
+            if (isTransferPower)
+                PowerTransferAmount = cumulativePower;
 
             grid[row, col].Owner = instigator;
         }
@@ -364,6 +418,12 @@ namespace backend.Models
                 Action action = ActionQueue.Dequeue();
                 action();
             }
+
+            while (SelfEnhanceQueue.Count > 0)
+            {
+                var action = SelfEnhanceQueue.Dequeue();
+                action();
+            }
         }
 
         public bool PlaceCard(int handIndex, int row, int col)
@@ -388,6 +448,8 @@ namespace backend.Models
 
                 tile.InitAbility(this);
                 OnCardPlaced?.Invoke(this, grid, row, col);
+
+                PowerTransferAmount = 0;
 
                 ExecuteQueuedActions();
                 CalculatePlayerScores();
