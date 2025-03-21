@@ -10,6 +10,7 @@ import type { Card } from "../types/Card";
 import type { Game, GameDTO } from "../types/Game";
 import type { Message } from "../types/Message";
 import type { Player } from "../types/Player";
+import GetRandomName from "../utils/randomName";
 
 interface SignalRContextProps {
   connection: signalR.HubConnection | null;
@@ -193,7 +194,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
   const createGame = async (playerName: string) => {
     if (connection) {
       await connection
-        .invoke("CreateGame", playerName)
+        .invoke("CreateGame", playerName ? playerName : GetRandomName())
         .catch((error) => handleError(error, "CreateGame"));
     }
   };
@@ -201,7 +202,7 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
   const joinGame = async (gameId: string, playerName: string) => {
     if (connection) {
       await connection
-        .invoke("JoinGame", gameId, playerName)
+        .invoke("JoinGame", gameId, playerName ? playerName : GetRandomName())
         .catch((error) => handleError(error, "JoinGame"));
       setGameCode(gameId);
     }

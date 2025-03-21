@@ -23,6 +23,10 @@ const PlayersSection = () => {
     navigator.clipboard.writeText(gameCode);
   };
 
+  const isMe = (playerId: string) => {
+    return playerId === currPlayer?.id;
+  };
+
   return (
     <div className="flex flex-col gap-3 flex-1 max-w-[300px] bg-slate-800 bg-opacity-90 h-fit border border-orange-300 border-l-0">
       <header className="border-b border-orange-300 p-4">
@@ -31,7 +35,9 @@ const PlayersSection = () => {
       <section className="p-3 text-slate-100">
         <ul className="flex flex-col gap-3">
           <li
-            className={`flex items-center gap-2 p-3 bg-slate-700 rounded-full`}
+            className={`flex items-center gap-2 p-3 bg-slate-700 rounded-full ${
+              isMe(players[0].id) ? "text-orange-200" : ""
+            }`}
           >
             {players[0].isReady ? (
               <MdCheck className="text-green-500" />
@@ -42,7 +48,9 @@ const PlayersSection = () => {
           </li>
           {players.length === 2 ? (
             <li
-              className={`flex items-center gap-2 p-3 bg-slate-700 rounded-full`}
+              className={`flex items-center gap-2 p-3 bg-slate-700 rounded-full ${
+                isMe(players[1].id) ? "text-orange-200" : ""
+              }`}
             >
               {players[1].isReady ? (
                 <MdCheck className="text-green-500" />
