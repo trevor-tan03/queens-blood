@@ -20,10 +20,10 @@ const Chat = () => {
           <li
             className={`${
               msgData.playerId === currPlayer?.id
-                ? "text-orange-100 ml-auto bg-[#785a28]"
+                ? "text-white ml-auto bg-[#785a28]"
                 : msgData.playerId === "Server"
                 ? "text-center text-gray-400 mx-auto text-sm"
-                : "bg-[#1e2328] text-slate-200"
+                : "bg-[#1e2328] text-white"
             } w-fit mb-1 text-slate-700 px-3 py-1 rounded-md`}
             key={`m-${i}`}
           >

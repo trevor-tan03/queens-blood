@@ -7,12 +7,20 @@ const SelectedDeck = () => {
   const [selectedDeck, setSelectedDeck] = useState<Card[]>();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  const setDeck = () => {
     const storedDeck = localStorage.getItem("deck");
     if (storedDeck) {
       const parsedDeck = JSON.parse(storedDeck) as Card[];
       if (isLegalDeck(parsedDeck)) setSelectedDeck(parsedDeck);
     }
+  };
+
+  useEffect(() => {
+    window.addEventListener("storage", setDeck);
+
+    return () => {
+      window.removeEventListener("storage", setDeck);
+    };
   }, []);
 
   return (
