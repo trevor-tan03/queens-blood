@@ -13,18 +13,18 @@ const Chat = () => {
   return (
     <div>
       <ul
-        className="max-h-40 overflow-y-scroll mt-6 border-t border-gray-500 text-white"
+        className="h-[20.5rem] overflow-y-auto mt-6 border-t border-gray-500 text-white"
         ref={chatRef}
       >
         {messageLog.map((msgData, i) => (
           <li
             className={`${
               msgData.playerId === currPlayer?.id
-                ? "text-right bg-green-400 text-slate-700 ml-auto"
+                ? "text-orange-100 ml-auto bg-[#785a28]"
                 : msgData.playerId === "Server"
-                ? "text-center text-gray-500"
-                : "text-left bg-red-400"
-            } rounded-lg w-fit p-1 mb-1 text-slate-700`}
+                ? "text-center text-gray-400 mx-auto text-sm"
+                : "bg-[#1e2328] text-slate-200"
+            } w-fit mb-1 text-slate-700 px-3 py-1 rounded-md`}
             key={`m-${i}`}
           >
             <span>{msgData.message}</span>
