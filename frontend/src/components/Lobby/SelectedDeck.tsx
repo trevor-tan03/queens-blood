@@ -9,6 +9,7 @@ const SelectedDeck = () => {
 
   const setDeck = () => {
     const storedDeck = localStorage.getItem("deck");
+
     if (storedDeck) {
       const parsedDeck = JSON.parse(storedDeck) as Card[];
       if (isLegalDeck(parsedDeck)) setSelectedDeck(parsedDeck);
@@ -16,6 +17,7 @@ const SelectedDeck = () => {
   };
 
   useEffect(() => {
+    setDeck();
     window.addEventListener("storage", setDeck);
 
     return () => {

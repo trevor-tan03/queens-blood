@@ -73,14 +73,12 @@ export const SignalRProvider: React.FC<{ children: ReactNode }> = ({
 
   const setupSignalREvents = (conn: signalR.HubConnection) => {
     conn.on("ReceiveMessage", (message: string) => {
-      console.log(message);
-
       const messageDTO = JSON.parse(message);
       setMessageLog((prevLog) => [...prevLog, messageDTO]);
     });
 
     conn.on("ErrorMessage", (message: string) => {
-      console.log(message);
+      console.error(message);
     });
 
     conn.on("GameCode", (gameCode: string) => {
