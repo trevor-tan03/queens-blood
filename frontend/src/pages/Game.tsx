@@ -15,8 +15,11 @@ const Game = () => {
   return (
     <BoardContext>
       <CardAbilityProvider>
-        {isGameOver && <GameSummaryScreen />}
-        {!mulliganPhaseEnded ? <MulliganPhase /> : <GameScreen />}
+        <div className="relative h-dvh w-dvw bg-slate-700">
+          {isGameOver && <GameSummaryScreen />}
+          {!mulliganPhaseEnded ? <MulliganPhase /> : <GameScreen />}
+          {/* <Background /> */}
+        </div>
       </CardAbilityProvider>
     </BoardContext>
   );

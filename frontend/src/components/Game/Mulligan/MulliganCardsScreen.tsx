@@ -29,7 +29,7 @@ const MulliganCardsScreen = ({
   const { shownAbility } = useCardAbility();
 
   return (
-    <div className="absolute top-0 h-screen w-screen bg-black bg-opacity-40">
+    <div className="absolute top-0 h-screen w-screen bg-black bg-opacity-40 text-slate-100">
       <h1 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-3xl">
         Select cards to mulligan
       </h1>

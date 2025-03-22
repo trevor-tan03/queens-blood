@@ -1,6 +1,8 @@
 import { useSignalR } from "../../../SignalR/SignalRProvider";
 import Droppable from "../../dnd-kit/Droppable";
 import BoardTile from "./BoardTile";
+import ScoreBonus from "./ScoreBonus";
+import ScoreCoin from "./ScoreCoin";
 
 const Board = () => {
   const { gameState, gameStatePreview } = useSignalR();
@@ -26,7 +28,7 @@ const Board = () => {
               row={row}
               col={col}
             >
-              <BoardTile tile={tile} />
+              <BoardTile tile={tile} bgColour={(row + col) % 2 ? "b" : "w"} />
             </Droppable>
           ));
         })}
@@ -38,24 +40,19 @@ const Board = () => {
           return (
             <div
               key={`score-${index}`}
-              className="my-auto"
+              className="my-auto w-[150px] grid relative"
               style={{
                 gridColumnStart: index < 3 ? 1 : 7,
                 gridRowStart: row + 1,
               }}
             >
-              {score}
-              {laneBonuses[index] > 0 && (
-                <span
-                  className={`${
-                    laneScores[index] > laneScores[enemyRow]
-                      ? ""
-                      : "text-gray-300"
-                  }`}
-                >
-                  (+{laneBonuses[index]})
-                </span>
-              )}
+              <ScoreCoin value={score} isMine={index < 3} />
+
+              <ScoreBonus
+                isWinningLane={laneScores[index] > laneScores[enemyRow]}
+                isMine={index < 3}
+                bonusPoints={laneBonuses[index]}
+              />
             </div>
           );
         })}
