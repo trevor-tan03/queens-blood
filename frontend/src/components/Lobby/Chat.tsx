@@ -22,7 +22,7 @@ const Chat = () => {
               msgData.playerId === currPlayer?.id
                 ? "text-white ml-auto bg-[#785a28]"
                 : msgData.playerId === "Server"
-                ? "text-center text-gray-400 mx-auto text-sm"
+                ? "text-center text-slate-400 mx-auto text-sm"
                 : "bg-[#1e2328] text-white"
             } w-fit mb-1 text-slate-700 px-3 py-1 rounded-md`}
             key={`m-${i}`}
