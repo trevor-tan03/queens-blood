@@ -1,11 +1,13 @@
 import { BiClipboard } from "react-icons/bi";
 import { MdCheck } from "react-icons/md";
 import { useSignalR } from "../../SignalR/SignalRProvider";
+import { useAlertContext } from "./AlertContext";
 import Chat from "./Chat";
 import Waiting from "./Waiting";
 
 const PlayersSection = () => {
   const { gameCode, players, readyUp, unready, currPlayer } = useSignalR();
+  const { createAlert } = useAlertContext();
 
   const isPlayerReady = (connectionId: string) => {
     return players.find((player) => player.id === connectionId)?.isReady;
@@ -21,6 +23,7 @@ const PlayersSection = () => {
 
   const copyCodeToClipboard = () => {
     navigator.clipboard.writeText(gameCode);
+    createAlert("Copied party code.");
   };
 
   const isMe = (playerId: string) => {
@@ -70,7 +73,7 @@ const PlayersSection = () => {
         <div className="flex gap-2 items-center text-white mt-3">
           <span className="font-bold">PARTY CODE:</span>
           <button
-            className="p-2 border border-orange-300 rounded-full flex items-center gap-2 px-4 hover:bg-slate-700 transition-colors duration-200"
+            className="p-2 border border-orange-300 rounded-full flex items-center gap-2 px-4 hover:bg-slate-700 transition-colors duration-200 active:translate-y-[1px]"
             onClick={copyCodeToClipboard}
           >
             {gameCode}
