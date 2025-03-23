@@ -97,6 +97,7 @@ const CardList = ({ deck, setDeck }: Props) => {
                   <CardComponent
                     containerRef={cardListRef}
                     handleClick={handleAdd}
+                    clickAction="add"
                     card={d}
                   />
                   <CardCopiesText>

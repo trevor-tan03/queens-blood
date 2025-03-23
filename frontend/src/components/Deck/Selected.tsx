@@ -50,6 +50,7 @@ const Selected = ({ deck, setDeck }: Props) => {
                 card={c.card}
                 handleClick={() => handleRemove(c.card)}
                 containerRef={containerRef}
+                clickAction="remove"
                 grow={false}
               />
               <CardCopiesText>

@@ -36,6 +36,7 @@ const SelectedDeck = () => {
           card={card}
           containerRef={containerRef}
           handleClick={() => {}}
+          clickAction={null}
         />
       ))}
     </div>
