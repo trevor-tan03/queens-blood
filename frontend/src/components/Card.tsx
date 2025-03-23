@@ -52,7 +52,7 @@ const CardComponent = ({
       <div className="relative">
         {clickAction && (
           <div
-            className="absolute h-full w-full grid place-items-center opacity-0 hover:opacity-100 text-xl text-white"
+            className="absolute h-full w-full grid place-items-center opacity-0 hover:opacity-100 text-xl text-white transition-all duration-500"
             style={
               clickAction === "add"
                 ? {
@@ -65,7 +65,9 @@ const CardComponent = ({
                   }
             }
           >
-            <div>{clickAction === "add" ? "Add" : "Remove"}</div>
+            <div className="shadow-2xl">
+              {clickAction === "add" ? "Add" : "Remove"}
+            </div>
           </div>
         )}
         <img src={`../../assets/cards/${image}`} alt={name} loading="lazy" />

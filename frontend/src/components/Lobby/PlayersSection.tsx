@@ -1,7 +1,7 @@
 import { BiClipboard } from "react-icons/bi";
 import { MdCheck } from "react-icons/md";
 import { useSignalR } from "../../SignalR/SignalRProvider";
-import { useAlertContext } from "./AlertContext";
+import { useAlertContext } from "../AlertContext";
 import Chat from "./Chat";
 import Waiting from "./Waiting";
 

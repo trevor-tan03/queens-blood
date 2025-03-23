@@ -1,6 +1,6 @@
+import { AlertProvider } from "../components/AlertContext";
 import AutoPopulateDeck from "../components/AutoPopulateDeck";
 import GameBackground from "../components/Game/GameBackground";
-import { AlertProvider } from "../components/Lobby/AlertContext";
 import DeckHeader from "../components/Lobby/DeckHeader";
 import PlayersSection from "../components/Lobby/PlayersSection";
 import SelectedDeck from "../components/Lobby/SelectedDeck";

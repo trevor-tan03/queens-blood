@@ -1,5 +1,5 @@
 import { createContext, useContext, useRef } from "react";
-import "../../../public/css/Alert.css";
+import "../../public/css/Alert.css";
 
 interface IAlertContext {
   createAlert: (message: string) => void;
