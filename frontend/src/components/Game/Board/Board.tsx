@@ -10,6 +10,7 @@ const Board = () => {
 
   if (!gameState) return null;
   const { board, laneScores, laneBonuses } = gameStatePreview ?? gameState;
+  console.log(laneBonuses);
 
   const renderBoard = () => {
     return (
@@ -48,11 +49,13 @@ const Board = () => {
             >
               <ScoreCoin value={score} isMine={index < 3} />
 
-              <ScoreBonus
-                isWinningLane={laneScores[index] > laneScores[enemyRow]}
-                isMine={index < 3}
-                bonusPoints={laneBonuses[index]}
-              />
+              {laneBonuses[index] > 0 && (
+                <ScoreBonus
+                  isWinningLane={laneScores[index] > laneScores[enemyRow]}
+                  isMine={index < 3}
+                  bonusPoints={laneBonuses[index]}
+                />
+              )}
             </div>
           );
         })}

@@ -1085,5 +1085,20 @@ namespace QueensBloodTest
             AddToHandAndPlaceCard(game, Cards.GiSpecter, 1, 0);
             Assert.Null(game.Player1Grid[2,1].Card);
         }
+
+        [Fact]
+        public void ResetLoserBonusIfLaneScoreIsTied()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.GrasslandsWolf, 0, 0);
+            game.SwapPlayerTurns();
+            AddToHandAndPlaceCard(game, Cards.UltimatePartyAnimal, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 1);
+
+            Assert.Equal(0, game.Players[1].Scores[0].loserBonus);
+        }
     }
 }

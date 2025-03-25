@@ -302,20 +302,26 @@ namespace backend.Models
             // Look at the lanes the owner is winning and subtract the enemy's points in that lane and subtract winBonus
             for (int i = 0; i < NUM_ROWS; i++)
             {
-                var enemy = game.Players.Find(p => p != Owner);
+                var enemy = game.Players.Find(p => p.Id != Owner!.Id);
                 var laneWinner = game.GetLaneWinner(i);
                 if (laneWinner == null) continue;
 
                 // Owner is the victor. Add enemy's score to owner's
                 if (laneWinner!.Id == Owner!.Id)
                 {
-                    Owner!.Scores[i].loserBonus = enemy!.Scores[i].score;
+                    laneWinner!.Scores[i].loserBonus = enemy!.Scores[i].score;
                     enemy!.Scores[i].loserBonus = 0;
                 }
                 // Enemy is the victor. Add owner's score to enemy's
                 else if (laneWinner!.Id == enemy!.Id)
                 {
                     enemy!.Scores[i].loserBonus = Owner!.Scores[i].score;
+                    Owner!.Scores[i].loserBonus = 0;
+                }
+                // Tied
+                else
+                {
+                    enemy!.Scores[i].loserBonus = 0;
                     Owner!.Scores[i].loserBonus = 0;
                 }
             }

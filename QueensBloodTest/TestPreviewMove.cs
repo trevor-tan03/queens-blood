@@ -260,5 +260,24 @@ namespace QueensBloodTest
             Assert.Null(gameCopy.Player1Grid[0, 0].Card);
             Assert.Null(gameCopy.Player1Grid[2, 0].Card);
         }
+
+        [Fact]
+        public void PreviewBonusPowerWhenPlacingUPA()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.Ignilisk, 0, 0);
+            //AddToHandAndPlaceCard(game, Cards.UltimatePartyAnimal, 0, 1);
+
+            game.SwapPlayerTurns();
+
+            var gameCopy = Copy.DeepCopy(game);
+            AddToHandAndPlaceCard(gameCopy, Cards.SecurityOfficer, 0, 0);
+            AddToHandAndPlaceCard(gameCopy, Cards.UltimatePartyAnimal, 0, 1);
+
+            Assert.Equal(1, gameCopy.GetPlayerLaneBonus(1, 0));
+        }
     }
 }
