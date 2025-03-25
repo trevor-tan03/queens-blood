@@ -4,17 +4,22 @@ import Pawn from "./Pawn";
 
 interface Props {
   tile: Tile;
+  bgColour: "b" | "w";
 }
 
-const BoardTile = ({ tile }: Props) => {
+const BoardTile = ({ tile, bgColour }: Props) => {
   const { currPlayer } = useSignalR();
   const isMine = currPlayer !== undefined && currPlayer.id === tile?.ownerId;
 
   return (
     <div
-      className={`w-[130px] h-[178px] relative grid place-items-center border-4 ${
-        isMine ? "border-green-300" : "border-red-300"
-      }`}
+      className={`w-[130px] h-[178px] relative grid place-items-center border-2
+        ${isMine ? "border-green-300" : "border-red-300"}
+        ${
+          bgColour === "b"
+            ? "bg-violet-950 bg-opacity-30"
+            : "bg-slate-100 bg-opacity-50"
+        }`}
     >
       {tile.bonusPower !== 0 && (
         <div
@@ -28,7 +33,7 @@ const BoardTile = ({ tile }: Props) => {
 
       {tile.card ? (
         <img
-          className="h-full"
+          className={`h-full ${isMine ? "" : "hue-rotate-[140deg]"}`}
           alt={tile.card?.name}
           src={`../../../../public/assets/cards/${tile.card?.image}`}
         />

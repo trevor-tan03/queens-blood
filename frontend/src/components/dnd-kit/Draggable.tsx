@@ -42,7 +42,7 @@ const Draggable = ({
       style={style}
       {...listeners}
       {...attributes}
-      className="absolute w-[140px] h-full"
+      className="absolute w-[140px] h-full z-50"
     >
       {children}
     </div>

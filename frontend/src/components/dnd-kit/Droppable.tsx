@@ -36,8 +36,8 @@ const Droppable = ({
     <div
       ref={isMine && !isOccupied ? setNodeRef : null}
       style={{ gridColumnStart: col + 2, gridRowStart: row + 1 }}
-      className={`border w-fit ${
-        compatibleTiles.includes(id) ? "bg-yellow-300" : ""
+      className={`border w-full ${
+        compatibleTiles.includes(id) ? "bg-yellow-300 bg-opacity-50" : ""
       }`}
     >
       {children}

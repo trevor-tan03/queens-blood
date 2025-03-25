@@ -1,4 +1,3 @@
-
 const GameBackground = () => {
   return (
     <div className="w-full h-full fixed top-0 left-0 z-[-1] overflow-hidden">
@@ -9,7 +8,7 @@ const GameBackground = () => {
         className="object-cover h-full w-full object-top blur-2xl scale-110"
       />
     </div>
-  )
-}
+  );
+};
 
-export default GameBackground
+export default GameBackground;

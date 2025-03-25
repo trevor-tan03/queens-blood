@@ -1,0 +1,13 @@
+.alert {
+  animation: fade-out 1s linear;
+  animation-delay: 4s;
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}

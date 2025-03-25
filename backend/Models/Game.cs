@@ -44,6 +44,9 @@ namespace backend.Models
         {
             if (Players.Count >= 2 || Players.Any(p => p.Id == playerId)) return;
 
+            if (Players.Exists(p => p.Name == playerName))
+                playerName = $"{playerName} (1)";
+
             var player = new Player(playerId, playerName) { IsHost = Players.Count == 0 };
             Players.Add(player);
         }

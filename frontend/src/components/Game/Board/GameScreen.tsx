@@ -63,14 +63,14 @@ const GameScreen = () => {
 
           {currPlayer?.id === playing && (
             <button
-              className="z-50 cursor-pointer absolute right-0 bottom-[6rem]"
+              className="z-50 cursor-pointer absolute right-0 bottom-[6rem] text-xl py-3 px-12 bg-orange-300 hover:bg-transparent rounded-l-full border transition-colors duration-200 hover:text-orange-300 border-orange-300"
               onClick={() => skipTurn(gameCode)}
             >
-              Pass
+              Skip Turn
             </button>
           )}
 
-          <div className="absolute bottom-[1rem] left-[1rem] text-2xl pointer-events-none">
+          <div className="absolute bottom-[1rem] left-[1rem] text-2xl pointer-events-none text-slate-200">
             {shownAbility}
           </div>
         </div>

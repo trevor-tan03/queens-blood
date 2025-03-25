@@ -3,6 +3,7 @@ import { BiSearch } from "react-icons/bi";
 import { GrAscend, GrDescend, GrFilter } from "react-icons/gr";
 import type { Card } from "../../types/Card";
 import { getCopiesLimit, getRemainingCopies } from "../../utils/deckMethods";
+import { useAlertContext } from "../AlertContext";
 import CardComponent from "../Card";
 import { useOverlay } from "../Overlay";
 import CardCopiesText from "./CardCopiesText";
@@ -16,6 +17,7 @@ interface Props {
 
 const CardList = ({ deck, setDeck }: Props) => {
   const { toggleOrder, order, shownCards, filterCardName } = useFilters();
+  const { createAlert } = useAlertContext();
 
   const { showOverlay } = useOverlay();
 
@@ -35,6 +37,10 @@ const CardList = ({ deck, setDeck }: Props) => {
         return;
 
       setDeck((d) => [...d, card]);
+    } else {
+      createAlert(
+        "Only 15 cards can be selected. Please remove cards from your deck before adding."
+      );
     }
   };
 
@@ -97,6 +103,7 @@ const CardList = ({ deck, setDeck }: Props) => {
                   <CardComponent
                     containerRef={cardListRef}
                     handleClick={handleAdd}
+                    clickAction="add"
                     card={d}
                   />
                   <CardCopiesText>

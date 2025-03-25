@@ -57,6 +57,7 @@ export const isLegalDeck = (deck: Card[]) => {
 
 export const saveDeck = (deck: Card[]) => {
   localStorage.setItem("deck", JSON.stringify(deck));
+  dispatchEvent(new Event("storage"));
 };
 
 export const getDefaultDeck = () => {
