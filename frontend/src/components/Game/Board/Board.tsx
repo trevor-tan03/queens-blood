@@ -46,7 +46,11 @@ const Board = () => {
                 gridRowStart: row + 1,
               }}
             >
-              <ScoreCoin value={score} isMine={index < 3} />
+              <ScoreCoin
+                value={score}
+                isMine={index < 3}
+                marginLeft={index >= 3}
+              />
 
               {laneBonuses[index] > 0 && (
                 <ScoreBonus

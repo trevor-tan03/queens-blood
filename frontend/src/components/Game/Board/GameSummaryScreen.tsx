@@ -1,4 +1,5 @@
 import { useSignalR } from "../../../SignalR/SignalRProvider";
+import ScoreCoin from "./ScoreCoin";
 
 const GameSummaryScreen = () => {
   const { gameState } = useSignalR();
@@ -31,10 +32,17 @@ const GameSummaryScreen = () => {
 
   return (
     <div className="absolute w-full h-full grid place-items-center bg-black bg-opacity-60 z-50">
-      <div className="bg-red-300 w-full text-center p-3">
-        {data[1]}
-        {data[0]}
-        {data[2]}
+      <div className="w-full text-center p-3">
+        <div className="flex gap-3 align-center justify-center">
+          <ScoreCoin value={data[1] as number} isMine={true} />
+          <span className="text-2xl font-bold text-white my-auto px-12">
+            {data[0]}
+          </span>
+          <ScoreCoin value={data[2] as number} isMine={false} />
+        </div>
+        <a href="/" className="bg-orange-300 p-3 px-8 rounded-full">
+          Back
+        </a>
       </div>
     </div>
   );
