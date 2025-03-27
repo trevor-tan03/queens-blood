@@ -3,4 +3,5 @@ export type Player = {
   id: string;
   isReady: boolean;
   isHost: boolean;
+  playerIndex: number;
 };
