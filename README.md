@@ -1,20 +1,65 @@
-## Setup
+<!-- Banner here -->
+<div align="center">
+  <h1>Queen's Blood Clone</h1>
+  <p>A web-based recreation of the Queen's Blood minigame from <a href="https://ffvii.square-enix-games.com/en-us/games/rebirth">Final Fantasy VII: Rebirth</a></p>
+</div>
 
----
+<div align="center">
+  <img alt="Static Badge" src="https://img.shields.io/badge/.NET-8.0-purple">
+  <img alt="Static Badge" src="https://img.shields.io/badge/React-18.3.1-blue">
+  <img alt="Static Badge" src="https://img.shields.io/badge/SignalR-2.4.3-cyan">
+</div>
 
-1. Make sure you have Docker Desktop installed
-2. To setup and run the backend & frontend servers use the Docker command:
+<br>
 
+<p align="center">
+    <a href="#getting-started">Getting Started</a> •
+    <a href="#how-to-play">How To Play</a> •
+    <a href="credits">Credits</a>
+</p>
+
+![image](https://github.com/user-attachments/assets/0c04e81a-2b8a-42a6-9847-a8c51da3a425)
+
+## Getting Started
+
+To clone and run this application, you'll net [Git](https://git-scm.com/), [Node.js](https://nodejs.org/en), and [.NET 8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) installed on your computer. From your command line:
 ```bash
-docker-compose up
+# Clone the repository
+$ git clone https://github.com/trevor-tan03/queens-blood.git
+
+# Go into the repository
+$ cd queens-blood
+
+# Install dependencies
+$ npm install
+
+# Create a .env file using the contents in .env.example
+$ cp .env.example .env
+
+# Run the frontend
+$ cd frontend
+$ npm run dev
+
+# Run the backend (from a separate terminal)
+$ cd backend
+$ dotnet run
 ```
 
-3. To automatically detect when changes are made, open up another terminal and enter:
+## How To Play
 
-```bash
-docker-compose watch
-```
+1. Create or join a game
+    - Requires two players to start a game
+2. Mulligan phase
+    - 30sec to select the cards you wish to redraw
+3. Starting player is selected randomly
+4. Player with the turn can play a card by dragging and dropping it onto the play area or skip turn
+     - Cards can only place cards on tiles owned (marked in green)
+5. If both players skip turns consecutively, the game ends and the player with most points wins
+     - Points are awarded ONLY if the player has more points than the opponent in that lane.
+     - Neither players will receive points if it's a tie
 
-Although this is more of an optional step.
-
-<b>NOTE:</b> Saved changes in the backend will NOT be reflected automatically. You will need to restart the backend server.
+## Credits
+- Square Enix (creators of Final Fantasy VII)
+- [Queen's Blood Online](https://www.queensbloodonline.com/) (another fan's recreation of the minigame)
+- List of Queen's Blood cards from  [Game8](https://game8.co/games/Final-Fantasy-VII-Rebirth/archives/Queens-Blood)
+- My friend [Frank](https://github.com/frankpadada) helping with retrieving data of the cards
