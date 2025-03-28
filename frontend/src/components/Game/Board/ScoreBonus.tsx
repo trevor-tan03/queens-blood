@@ -8,7 +8,7 @@ const ScoreBonus = ({ isWinningLane, bonusPoints, isMine }: Props) => {
   return (
     <span
       className={`
-        p-2 px-4 border 
+        p-2 px-4 border
         ${
           isWinningLane
             ? "text-yellow-200 border-yellow-200 font-bold"
@@ -19,7 +19,7 @@ const ScoreBonus = ({ isWinningLane, bonusPoints, isMine }: Props) => {
             ? "right-0 rounded-l-full bg-blue-900"
             : "left-0 rounded-r-full bg-red-900"
         }
-        absolute translate-y-6`}
+        absolute translate-y-16`}
     >
       +{bonusPoints}
     </span>

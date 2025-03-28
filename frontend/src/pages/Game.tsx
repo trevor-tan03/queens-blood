@@ -4,6 +4,7 @@ import GameScreen from "../components/Game/Board/GameScreen";
 import GameSummaryScreen from "../components/Game/Board/GameSummaryScreen";
 import { CardAbilityProvider } from "../components/Game/CardAbilityContext";
 import MulliganPhase from "../components/Game/Mulligan/MulliganPhase";
+import Background from "../components/Home/Background";
 import Lobby from "./Lobby";
 
 const Game = () => {
@@ -15,10 +16,10 @@ const Game = () => {
   return (
     <BoardContext>
       <CardAbilityProvider>
-        <div className="relative h-dvh w-dvw bg-slate-700">
+        <div className="relative h-dvh w-dvw">
           {isGameOver && <GameSummaryScreen />}
           {!mulliganPhaseEnded ? <MulliganPhase /> : <GameScreen />}
-          {/* <Background /> */}
+          <Background />
         </div>
       </CardAbilityProvider>
     </BoardContext>

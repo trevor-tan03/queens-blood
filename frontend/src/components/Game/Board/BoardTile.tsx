@@ -13,7 +13,7 @@ const BoardTile = ({ tile, bgColour }: Props) => {
 
   return (
     <div
-      className={`w-[130px] h-[178px] relative grid place-items-center border-2
+      className={`w-[135px] h-[145px] relative grid place-items-center border-2
         ${isMine ? "border-green-300" : "border-red-300"}
         ${
           bgColour === "b"
@@ -33,7 +33,9 @@ const BoardTile = ({ tile, bgColour }: Props) => {
 
       {tile.card ? (
         <img
-          className={`h-full ${isMine ? "" : "hue-rotate-[140deg]"}`}
+          className={`w-[135px] h-[145px] ${
+            isMine ? "" : "hue-rotate-[140deg]"
+          }`}
           alt={tile.card?.name}
           src={`../../../../public/assets/cards/${tile.card?.image}`}
         />

@@ -34,6 +34,10 @@ const MulliganCardsScreen = ({
         Select cards to mulligan
       </h1>
 
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-12 text-xl text-orange-300">
+        {getTimeFormat(deadline)}
+      </div>
+
       <div className="flex absolute bottom-[16rem] left-[3rem]">
         {cards.map((card, index) => {
           const offsetX = getXOffset(index);
@@ -66,7 +70,6 @@ const MulliganCardsScreen = ({
           Confirm
         </button>
       )}
-      <div>{getTimeFormat(deadline)}</div>
     </div>
   );
 };

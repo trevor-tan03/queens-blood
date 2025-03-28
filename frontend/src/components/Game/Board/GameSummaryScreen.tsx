@@ -44,9 +44,14 @@ const GameSummaryScreen = () => {
               {currPlayer!.name}
             </div>
           </div>
-          <span className="text-2xl font-bold text-white my-auto px-12">
-            {data[0]}
-          </span>
+
+          <div
+            className={`text-4xl font-bold my-auto px-12 flex-1 
+            ${data[0] === "Victory" ? "text-orange-300" : "text-gray-200"}`}
+          >
+            <span className="bg-gradient-to-r">{data[0]}</span>
+          </div>
+
           <div className="flex flex-col">
             <ScoreCoin
               value={data[2] as number}

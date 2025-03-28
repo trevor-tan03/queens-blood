@@ -14,9 +14,11 @@ const Board = () => {
   const renderBoard = () => {
     return (
       <div
-        className="grid min-w-fit rotate-x-20"
+        className="grid min-w-fit mt-16"
         style={{
           gridTemplateColumns: "repeat(7, auto)",
+          transformOrigin: "top",
+          transform: "perspective(100px) rotateX(2deg)",
         }}
       >
         {board.map((_, row) => {
@@ -40,7 +42,7 @@ const Board = () => {
           return (
             <div
               key={`score-${index}`}
-              className="my-auto w-[150px] grid relative"
+              className="my-auto w-[150px] grid relative place-items-center"
               style={{
                 gridColumnStart: index < 3 ? 1 : 7,
                 gridRowStart: row + 1,
@@ -49,7 +51,6 @@ const Board = () => {
               <ScoreCoin
                 value={score}
                 isMine={index < 3}
-                marginLeft={index >= 3}
                 isMuted={laneScores[index] <= laneScores[enemyRow]}
               />
 
