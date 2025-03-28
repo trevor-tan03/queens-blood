@@ -1,7 +1,7 @@
 import { useSignalR } from "../SignalR/SignalRProvider";
+import GameSummaryScreen from "../components/Game/Banner/GameSummaryScreen";
 import BoardContext from "../components/Game/Board/BoardContext";
 import GameScreen from "../components/Game/Board/GameScreen";
-import GameSummaryScreen from "../components/Game/Board/GameSummaryScreen";
 import { CardAbilityProvider } from "../components/Game/CardAbilityContext";
 import MulliganPhase from "../components/Game/Mulligan/MulliganPhase";
 import Background from "../components/Home/Background";

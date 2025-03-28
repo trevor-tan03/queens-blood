@@ -1,10 +1,12 @@
 import { DndContext, DragEndEvent, DragOverEvent } from "@dnd-kit/core";
 import { useEffect } from "react";
 import { useSignalR } from "../../../SignalR/SignalRProvider";
+import PlayerTurnBanner from "../Banner/PlayerTurnBanner";
 import { useCardAbility } from "../CardAbilityContext";
 import CardsInHand from "../Hand";
 import Board from "./Board";
 import { CompatibleCardsProvider } from "./LegalTilesContext";
+import PlayerNames from "./PlayerNames";
 
 const GameScreen = () => {
   const {
@@ -58,6 +60,9 @@ const GameScreen = () => {
           <div className="relative">
             <CardsInHand hand={hand} />
           </div>
+
+          <PlayerTurnBanner />
+          <PlayerNames />
 
           <Board />
 

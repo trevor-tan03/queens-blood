@@ -325,7 +325,7 @@ namespace backend.Models
             if (tile == null) return;
 
             OnCardDestroyed?.Invoke(this, grid, row, col);
-            if (grid[row, col].Card!.Name == "Ultimate Party Animal")
+            if (grid[row, col].Card != null && grid[row, col].Card!.Name == "Ultimate Party Animal")
                 UPAsPlaced--;
 
             int cumulativePower = tile.GetCumulativePower();

@@ -1,5 +1,5 @@
 import { useSignalR } from "../../../SignalR/SignalRProvider";
-import ScoreCoin from "./ScoreCoin";
+import ScoreCoin from "../Board/ScoreCoin";
 
 const GameSummaryScreen = () => {
   const { gameState, players, currPlayer } = useSignalR();
