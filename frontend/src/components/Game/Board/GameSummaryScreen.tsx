@@ -34,11 +34,11 @@ const GameSummaryScreen = () => {
     <div className="absolute w-full h-full grid place-items-center bg-black bg-opacity-60 z-50">
       <div className="w-full text-center p-3">
         <div className="flex gap-3 align-center justify-center">
-          <ScoreCoin value={data[1] as number} isMine={true} />
+          <ScoreCoin value={data[1] as number} isMine={true} isMuted={false} />
           <span className="text-2xl font-bold text-white my-auto px-12">
             {data[0]}
           </span>
-          <ScoreCoin value={data[2] as number} isMine={false} />
+          <ScoreCoin value={data[2] as number} isMine={false} isMuted={false} />
         </div>
         <a href="/" className="bg-orange-300 p-3 px-8 rounded-full">
           Back

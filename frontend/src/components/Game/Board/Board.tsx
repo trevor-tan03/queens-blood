@@ -50,6 +50,7 @@ const Board = () => {
                 value={score}
                 isMine={index < 3}
                 marginLeft={index >= 3}
+                isMuted={laneScores[index] <= laneScores[enemyRow]}
               />
 
               {laneBonuses[index] > 0 && (
