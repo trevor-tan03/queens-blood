@@ -57,6 +57,7 @@ namespace backend.Models
             if (OnRoundEndCondition == Card!.Ability.Action)
             {
                 _subscribedEvents.Add("L+V");
+                game.UPAsPlaced++;
                 game.OnRoundEnd += HandleAddLaneLoserScoreToVictor;
             }
 
@@ -219,6 +220,14 @@ namespace backend.Models
                 int winBonusFromCard = (int)Card!.Ability.Value!;
                 // Subtract the destroyed card's win bonus score
                 Owner!.Scores[row].winBonus -= winBonusFromCard;
+            }
+            else if (abilityAction == "L+V" && game.UPAsPlaced == 0)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    game.Players[0].Scores[i].loserBonus = 0;
+                    game.Players[1].Scores[i].loserBonus = 0;
+                }
             }
         }
 

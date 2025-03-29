@@ -10,14 +10,15 @@ const Board = () => {
 
   if (!gameState) return null;
   const { board, laneScores, laneBonuses } = gameStatePreview ?? gameState;
-  console.log(laneBonuses);
 
   const renderBoard = () => {
     return (
       <div
-        className="grid min-w-fit rotate-x-20"
+        className="grid min-w-fit mt-16 z-[9999]"
         style={{
           gridTemplateColumns: "repeat(7, auto)",
+          transformOrigin: "top",
+          transform: "perspective(100px) rotateX(2deg)",
         }}
       >
         {board.map((_, row) => {
@@ -41,13 +42,17 @@ const Board = () => {
           return (
             <div
               key={`score-${index}`}
-              className="my-auto w-[150px] grid relative"
+              className="my-auto w-[150px] grid relative place-items-center"
               style={{
                 gridColumnStart: index < 3 ? 1 : 7,
                 gridRowStart: row + 1,
               }}
             >
-              <ScoreCoin value={score} isMine={index < 3} />
+              <ScoreCoin
+                value={score}
+                isMine={index < 3}
+                isMuted={laneScores[index] <= laneScores[enemyRow]}
+              />
 
               {laneBonuses[index] > 0 && (
                 <ScoreBonus

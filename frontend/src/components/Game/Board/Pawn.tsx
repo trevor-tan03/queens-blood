@@ -6,6 +6,8 @@ interface Props {
 const Pawn = ({ rank, isMine }: Props) => {
   const filename = isMine ? `green-${rank}` : `red-${rank}`;
 
+  if (rank === 0) return null;
+
   return (
     <div>
       <img

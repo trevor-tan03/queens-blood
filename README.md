@@ -18,17 +18,21 @@
     <a href="credits">Credits</a>
 </p>
 
-![image](https://github.com/user-attachments/assets/0c04e81a-2b8a-42a6-9847-a8c51da3a425)
+![image](https://github.com/user-attachments/assets/f2fa0b1e-22b9-4f36-b816-c0a7f6e9fa6c)
+
 
 ## Getting Started
 
-To clone and run this application, you'll net [Git](https://git-scm.com/), [Node.js](https://nodejs.org/en), and [.NET 8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) installed on your computer. From your command line:
+To clone and run this application, you'll need [Git](https://git-scm.com/), [Node.js](https://nodejs.org/en), and [.NET 8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) installed on your computer. From your command line:
 ```bash
 # Clone the repository
 $ git clone https://github.com/trevor-tan03/queens-blood.git
 
 # Go into the repository
 $ cd queens-blood
+
+# Go into the frontend directory
+$ cd frontend
 
 # Install dependencies
 $ npm install
@@ -37,11 +41,10 @@ $ npm install
 $ cp .env.example .env
 
 # Run the frontend
-$ cd frontend
 $ npm run dev
 
 # Run the backend (from a separate terminal)
-$ cd backend
+$ cd queens-blood/backend
 $ dotnet run
 ```
 

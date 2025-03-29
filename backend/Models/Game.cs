@@ -20,6 +20,7 @@ namespace backend.Models
         private int _consecutivePasses { get; set; } = 0;
         public int _currentPlayerIndex = 0;
         public int PowerTransferAmount { get; set; } = 0;
+        public int UPAsPlaced { get; set; } = 0;
 
         // Events
         public event Action<Game, Tile[,], int, int> OnCardPlaced;
@@ -324,6 +325,8 @@ namespace backend.Models
             if (tile == null) return;
 
             OnCardDestroyed?.Invoke(this, grid, row, col);
+            if (grid[row, col].Card != null && grid[row, col].Card!.Name == "Ultimate Party Animal")
+                UPAsPlaced--;
 
             int cumulativePower = tile.GetCumulativePower();
             var tileBonusPower = grid[row, col].PlayerTileBonusPower[instigator.playerIndex];

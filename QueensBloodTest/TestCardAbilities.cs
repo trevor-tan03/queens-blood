@@ -1100,5 +1100,24 @@ namespace QueensBloodTest
 
             Assert.Equal(0, game.Players[1].Scores[0].loserBonus);
         }
+
+        [Fact]
+        public void RemoveBonusPowerUponReplacingUltimatePartyAnimalCard()
+        {
+            var game = CreateGameWithPlayers();
+            game.Start();
+            SetPlayer1Start(game);
+
+            AddToHandAndPlaceCard(game, Cards.UltimatePartyAnimal, 0, 0);
+            AddToHandAndPlaceCard(game, Cards.GrasslandsWolf, 0, 1);
+
+            game.SwapPlayerTurns();
+            AddToHandAndPlaceCard(game, Cards.SecurityOfficer, 0, 0);
+            Assert.Equal(1, game.Players[0].Scores[0].loserBonus);
+
+            game.SwapPlayerTurns();
+            AddToHandAndPlaceCard(game, Cards.InsectoidChimera, 0, 0);
+            Assert.Equal(0, game.Players[0].Scores[0].loserBonus);
+        }
     }
 }
