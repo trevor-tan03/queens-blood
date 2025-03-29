@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useSignalR } from "../../../SignalR/SignalRProvider";
 import Droppable from "../../dnd-kit/Droppable";
 import BoardTile from "./BoardTile";
@@ -6,6 +7,7 @@ import ScoreCoin from "./ScoreCoin";
 
 const Board = () => {
   const { gameState, gameStatePreview } = useSignalR();
+  const boardRef = useRef<HTMLDivElement>(null);
   const NUM_ROWS = 3;
 
   if (!gameState) return null;
@@ -14,7 +16,7 @@ const Board = () => {
   const renderBoard = () => {
     return (
       <div
-        className="grid min-w-fit mt-16"
+        className="grid min-w-fit mt-16 z-[99]"
         style={{
           gridTemplateColumns: "repeat(7, auto)",
           transformOrigin: "top",
@@ -30,7 +32,11 @@ const Board = () => {
               row={row}
               col={col}
             >
-              <BoardTile tile={tile} bgColour={(row + col) % 2 ? "b" : "w"} />
+              <BoardTile
+                tile={tile}
+                bgColour={(row + col) % 2 ? "b" : "w"}
+                boardRef={boardRef}
+              />
             </Droppable>
           ));
         })}
