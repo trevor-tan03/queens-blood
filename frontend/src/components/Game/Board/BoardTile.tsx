@@ -6,10 +6,9 @@ import Pawn from "./Pawn";
 interface Props {
   tile: Tile;
   bgColour: "b" | "w";
-  boardRef: React.RefObject<HTMLDivElement>;
 }
 
-const BoardTile = ({ tile, bgColour, boardRef }: Props) => {
+const BoardTile = ({ tile, bgColour }: Props) => {
   const { currPlayer } = useSignalR();
   const isMine = currPlayer !== undefined && currPlayer.id === tile?.ownerId;
   const tileRef = useRef<HTMLDivElement>(null);
@@ -18,6 +17,15 @@ const BoardTile = ({ tile, bgColour, boardRef }: Props) => {
 
   return (
     <div
+      ref={tileRef}
+      onMouseOver={() => {
+        popupRef.current!.style.display = "block";
+      }}
+      onMouseOut={() => {
+        popupRef.current!.style.display = "none";
+        popupRef.current!.style.left = "auto";
+        popupRef.current!.style.right = "auto";
+      }}
       className={`w-[135px] h-[145px] relative grid place-items-center border-2
         ${isMine ? "border-green-300" : "border-red-300"}
         ${
@@ -37,20 +45,9 @@ const BoardTile = ({ tile, bgColour, boardRef }: Props) => {
       )}
 
       {tile.card ? (
-        <div
-          ref={tileRef}
-          onMouseOver={() => {
-            popupRef.current!.style.display = "block";
-            // getPosition(popupRef.current!);
-          }}
-          onMouseOut={() => {
-            popupRef.current!.style.display = "none";
-            popupRef.current!.style.left = "auto";
-            popupRef.current!.style.right = "auto";
-          }}
-        >
+        <div>
           <div
-            className={`z-[99] absolute top-0 min-h-[120px] bg-slate-800 border border-orange-300 hidden p-4 text-white bg-opacity-90 pointer-events-none left-0`}
+            className={`z-[99] absolute top-0 min-h-[120px] bg-slate-800 border border-orange-300 hidden p-4 text-white bg-opacity-90 pointer-events-none ml-[135px]`}
             style={{
               minWidth: `${POPUP_WIDTH}px`,
               maxWidth: `${POPUP_WIDTH}px`,

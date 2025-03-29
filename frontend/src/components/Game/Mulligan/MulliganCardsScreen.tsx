@@ -65,7 +65,7 @@ const MulliganCardsScreen = ({
       {!hasConfirmedMulligan && (
         <button
           onClick={confirmMulligan}
-          className="absolute bottom-[8rem] right-0"
+          className="z-50 cursor-pointer absolute right-0 bottom-[6rem] text-xl py-3 px-12 bg-orange-300 hover:bg-transparent rounded-l-full border transition-colors duration-200 hover:text-orange-300 border-orange-300 text-slate-900"
         >
           Confirm
         </button>

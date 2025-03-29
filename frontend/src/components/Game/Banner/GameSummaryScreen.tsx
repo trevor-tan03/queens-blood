@@ -31,7 +31,7 @@ const GameSummaryScreen = () => {
   const data = getEndGameData();
 
   return (
-    <div className="absolute w-full h-full grid place-items-center bg-black bg-opacity-60 z-[99]">
+    <div className="absolute w-full h-full grid place-items-center bg-black bg-opacity-60 z-[9999]">
       <div className="w-full text-center p-3">
         <div className="flex gap-3 align-center justify-center">
           <div className="flex flex-col">
