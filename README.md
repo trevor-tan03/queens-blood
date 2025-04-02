@@ -23,7 +23,7 @@
 
 ## Getting Started
 
-To clone and run this application, you'll need [Git](https://git-scm.com/), [Node.js](https://nodejs.org/en), and [.NET 8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) installed on your computer. From your command line:
+To clone and run this application, you'll need [Git](https://git-scm.com/), [Node.js 22 LTS](https://nodejs.org/en), and [.NET 8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) installed on your computer. From your command line:
 ```bash
 # Clone the repository
 $ git clone https://github.com/trevor-tan03/queens-blood.git
