@@ -64,7 +64,7 @@ const BoardTile = ({ tile, bgColour }: Props) => {
               isMine ? "" : "hue-rotate-[140deg]"
             }`}
             alt={tile.card?.name}
-            src={`../../../../public/assets/cards/${tile.card?.image}`}
+            src={`../../../../assets/cards/${tile.card?.image}`}
           />
         </div>
       ) : tile.ownerId ? (
