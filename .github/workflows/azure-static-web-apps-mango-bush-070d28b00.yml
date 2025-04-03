@@ -37,6 +37,8 @@ jobs:
           #api_location: "" # Api source code path - optional
           output_location: "build" # Built app content directory - optional
           ###### End of Repository/Build Configurations ######
+        env:
+          VITE_API_URL: https://queensbloodbackend-fhanf2c8hehfb2c3.australiaeast-01.azurewebsites.net
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
