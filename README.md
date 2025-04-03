@@ -4,6 +4,10 @@
   <p>A web-based recreation of the Queen's Blood minigame from <a href="https://ffvii.square-enix-games.com/en-us/games/rebirth">Final Fantasy VII: Rebirth</a></p>
 </div>
 
+<p align="center">
+  Play <a href="https://mango-bush-070d28b00.6.azurestaticapps.net">Here</a>
+</p>
+
 <div align="center">
   <img alt="Static Badge" src="https://img.shields.io/badge/.NET-8.0-purple">
   <img alt="Static Badge" src="https://img.shields.io/badge/React-18.3.1-blue">
