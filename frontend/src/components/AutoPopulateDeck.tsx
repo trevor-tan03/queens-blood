@@ -1,10 +1,12 @@
-import { useEffect } from "react";
-import { getDefaultDeck, saveDeck } from "../utils/deckMethods";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import type { Card } from "../types/Card";
+import { getDefaultDeck, saveDeck } from "../utils/deckMethods";
 
 const AutoPopulateDeck = () => {
-  const api = `${import.meta.env.VITE_API_URL}/api/cards/base`;
+  const api = `${
+    import.meta.env.VITE_API_URL || process.env.VITE_API_URL
+  }/api/cards/base`;
 
   const { data } = useQuery<Card[]>({
     queryKey: ["baseCards"],

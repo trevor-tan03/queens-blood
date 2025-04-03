@@ -22,7 +22,9 @@ const Deck = () => {
     }
   }, []);
 
-  const api = `${import.meta.env.VITE_API_URL}/api/cards/base`;
+  const api = `${
+    import.meta.env.VITE_API_URL || process.env.VITE_API_URL
+  }/api/cards/base`;
 
   const { isPending, error, data } = useQuery<Card[]>({
     queryKey: ["baseCards"],
