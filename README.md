@@ -4,6 +4,8 @@
   <p>A web-based recreation of the Queen's Blood minigame from <a href="https://ffvii.square-enix-games.com/en-us/games/rebirth">Final Fantasy VII: Rebirth</a></p>
 </div>
 
+**DISCLAIMER: I am using the free tier of Azure's app service which sleeps after a period of inactivity. It'll take roughly 1-2 minutes for it to be ready**
+
 <p align="center">
   Play <a href="https://mango-bush-070d28b00.6.azurestaticapps.net">Here</a>
 </p>
